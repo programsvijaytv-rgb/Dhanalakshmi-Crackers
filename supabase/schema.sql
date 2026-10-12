@@ -398,74 +398,96 @@ AS $$
 $$;
 
 -- Categories & Products: Public Read, Admin Write
+DROP POLICY IF EXISTS "Public can view active categories" ON public.categories;
 CREATE POLICY "Public can view active categories" ON public.categories
     FOR SELECT USING (is_active = TRUE);
 
+DROP POLICY IF EXISTS "Admin/Staff can manage categories" ON public.categories;
 CREATE POLICY "Admin/Staff can manage categories" ON public.categories
     FOR ALL USING (public.is_admin_or_staff());
 
+DROP POLICY IF EXISTS "Public can view active products" ON public.products;
 CREATE POLICY "Public can view active products" ON public.products
     FOR SELECT USING (is_active = TRUE);
 
+DROP POLICY IF EXISTS "Admin/Staff can manage products" ON public.products;
 CREATE POLICY "Admin/Staff can manage products" ON public.products
     FOR ALL USING (public.is_admin_or_staff());
 
 -- Business Settings: Public Read, Admin Write
+DROP POLICY IF EXISTS "Public can read business settings" ON public.business_settings;
 CREATE POLICY "Public can read business settings" ON public.business_settings
     FOR SELECT USING (TRUE);
 
+DROP POLICY IF EXISTS "Admin can update business settings" ON public.business_settings;
 CREATE POLICY "Admin can update business settings" ON public.business_settings
     FOR ALL USING (public.is_admin_or_staff());
 
 -- Orders & Order Items: Public can insert their order, Admin can manage all
+DROP POLICY IF EXISTS "Public can place orders" ON public.orders;
 CREATE POLICY "Public can place orders" ON public.orders
     FOR INSERT WITH CHECK (TRUE);
 
+DROP POLICY IF EXISTS "Public can view their order by order_number" ON public.orders;
 CREATE POLICY "Public can view their order by order_number" ON public.orders
     FOR SELECT USING (TRUE);
 
+DROP POLICY IF EXISTS "Admin/Staff can manage orders" ON public.orders;
 CREATE POLICY "Admin/Staff can manage orders" ON public.orders
     FOR ALL USING (public.is_admin_or_staff());
 
+DROP POLICY IF EXISTS "Public can insert order items" ON public.order_items;
 CREATE POLICY "Public can insert order items" ON public.order_items
     FOR INSERT WITH CHECK (TRUE);
 
+DROP POLICY IF EXISTS "Public can view order items" ON public.order_items;
 CREATE POLICY "Public can view order items" ON public.order_items
     FOR SELECT USING (TRUE);
 
+DROP POLICY IF EXISTS "Admin/Staff can manage order items" ON public.order_items;
 CREATE POLICY "Admin/Staff can manage order items" ON public.order_items
     FOR ALL USING (public.is_admin_or_staff());
 
 -- Invoices, Invoice Items & Payments: Admin/Staff only
+DROP POLICY IF EXISTS "Admin/Staff can manage invoices" ON public.invoices;
 CREATE POLICY "Admin/Staff can manage invoices" ON public.invoices
     FOR ALL USING (public.is_admin_or_staff());
 
+DROP POLICY IF EXISTS "Admin/Staff can manage invoice items" ON public.invoice_items;
 CREATE POLICY "Admin/Staff can manage invoice items" ON public.invoice_items
     FOR ALL USING (public.is_admin_or_staff());
 
+DROP POLICY IF EXISTS "Admin/Staff can manage payments" ON public.payments;
 CREATE POLICY "Admin/Staff can manage payments" ON public.payments
     FOR ALL USING (public.is_admin_or_staff());
 
+DROP POLICY IF EXISTS "Admin/Staff can manage customers" ON public.customers;
 CREATE POLICY "Admin/Staff can manage customers" ON public.customers
     FOR ALL USING (public.is_admin_or_staff());
 
+DROP POLICY IF EXISTS "Admin/Staff can view inventory movements" ON public.inventory_movements;
 CREATE POLICY "Admin/Staff can view inventory movements" ON public.inventory_movements
     FOR ALL USING (public.is_admin_or_staff());
 
 -- Profiles RLS
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
 CREATE POLICY "Users can view their own profile" ON public.profiles
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Admin can view all profiles" ON public.profiles;
 CREATE POLICY "Admin can view all profiles" ON public.profiles
     FOR ALL USING (public.is_admin_or_staff());
 
 -- Reviews RLS
+DROP POLICY IF EXISTS "Public can view verified reviews" ON public.reviews;
 CREATE POLICY "Public can view verified reviews" ON public.reviews
     FOR SELECT USING (is_verified = TRUE);
 
+DROP POLICY IF EXISTS "Public can submit review" ON public.reviews;
 CREATE POLICY "Public can submit review" ON public.reviews
     FOR INSERT WITH CHECK (TRUE);
 
+DROP POLICY IF EXISTS "Admin can manage reviews" ON public.reviews;
 CREATE POLICY "Admin can manage reviews" ON public.reviews
     FOR ALL USING (public.is_admin_or_staff());
 
