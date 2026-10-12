@@ -12,6 +12,15 @@ async function handleAdminLogin(email, password) {
     try {
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (error) {
+        // Fallback for store manager before new users are added to Supabase Auth
+        if (email === "admin@dhanalakshmicrackers.com" && password === "admin123") {
+          sessionStorage.setItem("dc_auth_user", JSON.stringify({
+            email: "admin@dhanalakshmicrackers.com",
+            role: "admin",
+            full_name: "Store Manager (Local Demo)"
+          }));
+          return { success: true, isDemo: true };
+        }
         throw new Error(error.message);
       }
 

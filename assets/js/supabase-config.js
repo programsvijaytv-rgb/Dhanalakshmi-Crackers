@@ -3,12 +3,14 @@
 // ==============================================================================
 
 // Replace with your project credentials or configure via Admin Settings
-const DEFAULT_SUPABASE_URL = "https://your-project.supabase.co";
-const DEFAULT_SUPABASE_ANON_KEY = "your-public-anon-key";
+const DEFAULT_SUPABASE_URL = "https://pbjcqamswwwoklcgdfjd.supabase.co";
+const DEFAULT_SUPABASE_ANON_KEY = "sb_publishable_-nw-Lngui7gSYjJLsSaCAg_3OnHKd7H";
 
-// Retrieve saved configuration from localStorage if customized
-const SUPABASE_URL = localStorage.getItem("dc_supabase_url") || DEFAULT_SUPABASE_URL;
-const SUPABASE_ANON_KEY = localStorage.getItem("dc_supabase_anon_key") || DEFAULT_SUPABASE_ANON_KEY;
+// Retrieve saved configuration from localStorage if customized, or use live project defaults
+const _storedUrl = localStorage.getItem("dc_supabase_url");
+const _storedKey = localStorage.getItem("dc_supabase_anon_key");
+const SUPABASE_URL = (_storedUrl && !_storedUrl.includes("your-project")) ? _storedUrl : DEFAULT_SUPABASE_URL;
+const SUPABASE_ANON_KEY = (_storedKey && !_storedKey.includes("your-public-anon-key")) ? _storedKey : DEFAULT_SUPABASE_ANON_KEY;
 
 let supabaseClient = null;
 
@@ -34,8 +36,8 @@ function getSupabase() {
  */
 function isSupabaseConfigured() {
   return (
-    SUPABASE_URL &&
-    SUPABASE_ANON_KEY &&
+    Boolean(SUPABASE_URL) &&
+    Boolean(SUPABASE_ANON_KEY) &&
     !SUPABASE_URL.includes("your-project") &&
     !SUPABASE_ANON_KEY.includes("your-public-anon-key")
   );

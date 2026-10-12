@@ -1122,8 +1122,10 @@ async function initAdminSettings() {
   document.getElementById("setUpiName").value = settings.upi_name || "";
 
   // Supabase Credentials Config
-  document.getElementById("setSupabaseUrl").value = localStorage.getItem("dc_supabase_url") || "";
-  document.getElementById("setSupabaseAnonKey").value = localStorage.getItem("dc_supabase_anon_key") || "";
+  const currentSbUrl = localStorage.getItem("dc_supabase_url");
+  const currentSbKey = localStorage.getItem("dc_supabase_anon_key");
+  document.getElementById("setSupabaseUrl").value = (currentSbUrl && !currentSbUrl.includes("your-project")) ? currentSbUrl : DEFAULT_SUPABASE_URL;
+  document.getElementById("setSupabaseAnonKey").value = (currentSbKey && !currentSbKey.includes("your-public-anon-key")) ? currentSbKey : DEFAULT_SUPABASE_ANON_KEY;
 
   const form = document.getElementById("settingsForm");
   if (form) {
