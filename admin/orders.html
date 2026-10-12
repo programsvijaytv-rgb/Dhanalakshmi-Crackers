@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Orders Management | Dhanalakshmi Crackers</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/print.css">
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="logo-badge">🪔</div>
+      <div>
+        <div class="brand-title">Dhanalakshmi</div>
+        <div class="brand-sub">Admin & POS</div>
+      </div>
+    </div>
+
+    <nav class="admin-nav">
+      <a href="index.html" class="admin-nav-item"><span class="icon">📊</span> Dashboard</a>
+      <a href="billing.html" class="admin-nav-item"><span class="icon">⚡</span> POS Billing Terminal</a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">🎆</span> Product Catalog</a>
+      <a href="orders.html" class="admin-nav-item active"><span class="icon">📦</span> Online Orders</a>
+      <a href="invoices.html" class="admin-nav-item"><span class="icon">🧾</span> Invoices Archive</a>
+      <a href="customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
+      <a href="reports.html" class="admin-nav-item"><span class="icon">📈</span> Sales Reports</a>
+      <a href="settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-user-info">
+        <div class="admin-avatar">AD</div>
+        <div>
+          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Admin Staff</div>
+          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+        </div>
+      </div>
+      <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <h1 class="admin-page-title">Customer Online Orders</h1>
+      <div class="topbar-actions" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 0.35rem;">
+          <label for="orderStatusFilter" style="font-size: 0.8rem; font-weight: 700; color: #4b5563;">Order:</label>
+          <select id="orderStatusFilter" class="form-select" style="width: 145px; padding: 0.4rem 0.6rem; font-size: 0.85rem;">
+            <option value="all">All Orders</option>
+            <option value="pending">⏳ Pending</option>
+            <option value="confirmed">📋 Confirmed</option>
+            <option value="dispatched">🚚 Dispatched</option>
+            <option value="delivered">🎉 Delivered</option>
+            <option value="cancelled">❌ Cancelled</option>
+          </select>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.35rem;">
+          <label for="orderPaymentStatusFilter" style="font-size: 0.8rem; font-weight: 700; color: #4b5563;">Payment:</label>
+          <select id="orderPaymentStatusFilter" class="form-select" style="width: 145px; padding: 0.4rem 0.6rem; font-size: 0.85rem;">
+            <option value="all">All Payments</option>
+            <option value="paid">✅ Paid</option>
+            <option value="unpaid">❌ Unpaid</option>
+            <option value="pending">⏳ Pending</option>
+            <option value="refunded">↩️ Refunded</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="admin-table-card">
+        <div class="table-header-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; flex-grow: 1; max-width: 450px;">
+            <input type="text" id="orderSearchInput" class="form-input" placeholder="Search by Order #, Customer, or Phone...">
+          </div>
+          <span style="font-size: 0.85rem; color: #6b7280;">Instant real-time Status & Payment updater</span>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Customer Name</th>
+                <th>Amount</th>
+                <th>Payment Mode</th>
+                <th>Payment Status</th>
+                <th>Order Status</th>
+                <th>Date</th>
+                <th style="width: 200px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminOrdersTbody">
+              <!-- Rendered dynamically by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/supabase-config.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/whatsapp.js"></script>
+  <script src="../assets/js/invoices.js"></script>
+  <script src="../assets/js/admin.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", initAdminOrders);
+  </script>
+</body>
+</html>

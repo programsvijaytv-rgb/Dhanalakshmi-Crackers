@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart | Dhanalakshmi Crackers Sivakasi</title>
+  <meta name="description" content="View items in your festive fireworks cart. Update quantities, review pricing, and proceed to secure checkout.">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/print.css">
+</head>
+<body>
+
+  <!-- Top Announcement Bar -->
+  <div class="top-announcement">
+    <div class="container">
+      <span>✨ Sivakasi Wholesale Factory Pricing Applied Automatically!</span>
+      <span>📞 Helpline / WhatsApp: <a href="tel:+919876543210">+91 98765 43210</a></span>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-symbol">🪔</div>
+        <div class="brand-text">
+          <h1>Dhanalakshmi</h1>
+          <span>CRACKERS SIVAKASI</span>
+        </div>
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="products.html">All Fireworks</a></li>
+          <li><a href="cart.html" class="active">My Cart</a></li>
+          <li><a href="login.html" style="color: var(--secondary);">Staff / Admin</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="cart.html" class="cart-btn-header" aria-label="Shopping Cart">
+          🛒 <span class="cart-counter">0</span>
+        </a>
+        <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Open Navigation Menu" aria-expanded="false">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Drawer -->
+  <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+  <aside class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="Mobile Navigation Menu">
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <div class="brand-symbol">🪔</div>
+        <div class="brand-text">
+          <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin: 0;">Dhanalakshmi</h2>
+          <span style="font-size: 0.7rem; color: var(--secondary); font-weight: 600; text-transform: uppercase;">Crackers Sivakasi</span>
+        </div>
+      </div>
+      <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close Menu">&times;</button>
+    </div>
+
+    <div class="drawer-body">
+      <ul class="drawer-links">
+        <li><a href="index.html" class="drawer-link"><span class="drawer-icon">🏠</span> Home</a></li>
+        <li><a href="products.html" class="drawer-link"><span class="drawer-icon">🎆</span> All Fireworks Catalog</a></li>
+        <li><a href="products.html?category=gift-boxes" class="drawer-link"><span class="drawer-icon">🎁</span> Festival Gift Hampers</a></li>
+        <li><a href="index.html#reviewsSection" class="drawer-link"><span class="drawer-icon">⭐</span> Customer Reviews & Ratings</a></li>
+        <li><a href="cart.html" class="drawer-link active"><span class="drawer-icon">🛒</span> My Shopping Cart <span class="cart-counter drawer-badge">0</span></a></li>
+        <li><a href="login.html" class="drawer-link"><span class="drawer-icon">🔐</span> Staff & Admin Login</a></li>
+      </ul>
+
+      <div class="drawer-footer-card">
+        <div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.25rem;">
+          📞 Direct Sivakasi Support
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+          Wholesale inquiries & fast festive booking
+        </div>
+        <a href="https://wa.me/919876543210?text=Hi%20Dhanalakshmi%20Crackers%2C%20I%20would%20like%20to%20order%20Diwali%20crackers" target="_blank" class="btn btn-primary btn-block" style="padding: 0.65rem; font-size: 0.85rem;">
+          💬 WhatsApp Fast Order
+        </a>
+        <a href="tel:+919876543210" class="btn btn-secondary btn-block" style="padding: 0.65rem; font-size: 0.85rem; margin-top: 0.5rem;">
+          📞 Call +91 98765 43210
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Cart Content -->
+  <main class="section">
+    <div class="container">
+      <h1 style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; margin-bottom: 2rem;">
+        Your Shopping Cart
+      </h1>
+
+      <!-- Empty State -->
+      <div id="cartEmptyState" style="display: none; text-align: center; padding: 4rem 1rem; background: #fff; border-radius: 16px; border: 1px solid var(--border-color);">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🛒</div>
+        <h2 style="font-family: var(--font-heading); font-size: 1.5rem; margin-bottom: 0.5rem;">Your cart is currently empty</h2>
+        <p style="color: #6b7280; margin-bottom: 1.5rem;">Celebrate this festive season with authentic Sivakasi fireworks at factory discounts.</p>
+        <a href="products.html" class="btn btn-primary">Browse Fireworks Catalog</a>
+      </div>
+
+      <!-- Cart Layout -->
+      <div class="cart-layout" id="cartLayout">
+        <!-- Cart Items Table -->
+        <div class="cart-card">
+          <table class="cart-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="cartItemsContainer">
+              <!-- Rendered dynamically by cart.js -->
+            </tbody>
+          </table>
+
+          <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <a href="products.html" style="color: var(--primary); font-weight: 600; font-size: 0.9rem;">
+              &larr; Add More Items
+            </a>
+            <button class="btn btn-secondary btn-sm" onclick="if(confirm('Clear all items from your cart?')) { clearCart(); renderCartPage(); }">
+              Clear Entire Cart
+            </button>
+          </div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="cart-card cart-summary-card">
+          <h2 style="font-family: var(--font-heading); font-size: 1.35rem; font-weight: 700; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+            <span>Order Summary</span>
+            <span class="festive-pill-tag">✨ Wholesale Direct</span>
+          </h2>
+
+          <!-- Festive Free Shipping / Dispatch Progress -->
+          <div class="free-shipping-card">
+            <div id="freeShippingProgressText" class="free-shipping-text">
+              Add crackers to unlock <strong>Free Moisture-Proof Packing & Express Dispatch!</strong>
+            </div>
+            <div class="shipping-progress-track">
+              <div id="freeShippingProgressBar" class="shipping-progress-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span id="cartSubtotal" style="font-weight: 700;">₹0.00</span>
+          </div>
+
+          <div class="summary-row" id="cartSavingsRow" style="display: none; color: #15803d; font-weight: 600;">
+            <span>Factory Wholesale Savings:</span>
+            <span id="cartTotalSavings">₹0.00</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Festive Moisture-Proof Packing:</span>
+            <span style="color: #10b981; font-weight: 700;">FREE</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Transport Dispatch Coordination:</span>
+            <span style="color: #10b981; font-weight: 700;">INCLUDED</span>
+          </div>
+
+          <div class="summary-row total-row">
+            <span>Estimated Grand Total:</span>
+            <span class="total-val" id="cartGrandTotal">₹0.00</span>
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <a href="checkout.html" class="btn btn-primary btn-block btn-checkout-glow" style="padding: 1.05rem; font-size: 1.05rem; font-weight: 700;">
+              Proceed to Secure Checkout &rarr;
+            </a>
+          </div>
+
+          <!-- Trust Seals Card -->
+          <div class="cart-trust-badges">
+            <div class="cart-trust-item">
+              <span>🛡️</span> 100% Sivakasi PESO Certified
+            </div>
+            <div class="cart-trust-item">
+              <span>🏭</span> Direct Factory Price Guarantee
+            </div>
+            <div class="cart-trust-item">
+              <span>📲</span> Instant WhatsApp Invoice & Live Tracking
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <div>&copy; 2026 Dhanalakshmi Crackers Sivakasi. All rights reserved.</div>
+      <div>Helpline: +91 98765 43210</div>
+    </div>
+  </footer>
+
+  <!-- Mobile Sticky Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav" aria-label="Quick Mobile Navigation">
+    <a href="index.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🏠</span>
+      <span class="bottom-nav-label">Home</span>
+    </a>
+    <a href="products.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎆</span>
+      <span class="bottom-nav-label">Crackers</span>
+    </a>
+    <a href="products.html?category=gift-boxes" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎁</span>
+      <span class="bottom-nav-label">Gifts</span>
+    </a>
+    <a href="cart.html" class="bottom-nav-item active">
+      <span class="bottom-nav-icon" style="position: relative;">
+        🛒
+        <span class="cart-counter bottom-nav-badge">0</span>
+      </span>
+      <span class="bottom-nav-label">Cart</span>
+    </a>
+    <a href="https://wa.me/919876543210?text=Hi%20Dhanalakshmi%20Crackers%2C%20I%20would%20like%20to%20order%20crackers" target="_blank" class="bottom-nav-item highlight">
+      <span class="bottom-nav-icon">💬</span>
+      <span class="bottom-nav-label">WhatsApp</span>
+    </a>
+  </nav>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/mobile-nav.js"></script>
+</body>
+</html>

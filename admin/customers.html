@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Directory | Dhanalakshmi Crackers</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/print.css">
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="logo-badge">🪔</div>
+      <div>
+        <div class="brand-title">Dhanalakshmi</div>
+        <div class="brand-sub">Admin & POS</div>
+      </div>
+    </div>
+
+    <nav class="admin-nav">
+      <a href="index.html" class="admin-nav-item"><span class="icon">📊</span> Dashboard</a>
+      <a href="billing.html" class="admin-nav-item"><span class="icon">⚡</span> POS Billing Terminal</a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">🎆</span> Product Catalog</a>
+      <a href="orders.html" class="admin-nav-item"><span class="icon">📦</span> Online Orders</a>
+      <a href="invoices.html" class="admin-nav-item"><span class="icon">🧾</span> Invoices Archive</a>
+      <a href="customers.html" class="admin-nav-item active"><span class="icon">👥</span> Customers</a>
+      <a href="reports.html" class="admin-nav-item"><span class="icon">📈</span> Sales Reports</a>
+      <a href="settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-user-info">
+        <div class="admin-avatar">AD</div>
+        <div>
+          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Admin Staff</div>
+          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+        </div>
+      </div>
+      <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <h1 class="admin-page-title">Customer Directory & Festival History</h1>
+    </header>
+
+    <main class="admin-content">
+      <div class="admin-table-card">
+        <div class="table-header-bar">
+          <h2>Registered Customers & Walk-in Records</h2>
+          <span style="font-size: 0.85rem; color: #6b7280;">Auto-collected from POS & online checkouts</span>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Customer Name</th>
+                <th>Mobile Number</th>
+                <th>Address / Location</th>
+                <th>Total Purchases</th>
+                <th>Total Spent</th>
+              </tr>
+            </thead>
+            <tbody id="adminCustomersTbody">
+              <!-- Rendered dynamically by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/supabase-config.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", initAdminCustomers);
+  </script>
+</body>
+</html>

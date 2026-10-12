@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout | Dhanalakshmi Crackers Sivakasi</title>
+  <meta name="description" content="Secure checkout for Dhanalakshmi Crackers. Enter your delivery address, select payment method, and confirm your festive fireworks order.">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/print.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="index.html" class="brand-logo">
+        <div class="brand-symbol">🪔</div>
+        <div class="brand-text">
+          <h1>Dhanalakshmi</h1>
+          <span>CRACKERS SIVAKASI</span>
+        </div>
+      </a>
+
+      <div style="font-size: 0.9rem; font-weight: 600; color: #16a34a; display: flex; align-items: center; gap: 0.35rem;">
+        🔒 Secure Checkout
+      </div>
+    </div>
+  </header>
+
+  <!-- Checkout Form Section -->
+  <main class="section">
+    <div class="container">
+      <div style="margin-bottom: 2rem;">
+        <h1 style="font-family: var(--font-heading); font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem;">
+          Delivery & Payment Details
+        </h1>
+        <p style="color: #6b7280; font-size: 0.95rem;">
+          Please enter your delivery address and contact information accurately to ensure timely festival dispatch.
+        </p>
+      </div>
+
+      <!-- Checkout Steps Progress Bar -->
+      <div class="checkout-steps-bar">
+        <div class="checkout-step completed">
+          <div class="step-num">✓</div>
+          <div class="step-label">1. Shopping Cart</div>
+        </div>
+        <div class="checkout-step-line completed"></div>
+        <div class="checkout-step active">
+          <div class="step-num">2</div>
+          <div class="step-label">2. Delivery Address</div>
+        </div>
+        <div class="checkout-step-line"></div>
+        <div class="checkout-step">
+          <div class="step-num">3</div>
+          <div class="step-label">3. Confirm & Invoice</div>
+        </div>
+      </div>
+
+      <div class="cart-layout">
+        <!-- Delivery Address & Payment Form -->
+        <div class="cart-card checkout-form-card">
+          <form id="checkoutOrderForm">
+            <h2 class="form-section-heading">
+              <span>👤 1. Customer Delivery Information</span>
+            </h2>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="custFullName">Full Name *</label>
+                <input type="text" id="custFullName" class="form-input" placeholder="e.g. Ramesh Kumar" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="custPhone">WhatsApp / Mobile Number *</label>
+                <input type="tel" id="custPhone" class="form-input" placeholder="10-digit mobile number" pattern="[0-9]{10}" required>
+                <div class="input-hint">Order confirmation & digital invoice will be sent here</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="custAddress">Delivery Street Address *</label>
+              <textarea id="custAddress" class="form-textarea" rows="2" placeholder="House/Flat No, Street Name, Landmark" required></textarea>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="custCity">City / Town *</label>
+                <input type="text" id="custCity" class="form-input" placeholder="e.g. Chennai, Madurai" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="custPincode">Postal Pincode *</label>
+                <input type="text" id="custPincode" class="form-input" placeholder="e.g. 600040" pattern="[0-9]{6}" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="orderNotes">Special Delivery Instructions (Optional)</label>
+              <input type="text" id="orderNotes" class="form-input" placeholder="e.g. Call before delivery, handle with care">
+            </div>
+
+            <!-- Payment Options -->
+            <h2 class="form-section-heading" style="margin-top: 2rem;">
+              <span>💳 2. Choose Payment Mode</span>
+            </h2>
+
+            <div class="payment-methods-grid">
+              <label class="payment-method-card active" id="payCardCOD">
+                <input type="radio" name="paymentMethod" value="COD" checked class="payment-radio">
+                <div class="payment-card-content">
+                  <div class="payment-card-header">
+                    <span class="payment-icon">💵</span>
+                    <strong class="payment-title">Cash on Delivery (COD) / Pay on Dispatch</strong>
+                  </div>
+                  <p class="payment-desc">Pay cash or scan UPI upon delivery / counter pickup verification.</p>
+                </div>
+                <div class="payment-check-mark">✓</div>
+              </label>
+
+              <label class="payment-method-card" id="payCardUPI">
+                <input type="radio" name="paymentMethod" value="UPI" class="payment-radio">
+                <div class="payment-card-content">
+                  <div class="payment-card-header">
+                    <span class="payment-icon">⚡</span>
+                    <strong class="payment-title">Direct Merchant UPI (GPay, PhonePe, Paytm, BHIM)</strong>
+                    <span class="badge-fast-upi">Instant & Zero Fee</span>
+                  </div>
+                  <p class="payment-desc">Instant dynamic NPCI QR code to merchant VPA with zero payment gateway surcharge.</p>
+                </div>
+                <div class="payment-check-mark">✓</div>
+              </label>
+
+              <label class="payment-method-card" id="payCardONLINE">
+                <input type="radio" name="paymentMethod" value="ONLINE" class="payment-radio">
+                <div class="payment-card-content">
+                  <div class="payment-card-header">
+                    <span class="payment-icon">💳</span>
+                    <strong class="payment-title">Online Net Banking & Cards Gateway</strong>
+                  </div>
+                  <p class="payment-desc">Secure credit/debit card and net banking processing via verified gateway.</p>
+                </div>
+                <div class="payment-check-mark">✓</div>
+              </label>
+            </div>
+
+            <button type="submit" id="btnSubmitOrder" class="btn btn-primary btn-block btn-order-submit">
+              Place Fireworks Order Now &rarr;
+            </button>
+          </form>
+        </div>
+
+        <!-- Sidebar Summary -->
+        <div class="cart-card">
+          <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem;">
+            Order Items
+          </h2>
+
+          <div id="checkoutItemsSummary" style="max-height: 350px; overflow-y: auto; margin-bottom: 1.5rem; padding-right: 0.5rem;">
+            <!-- Items rendered by checkout.js -->
+          </div>
+
+          <div class="summary-row">
+            <span>Items Subtotal:</span>
+            <span id="checkoutSubtotal">₹0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Special Festival Discount:</span>
+            <span style="color: #10b981;">Included</span>
+          </div>
+          <div class="summary-row total-row">
+            <span>Total Payable:</span>
+            <span class="total-val" id="checkoutTotal">₹0.00</span>
+          </div>
+
+          <div style="margin-top: 1.5rem; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 0.85rem; font-size: 0.8rem; color: #065f46;">
+            ✓ Immediate order receipt will be sent to your WhatsApp number upon confirmation.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <div>&copy; 2026 Dhanalakshmi Crackers Sivakasi. All rights reserved.</div>
+      <div>Helpline: +91 98765 43210</div>
+    </div>
+  </footer>
+
+  <!-- Mobile Sticky Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav" aria-label="Quick Mobile Navigation">
+    <a href="index.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🏠</span>
+      <span class="bottom-nav-label">Home</span>
+    </a>
+    <a href="products.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎆</span>
+      <span class="bottom-nav-label">Crackers</span>
+    </a>
+    <a href="products.html?category=gift-boxes" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎁</span>
+      <span class="bottom-nav-label">Gifts</span>
+    </a>
+    <a href="cart.html" class="bottom-nav-item">
+      <span class="bottom-nav-icon" style="position: relative;">
+        🛒
+        <span class="cart-counter bottom-nav-badge">0</span>
+      </span>
+      <span class="bottom-nav-label">Cart</span>
+    </a>
+    <a href="https://wa.me/919876543210?text=Hi%20Dhanalakshmi%20Crackers%2C%20I%20would%20like%20to%20order%20crackers" target="_blank" class="bottom-nav-item highlight">
+      <span class="bottom-nav-icon">💬</span>
+      <span class="bottom-nav-label">WhatsApp</span>
+    </a>
+  </nav>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/cart.js"></script>
+  <script src="assets/js/payments.js"></script>
+  <script src="assets/js/whatsapp.js"></script>
+  <script src="assets/js/invoices.js"></script>
+  <script src="assets/js/checkout.js"></script>
+  <script src="assets/js/mobile-nav.js"></script>
+</body>
+</html>

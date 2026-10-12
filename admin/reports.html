@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Reports & Analytics | Dhanalakshmi Crackers</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/print.css">
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="logo-badge">🪔</div>
+      <div>
+        <div class="brand-title">Dhanalakshmi</div>
+        <div class="brand-sub">Admin & POS</div>
+      </div>
+    </div>
+
+    <nav class="admin-nav">
+      <a href="index.html" class="admin-nav-item"><span class="icon">📊</span> Dashboard</a>
+      <a href="billing.html" class="admin-nav-item"><span class="icon">⚡</span> POS Billing Terminal</a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">🎆</span> Product Catalog</a>
+      <a href="orders.html" class="admin-nav-item"><span class="icon">📦</span> Online Orders</a>
+      <a href="invoices.html" class="admin-nav-item"><span class="icon">🧾</span> Invoices Archive</a>
+      <a href="customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
+      <a href="reports.html" class="admin-nav-item active"><span class="icon">📈</span> Sales Reports</a>
+      <a href="settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-user-info">
+        <div class="admin-avatar">AD</div>
+        <div>
+          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Admin Staff</div>
+          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+        </div>
+      </div>
+      <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <h1 class="admin-page-title">Sales Reports & Financial Analytics</h1>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="exportSalesReportCSV()">
+          📥 Export CSV
+        </button>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- Report Summaries -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-data">
+            <h3>Gross Revenue</h3>
+            <div class="kpi-val" id="repGrossSales">₹0.00</div>
+          </div>
+          <div class="kpi-icon sales">📈</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-data">
+            <h3>Cash Collections</h3>
+            <div class="kpi-val" id="repCashCollections">₹0.00</div>
+          </div>
+          <div class="kpi-icon stock">💵</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-data">
+            <h3>UPI Digital Volume</h3>
+            <div class="kpi-val" id="repUpiCollections">₹0.00</div>
+          </div>
+          <div class="kpi-icon orders">📱</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-data">
+            <h3>Total GST Collected (18%)</h3>
+            <div class="kpi-val" id="repTotalTax">₹0.00</div>
+          </div>
+          <div class="kpi-icon products">🏛️</div>
+        </div>
+      </div>
+
+      <!-- Breakdown Tables -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+        <!-- Payment Mode Breakdown -->
+        <div class="admin-table-card">
+          <div class="table-header-bar">
+            <h2>Payment Mode Distribution</h2>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Transactions</th>
+                  <th>Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="repPaymentBreakdownTbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top Selling Firecrackers -->
+        <div class="admin-table-card">
+          <div class="table-header-bar">
+            <h2>Best Selling Firecrackers</h2>
+          </div>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Cracker Name</th>
+                  <th>Qty Sold</th>
+                  <th>Revenue (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="repTopProductsTbody">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/supabase-config.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      protectAdminRoute();
+      loadReportsData();
+    });
+
+    function loadReportsData() {
+      const invoices = JSON.parse(localStorage.getItem("dc_invoices_history") || "[]");
+      const orders = JSON.parse(localStorage.getItem("dc_orders_list") || "[]");
+
+      let gross = 0;
+      let cash = 0;
+      let upi = 0;
+      let tax = 0;
+
+      const payMap = { CASH: { count: 0, sum: 0 }, UPI: { count: 0, sum: 0 }, ONLINE: { count: 0, sum: 0 }, CARD: { count: 0, sum: 0 }, COD: { count: 0, sum: 0 } };
+      const prodMap = {};
+
+      invoices.forEach(inv => {
+        const amt = Number(inv.total_amount) || 0;
+        gross += amt;
+        tax += Number(inv.tax_amount) || 0;
+        const method = inv.payment_method || "CASH";
+        if (method === "CASH") cash += amt;
+        if (method === "UPI") upi += amt;
+
+        if (!payMap[method]) payMap[method] = { count: 0, sum: 0 };
+        payMap[method].count += 1;
+        payMap[method].sum += amt;
+
+        (inv.items || []).forEach(item => {
+          if (!prodMap[item.product_name]) prodMap[item.product_name] = { qty: 0, rev: 0 };
+          prodMap[item.product_name].qty += Number(item.quantity);
+          prodMap[item.product_name].rev += Number(item.subtotal);
+        });
+      });
+
+      orders.forEach(o => {
+        const amt = Number(o.total_amount) || 0;
+        gross += amt;
+        const method = o.payment_method || "COD";
+        if (!payMap[method]) payMap[method] = { count: 0, sum: 0 };
+        payMap[method].count += 1;
+        payMap[method].sum += amt;
+      });
+
+      document.getElementById("repGrossSales").textContent = formatCurrency(gross);
+      document.getElementById("repCashCollections").textContent = formatCurrency(cash);
+      document.getElementById("repUpiCollections").textContent = formatCurrency(upi);
+      document.getElementById("repTotalTax").textContent = formatCurrency(tax);
+
+      // Payment breakdown table
+      const payTbody = document.getElementById("repPaymentBreakdownTbody");
+      if (payTbody) {
+        payTbody.innerHTML = Object.keys(payMap).filter(k => payMap[k].count > 0).map(k => `
+          <tr>
+            <td><strong>${k}</strong></td>
+            <td>${payMap[k].count} bills</td>
+            <td><strong>${formatCurrency(payMap[k].sum)}</strong></td>
+          </tr>
+        `).join("") || `<tr><td colspan="3" style="text-align: center; color: #9ca3af; padding: 1rem;">No transactions yet</td></tr>`;
+      }
+
+      // Top products table
+      const prodTbody = document.getElementById("repTopProductsTbody");
+      if (prodTbody) {
+        const sortedProds = Object.keys(prodMap).sort((a, b) => prodMap[b].qty - prodMap[a].qty).slice(0, 5);
+        prodTbody.innerHTML = sortedProds.map(k => `
+          <tr>
+            <td><strong>${k}</strong></td>
+            <td>${prodMap[k].qty} units</td>
+            <td><strong>${formatCurrency(prodMap[k].rev)}</strong></td>
+          </tr>
+        `).join("") || `<tr><td colspan="3" style="text-align: center; color: #9ca3af; padding: 1rem;">No POS sales recorded yet</td></tr>`;
+      }
+    }
+
+    function exportSalesReportCSV() {
+      const invoices = JSON.parse(localStorage.getItem("dc_invoices_history") || "[]");
+      if (invoices.length === 0) {
+        alert("No invoice data available to export.");
+        return;
+      }
+
+      let csv = "Invoice Number,Customer Name,Customer Phone,Subtotal,Discount,Tax,Total Amount,Payment Mode,Date\n";
+      invoices.forEach(i => {
+        csv += `"${i.invoice_number}","${i.customer_name || ''}","${i.customer_phone || ''}",${i.subtotal},${i.discount_amount},${i.tax_amount},${i.total_amount},"${i.payment_method}","${i.created_at}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Dhanalakshmi_Sales_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>

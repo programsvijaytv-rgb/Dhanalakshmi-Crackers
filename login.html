@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin & Staff Login | Dhanalakshmi Crackers</title>
+  <meta name="description" content="Secure administrative and POS billing terminal login for Dhanalakshmi Crackers management staff.">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/print.css">
+</head>
+<body style="background: linear-gradient(135deg, #180303 0%, #350808 100%); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1.5rem;">
+
+  <div style="background: #ffffff; border-radius: 16px; width: 100%; max-width: 440px; padding: 2.5rem; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #c21d1d, #f59e0b); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 0.75rem auto; color: #fff;">
+        🪔
+      </div>
+      <h1 style="font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; color: #111827; margin-bottom: 0.25rem;">
+        Staff & Admin Login
+      </h1>
+      <p style="color: #6b7280; font-size: 0.875rem;">
+        Dhanalakshmi Crackers Sivakasi Management
+      </p>
+    </div>
+
+    <!-- Error Alert Banner -->
+    <div id="loginErrorAlert" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1.25rem;">
+    </div>
+
+    <form id="adminLoginForm">
+      <div class="form-group">
+        <label class="form-label" for="loginEmail">Email Address</label>
+        <input type="email" id="loginEmail" class="form-input" placeholder="admin@dhanalakshmicrackers.com" value="admin@dhanalakshmicrackers.com" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" value="admin123" required>
+      </div>
+
+      <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-size: 1rem; margin-top: 1rem;">
+        Sign In to POS & Dashboard &rarr;
+      </button>
+    </form>
+
+    <!-- Demo Notice -->
+    <div style="margin-top: 1.75rem; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 0.85rem; font-size: 0.8rem; color: #92400e; line-height: 1.5;">
+      💡 <strong>Default Demo Access:</strong><br>
+      Email: <code>admin@dhanalakshmicrackers.com</code><br>
+      Password: <code>admin123</code><br>
+      <span style="font-size: 0.75rem; color: #78350f;">Connect your Supabase project in Admin &rarr; Settings to activate live authentication.</span>
+    </div>
+
+    <div style="text-align: center; margin-top: 1.5rem;">
+      <a href="index.html" style="font-size: 0.85rem; color: #6b7280; text-decoration: underline;">
+        &larr; Return to Customer Storefront
+      </a>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/supabase-config.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script>
+    document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPassword").value.trim();
+      const btn = document.getElementById("btnLoginSubmit");
+      const errEl = document.getElementById("loginErrorAlert");
+
+      btn.disabled = true;
+      btn.textContent = "Verifying...";
+      errEl.style.display = "none";
+
+      const result = await handleAdminLogin(email, pass);
+      if (result.success) {
+        window.location.href = "admin/index.html";
+      } else {
+        errEl.textContent = result.error || "Login failed.";
+        errEl.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "Sign In to POS & Dashboard →";
+      }
+    });
+  </script>
+</body>
+</html>

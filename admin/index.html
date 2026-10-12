@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Dhanalakshmi Crackers</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/print.css">
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="logo-badge">🪔</div>
+      <div>
+        <div class="brand-title">Dhanalakshmi</div>
+        <div class="brand-sub">Admin & POS</div>
+      </div>
+    </div>
+
+    <nav class="admin-nav">
+      <a href="index.html" class="admin-nav-item active"><span class="icon">📊</span> Dashboard</a>
+      <a href="billing.html" class="admin-nav-item" style="color: #fef08a;"><span class="icon">⚡</span> POS Billing Terminal</a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">🎆</span> Product Catalog</a>
+      <a href="orders.html" class="admin-nav-item"><span class="icon">📦</span> Online Orders</a>
+      <a href="invoices.html" class="admin-nav-item"><span class="icon">🧾</span> Invoices Archive</a>
+      <a href="customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
+      <a href="reports.html" class="admin-nav-item"><span class="icon">📈</span> Sales Reports</a>
+      <a href="settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-user-info">
+        <div class="admin-avatar">AD</div>
+        <div>
+          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Store Admin</div>
+          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+        </div>
+      </div>
+      <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <h1 class="admin-page-title">Executive Dashboard</h1>
+      <div class="topbar-actions">
+        <a href="billing.html" class="btn btn-primary btn-sm">
+          ⚡ Open POS Counter
+        </a>
+        <a href="../index.html" target="_blank" class="btn btn-secondary btn-sm">
+          🌐 View Storefront
+        </a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- KPI Stats Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-data">
+            <h3>Total Sales Volume</h3>
+            <div class="kpi-val" id="kpiTotalSales">₹0.00</div>
+          </div>
+          <div class="kpi-icon sales">💰</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-data">
+            <h3>Completed Orders & Bills</h3>
+            <div class="kpi-val" id="kpiTotalOrders">0</div>
+          </div>
+          <div class="kpi-icon orders">📦</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-data">
+            <h3>Active Firecrackers</h3>
+            <div class="kpi-val" id="kpiTotalProducts">0</div>
+          </div>
+          <div class="kpi-icon products">🎆</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-data">
+            <h3>Low Stock Warnings</h3>
+            <div class="kpi-val" id="kpiLowStock" style="color: #ef4444;">0</div>
+          </div>
+          <div class="kpi-icon stock">⚠️</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Cards -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: #fff; padding: 1.5rem; border-radius: 14px;">
+          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">⚡ POS Billing Terminal</h2>
+          <p style="font-size: 0.85rem; color: #c7d2fe; margin-bottom: 1rem;">
+            Instant barcode/search item addition, cash tender calculation, GST compliance, and thermal printing.
+          </p>
+          <a href="billing.html" class="btn btn-accent btn-sm">Launch Cashier POS &rarr;</a>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #831843, #9d174d); color: #fff; padding: 1.5rem; border-radius: 14px;">
+          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">🎆 Product Inventory</h2>
+          <p style="font-size: 0.85rem; color: #fbcfe8; margin-bottom: 1rem;">
+            Add new Sivakasi cracker arrivals, modify wholesale rates, and update batch quantities.
+          </p>
+          <a href="products.html" class="btn btn-secondary btn-sm" style="color: #831843;">Manage Products &rarr;</a>
+        </div>
+      </div>
+
+      <!-- Recent Transactions Table -->
+      <div class="admin-table-card">
+        <div class="table-header-bar">
+          <h2>Recent POS & Online Sales Activity</h2>
+          <a href="invoices.html" class="btn btn-secondary btn-sm">View All Invoices &rarr;</a>
+        </div>
+        <div class="admin-table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Reference #</th>
+                <th>Channel</th>
+                <th>Customer</th>
+                <th>Total (₹)</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="dashboardRecentActivityTbody">
+              <!-- Rendered dynamically by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/supabase-config.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/products.js"></script>
+  <script src="../assets/js/admin.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", initAdminDashboard);
+  </script>
+</body>
+</html>

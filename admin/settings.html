@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Store & Payment Settings | Dhanalakshmi Crackers</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <link rel="stylesheet" href="../assets/css/print.css">
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="logo-badge">🪔</div>
+      <div>
+        <div class="brand-title">Dhanalakshmi</div>
+        <div class="brand-sub">Admin & POS</div>
+      </div>
+    </div>
+
+    <nav class="admin-nav">
+      <a href="index.html" class="admin-nav-item"><span class="icon">📊</span> Dashboard</a>
+      <a href="billing.html" class="admin-nav-item"><span class="icon">⚡</span> POS Billing Terminal</a>
+      <a href="products.html" class="admin-nav-item"><span class="icon">🎆</span> Product Catalog</a>
+      <a href="orders.html" class="admin-nav-item"><span class="icon">📦</span> Online Orders</a>
+      <a href="invoices.html" class="admin-nav-item"><span class="icon">🧾</span> Invoices Archive</a>
+      <a href="customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
+      <a href="reports.html" class="admin-nav-item"><span class="icon">📈</span> Sales Reports</a>
+      <a href="settings.html" class="admin-nav-item active"><span class="icon">⚙️</span> Store Settings</a>
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-user-info">
+        <div class="admin-avatar">AD</div>
+        <div>
+          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Admin Staff</div>
+          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+        </div>
+      </div>
+      <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <h1 class="admin-page-title">Store & Payment Configuration</h1>
+    </header>
+
+    <main class="admin-content">
+      <div class="admin-table-card" style="max-width: 850px; margin: 0 auto; padding: 2rem;">
+        <form id="settingsForm">
+          <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid var(--admin-border); padding-bottom: 0.5rem;">
+            1. Business Identity & Invoicing
+          </h2>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="setShopName">Business / Shop Name *</label>
+              <input type="text" id="setShopName" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setBusinessCategory">Business Category *</label>
+              <input type="text" id="setBusinessCategory" class="form-input" placeholder="e.g. Fireworks Supplier / Retail Store">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="setTagline">Business Tagline</label>
+              <input type="text" id="setTagline" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setLogoUrl">Logo Image URL</label>
+              <input type="url" id="setLogoUrl" class="form-input" placeholder="https://...">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="setPhone">Contact Phone Number *</label>
+              <input type="text" id="setPhone" class="form-input" placeholder="+91 98765 43210" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setWhatsappPhone">WhatsApp Helpline Number (Configured Separately) *</label>
+              <input type="text" id="setWhatsappPhone" class="form-input" placeholder="+91 98765 43210" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="setEmail">Official Business Email</label>
+              <input type="email" id="setEmail" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setOperatingHours">Operating Hours (from Google Profile)</label>
+              <input type="text" id="setOperatingHours" class="form-input" placeholder="e.g. Mon - Sun: 09:00 AM - 10:00 PM">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="setAddress">Verified Business Address (from Google Profile) *</label>
+            <textarea id="setAddress" class="form-textarea" rows="2" required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="setBusinessDesc">Business Description</label>
+            <textarea id="setBusinessDesc" class="form-textarea" rows="2" placeholder="Wholesale and retail distributor of certified Sivakasi fireworks..."></textarea>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="setCurrency">Currency</label>
+              <input type="text" id="setCurrency" class="form-input" value="INR (₹)" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setTimeZone">Time Zone</label>
+              <input type="text" id="setTimeZone" class="form-input" value="Asia/Kolkata" readonly>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setGst">GSTIN (Tax Number)</label>
+              <input type="text" id="setGst" class="form-input" placeholder="33AAAAA0000A1Z5">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center; margin-bottom: 1rem; background: #f9fafb; padding: 0.75rem; border-radius: 8px;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem; cursor: pointer;">
+              <input type="checkbox" id="setTaxApplicable" checked>
+              <span>Show Tax / GST on Invoices</span>
+            </label>
+            <div class="form-group" style="margin: 0;">
+              <label class="form-label" for="setTaxRate">Applicable GST Rate (%)</label>
+              <input type="number" id="setTaxRate" step="0.5" class="form-input" value="18">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="setInvoiceFooter">Invoice Footer Note / Greetings</label>
+            <input type="text" id="setInvoiceFooter" class="form-input" placeholder="Thank you for shopping with Dhanalakshmi Crackers! Have a sparkling Diwali.">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="setGoogleReviewUrl">Official Google Business Profile Review URL</label>
+            <input type="url" id="setGoogleReviewUrl" class="form-input" placeholder="https://share.google/AwTsdLuk9OtRHQhbR" value="https://share.google/AwTsdLuk9OtRHQhbR">
+            <span style="font-size: 0.75rem; color: #6b7280; display: block; margin-top: 4px;">Direct link used when customers click "Write a Google Review" on the home page.</span>
+          </div>
+
+          <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--admin-border); padding-bottom: 0.5rem;">
+            2. Merchant UPI Payment Settings
+          </h2>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label class="form-label" for="setUpiId">Merchant UPI ID (VPA) *</label>
+              <input type="text" id="setUpiId" class="form-input" placeholder="dhanalakshmi@upi" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setUpiName">Payee Name (as registered in Bank) *</label>
+              <input type="text" id="setUpiName" class="form-input" placeholder="Dhanalakshmi Crackers Sivakasi" required>
+            </div>
+          </div>
+
+          <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--admin-border); padding-bottom: 0.5rem;">
+            3. Supabase Live Cloud Integration
+          </h2>
+          <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 1rem;">
+            Configure your Supabase project keys here. Public publishable keys only — never paste service role secret keys.
+          </p>
+
+          <div class="form-group">
+            <label class="form-label" for="setSupabaseUrl">Supabase Project URL</label>
+            <input type="url" id="setSupabaseUrl" class="form-input" placeholder="https://your-project.supabase.co">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="setSupabaseAnonKey">Supabase Public Anon Key</label>
+            <input type="text" id="setSupabaseAnonKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...">
+          </div>
+
+          <div style="margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary btn-block" style="padding: 1rem; font-size: 1.05rem;">
+              💾 Save All Settings
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../assets/js/supabase-config.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", initAdminSettings);
+  </script>
+</body>
+</html>
