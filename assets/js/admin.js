@@ -734,7 +734,7 @@ function renderAdminOrdersTable(orders) {
       <td>${new Date(o.created_at || Date.now()).toLocaleDateString("en-IN")}</td>
       <td>
         <div class="action-btn-group">
-          <a href="../invoice.html?invoice=${o.order_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
+          <a href="/invoice.html?invoice=${o.order_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
           <button class="action-btn" onclick="printOrderInvoice('${o.order_number}')" title="Print Invoice (A4 / 80mm / 58mm)">🖨️ Print</button>
           <button class="action-btn" onclick="openOrderDetailsModal('${o.order_number}')" title="View Order Details">👁️ Details</button>
         </div>
@@ -1059,7 +1059,7 @@ function openOrderDetailsModal(orderNumber) {
           </button>
           <div style="display: flex; gap: 0.5rem;">
             <button class="btn btn-secondary btn-sm" onclick="closeOrderDetailsModal()">Close</button>
-            <a href="../invoice.html?invoice=${order.order_number}&download=true" target="_blank" class="btn btn-sm" style="background: #059669; color: #fff; display: inline-flex; align-items: center;">📥 PDF</a>
+            <a href="/invoice.html?invoice=${order.order_number}&download=true" target="_blank" class="btn btn-sm" style="background: #059669; color: #fff; display: inline-flex; align-items: center;">📥 PDF</a>
             <button class="btn btn-primary btn-sm" onclick="closeOrderDetailsModal(); printOrderInvoice('${order.order_number}');">
               🖨️ Print Invoice
             </button>
@@ -1317,7 +1317,7 @@ function renderInvoicesArchiveTable(invoices) {
       <td>${new Date(inv.created_at || Date.now()).toLocaleDateString("en-IN")}</td>
       <td>
         <div class="action-btn-group">
-          <a href="../invoice.html?invoice=${inv.invoice_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
+          <a href="/invoice.html?invoice=${inv.invoice_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
           <button class="action-btn" onclick="openAdminInvoiceModal('${inv.invoice_number}')">🖨️ View & Print</button>
           <button class="action-btn" onclick="sendAdminInvoiceWhatsApp('${inv.invoice_number}')">📲 WhatsApp</button>
         </div>

@@ -562,8 +562,7 @@
       if (!phone) return;
 
       const settings = JSON.parse(localStorage.getItem("dc_business_settings") || "{}");
-      const currentOrigin = window.location.origin + window.location.pathname.replace("invoice.html", "");
-      const invoiceDownloadUrl = `${currentOrigin}invoice.html?invoice=${loadedInvoice.invoice_number}&download=true`;
+      const invoiceDownloadUrl = `${window.location.origin}/invoice.html?invoice=${loadedInvoice.invoice_number}&download=true`;
 
       let message = 
 `🎆 *${settings.shop_name || 'Dhanalakshmi Crackers'}* 🎆

@@ -334,12 +334,11 @@ function downloadInvoicePDF(invoice = null) {
       if (typeof showToast === "function") showToast("Invoice PDF downloaded successfully! 📄", "success");
     }).catch(err => {
       console.warn("PDF generation error, opening invoice print view:", err);
-      window.open(`../invoice.html?invoice=${inv.invoice_number}&download=true`, "_blank");
+      window.open(`/invoice.html?invoice=${inv.invoice_number}&download=true`, "_blank");
     });
   } else {
     // Navigate or open dedicated invoice page with auto-download
-    const prefix = window.location.pathname.includes("/admin/") ? "../" : "./";
-    window.open(`${prefix}invoice.html?invoice=${inv.invoice_number}&download=true`, "_blank");
+    window.open(`/invoice.html?invoice=${inv.invoice_number}&download=true`, "_blank");
   }
 }
 
@@ -355,8 +354,6 @@ function emailCurrentInvoice() {
 
   const settings = JSON.parse(localStorage.getItem("dc_business_settings") || "{}");
   const shopName = settings.shop_name || "Dhanalakshmi Crackers";
-  const currentOrigin = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "/");
-  const prefix = window.location.pathname.includes("/admin/") ? "../" : "./";
   const downloadUrl = `${window.location.origin}/invoice.html?invoice=${inv.invoice_number}&download=true`;
 
   const subject = encodeURIComponent(`Invoice #${inv.invoice_number} from ${shopName} [PAID]`);

@@ -65,15 +65,18 @@
 
     // Active bottom navigation indicator
     const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    const cleanCurrent = currentPath.replace('.html', '');
     const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
     bottomNavItems.forEach((item) => {
       const href = item.getAttribute('href');
       if (href) {
         const itemPath = href.split('?')[0].split('#')[0];
+        const cleanItem = itemPath.replace('.html', '');
         if (
           itemPath === currentPath ||
-          (currentPath === '' && itemPath === 'index.html') ||
-          (currentPath === 'index.html' && itemPath === 'index.html')
+          cleanItem === cleanCurrent ||
+          (cleanCurrent === '' && cleanItem === 'index') ||
+          (cleanCurrent === 'index' && cleanItem === 'index')
         ) {
           item.classList.add('active');
         } else {

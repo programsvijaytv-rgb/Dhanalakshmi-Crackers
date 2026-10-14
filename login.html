@@ -77,7 +77,7 @@
 
       const result = await handleAdminLogin(email, pass);
       if (result.success) {
-        window.location.href = "admin/index.html";
+        window.location.href = "/admin/index.html";
       } else {
         errEl.textContent = result.error || "Login failed.";
         errEl.style.display = "block";

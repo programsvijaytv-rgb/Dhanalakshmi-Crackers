@@ -74,12 +74,12 @@ async function protectAdminRoute() {
   if (isSupabaseConfigured() && sb) {
     const { data: { session } } = await sb.auth.getSession();
     if (!session && !sessionUser) {
-      window.location.href = "../login.html";
+      window.location.href = "/login.html";
       return false;
     }
   } else {
     if (!sessionUser) {
-      window.location.href = "../login.html";
+      window.location.href = "/login.html";
       return false;
     }
   }
@@ -107,5 +107,5 @@ async function handleLogout() {
     }
   }
   sessionStorage.removeItem("dc_auth_user");
-  window.location.href = window.location.pathname.includes("/admin/") ? "../login.html" : "login.html";
+  window.location.href = "/login.html";
 }
