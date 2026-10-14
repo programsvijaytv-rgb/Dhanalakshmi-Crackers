@@ -1,0 +1,23 @@
+{
+  "sonarlint.rules": {
+    "Web:InlineStyles": {
+      "level": "off"
+    },
+    "Web:S1128": {
+      "level": "off"
+    },
+    "html:S1128": {
+      "level": "off"
+    },
+    "html:InlineStyles": {
+      "level": "off"
+    },
+    "css:S6795": {
+      "level": "off"
+    }
+  },
+  "htmlhint.options": {
+    "style-disabled": false,
+    "inline-style-disabled": false
+  }
+}
