@@ -638,6 +638,7 @@ async function initAdminOrders() {
     }
   }
 
+  updateOrderSummaryStats();
   renderAdminOrdersTable(adminOrdersList);
 
   const statusFilter = document.getElementById("orderStatusFilter");
@@ -652,6 +653,7 @@ async function initAdminOrders() {
     listenSync(async (event) => {
       if (event.type === "order_created" || event.type === "order_updated") {
         adminOrdersList = JSON.parse(localStorage.getItem("dc_orders_list") || "[]");
+        updateOrderSummaryStats();
         applyOrderFilters();
         if (event.type === "order_created" && event.payload) {
           showToast(`🔔 New Online Order: #${event.payload.order_number} (${formatCurrency(event.payload.total_amount)})`, "success");
@@ -660,6 +662,59 @@ async function initAdminOrders() {
     });
   }
 }
+
+function updateOrderSummaryStats() {
+  const volEl = document.getElementById("orderTotalVolume");
+  const countEl = document.getElementById("orderTotalCount");
+  const pendEl = document.getElementById("orderPendingCount");
+  const delivEl = document.getElementById("orderDeliveredCount");
+
+  const totalVol = adminOrdersList.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+  const totalCount = adminOrdersList.length;
+  const pendingCount = adminOrdersList.filter(o => (o.status || 'pending').toLowerCase() === 'pending').length;
+  const confirmedCount = adminOrdersList.filter(o => (o.status || '').toLowerCase() === 'confirmed').length;
+  const dispatchedCount = adminOrdersList.filter(o => (o.status || '').toLowerCase() === 'dispatched').length;
+  const deliveredCount = adminOrdersList.filter(o => (o.status || '').toLowerCase() === 'delivered').length;
+  const cancelledCount = adminOrdersList.filter(o => (o.status || '').toLowerCase() === 'cancelled').length;
+
+  if (volEl) volEl.textContent = formatCurrency(totalVol);
+  if (countEl) countEl.textContent = totalCount;
+  if (pendEl) pendEl.textContent = pendingCount;
+  if (delivEl) delivEl.textContent = deliveredCount;
+
+  // Update status pill badges
+  const pillAll = document.getElementById("pillCountAll");
+  const pillPend = document.getElementById("pillCountPending");
+  const pillConf = document.getElementById("pillCountConfirmed");
+  const pillDisp = document.getElementById("pillCountDispatched");
+  const pillDeliv = document.getElementById("pillCountDelivered");
+  const pillCanc = document.getElementById("pillCountCancelled");
+
+  if (pillAll) pillAll.textContent = totalCount;
+  if (pillPend) pillPend.textContent = pendingCount;
+  if (pillConf) pillConf.textContent = confirmedCount;
+  if (pillDisp) pillDisp.textContent = dispatchedCount;
+  if (pillDeliv) pillDeliv.textContent = deliveredCount;
+  if (pillCanc) pillCanc.textContent = cancelledCount;
+}
+
+function setOrderStatusPill(status) {
+  const pills = document.querySelectorAll(".order-pill-btn");
+  pills.forEach(p => {
+    if (p.getAttribute("data-status") === status) {
+      p.classList.add("active");
+    } else {
+      p.classList.remove("active");
+    }
+  });
+
+  const select = document.getElementById("orderStatusFilter");
+  if (select) {
+    select.value = status;
+  }
+  applyOrderFilters();
+}
+window.setOrderStatusPill = setOrderStatusPill;
 
 function applyOrderFilters() {
   const statusFilter = document.getElementById("orderStatusFilter");
@@ -693,55 +748,141 @@ function applyOrderFilters() {
 
 function renderAdminOrdersTable(orders) {
   const tbody = document.getElementById("adminOrdersTbody");
-  if (!tbody) return;
+  const mList = document.getElementById("adminOrdersMobileList");
 
-  tbody.innerHTML = "";
-  if (orders.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #9ca3af; padding: 2.5rem; font-size: 0.95rem;">No orders matching current filter or search.</td></tr>`;
-    return;
+  if (tbody) {
+    tbody.innerHTML = "";
+    if (orders.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #9ca3af; padding: 2.5rem; font-size: 0.95rem;">No orders matching current filter or search.</td></tr>`;
+    } else {
+      orders.forEach(o => {
+        const payStatus = (o.payment_status || "unpaid").toLowerCase();
+        const ordStatus = (o.status || "pending").toLowerCase();
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${o.order_number}</strong></td>
+          <td>
+            <strong>${o.customer_name || 'Customer'}</strong>
+            <div style="font-size: 0.75rem; color: #6b7280;">${o.customer_phone || '-'}</div>
+          </td>
+          <td><strong>${formatCurrency(o.total_amount)}</strong></td>
+          <td><span class="badge badge-info">${o.payment_method || 'COD'}</span></td>
+          <td>
+            <select class="status-select status-select-${payStatus}" onchange="updateOrderPaymentStatus('${o.order_number}', this.value); updateOrderSummaryStats();" title="Change Payment Status">
+              <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
+              <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
+              <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+              <option value="refunded" ${payStatus === 'refunded' ? 'selected' : ''}>↩️ Refunded</option>
+            </select>
+          </td>
+          <td>
+            <select class="status-select status-select-${ordStatus}" onchange="updateOrderStatus('${o.order_number}', this.value); updateOrderSummaryStats();" title="Change Order Status">
+              <option value="pending" ${ordStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+              <option value="confirmed" ${ordStatus === 'confirmed' ? 'selected' : ''}>📋 Confirmed</option>
+              <option value="dispatched" ${ordStatus === 'dispatched' ? 'selected' : ''}>🚚 Dispatched</option>
+              <option value="delivered" ${ordStatus === 'delivered' ? 'selected' : ''}>🎉 Delivered</option>
+              <option value="cancelled" ${ordStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+            </select>
+          </td>
+          <td>${new Date(o.created_at || Date.now()).toLocaleDateString("en-IN")}</td>
+          <td>
+            <div class="action-btn-group">
+              <a href="/invoice.html?invoice=${o.order_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
+              <button class="action-btn" onclick="printOrderInvoice('${o.order_number}')" title="Print Invoice (A4 / 80mm / 58mm)">🖨️ Print</button>
+              <button class="action-btn" onclick="openOrderDetailsModal('${o.order_number}')" title="View Order Details">👁️ Details</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
   }
 
-  orders.forEach(o => {
-    const payStatus = (o.payment_status || "unpaid").toLowerCase();
-    const ordStatus = (o.status || "pending").toLowerCase();
+  // Render Rich Mobile Order Cards for phones/tablets
+  if (mList) {
+    mList.innerHTML = "";
+    if (orders.length === 0) {
+      mList.innerHTML = `<div style="text-align: center; color: #9ca3af; padding: 2rem; background: #fff; border-radius: 8px; border: 1px dashed #d1d5db;">No orders matching current filter or search.</div>`;
+    } else {
+      orders.forEach(o => {
+        const payStatus = (o.payment_status || "unpaid").toLowerCase();
+        const ordStatus = (o.status || "pending").toLowerCase();
+        const itemsCount = (o.items || []).reduce((sum, it) => sum + (it.quantity || 1), 0);
+        const itemNames = (o.items || []).map(it => `${it.quantity}x ${it.product_name}`).join(', ');
+        const itemSummary = itemNames ? `${itemsCount} item${itemsCount === 1 ? '' : 's'} (${itemNames})` : (o.items && o.items.length > 0 ? `${itemsCount} items` : 'Festival Crackers Pack');
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><strong>${o.order_number}</strong></td>
-      <td>
-        <strong>${o.customer_name || 'Customer'}</strong>
-        <div style="font-size: 0.75rem; color: #6b7280;">${o.customer_phone || '-'}</div>
-      </td>
-      <td><strong>${formatCurrency(o.total_amount)}</strong></td>
-      <td><span class="badge badge-info">${o.payment_method || 'COD'}</span></td>
-      <td>
-        <select class="status-select status-select-${payStatus}" onchange="updateOrderPaymentStatus('${o.order_number}', this.value)" title="Change Payment Status">
-          <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
-          <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
-          <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-          <option value="refunded" ${payStatus === 'refunded' ? 'selected' : ''}>↩️ Refunded</option>
-        </select>
-      </td>
-      <td>
-        <select class="status-select status-select-${ordStatus}" onchange="updateOrderStatus('${o.order_number}', this.value)" title="Change Order Status">
-          <option value="pending" ${ordStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-          <option value="confirmed" ${ordStatus === 'confirmed' ? 'selected' : ''}>📋 Confirmed</option>
-          <option value="dispatched" ${ordStatus === 'dispatched' ? 'selected' : ''}>🚚 Dispatched</option>
-          <option value="delivered" ${ordStatus === 'delivered' ? 'selected' : ''}>🎉 Delivered</option>
-          <option value="cancelled" ${ordStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
-        </select>
-      </td>
-      <td>${new Date(o.created_at || Date.now()).toLocaleDateString("en-IN")}</td>
-      <td>
-        <div class="action-btn-group">
-          <a href="/invoice.html?invoice=${o.order_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
-          <button class="action-btn" onclick="printOrderInvoice('${o.order_number}')" title="Print Invoice (A4 / 80mm / 58mm)">🖨️ Print</button>
-          <button class="action-btn" onclick="openOrderDetailsModal('${o.order_number}')" title="View Order Details">👁️ Details</button>
-        </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+        const card = document.createElement("div");
+        card.className = "mobile-order-card";
+        card.innerHTML = `
+          <div class="moc-header">
+            <div class="moc-id-date">
+              <span class="moc-id">#${o.order_number}</span>
+              <span class="moc-date">${new Date(o.created_at || Date.now()).toLocaleDateString("en-IN", { day: 'numeric', month: 'short' })}</span>
+            </div>
+            <div class="moc-status-wrap">
+              <select class="status-select status-select-${ordStatus}" onchange="updateOrderStatus('${o.order_number}', this.value); updateOrderSummaryStats();" title="Change Order Status">
+                <option value="pending" ${ordStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                <option value="confirmed" ${ordStatus === 'confirmed' ? 'selected' : ''}>📋 Confirmed</option>
+                <option value="dispatched" ${ordStatus === 'dispatched' ? 'selected' : ''}>🚚 Dispatched</option>
+                <option value="delivered" ${ordStatus === 'delivered' ? 'selected' : ''}>🎉 Delivered</option>
+                <option value="cancelled" ${ordStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="moc-body">
+            <div class="moc-customer-row">
+              <div class="moc-customer-info">
+                <div class="moc-customer-name">👤 ${o.customer_name || 'Customer'}</div>
+                <div class="moc-customer-phone">📞 ${o.customer_phone || 'No phone'}</div>
+              </div>
+              ${o.customer_phone ? `
+                <div class="moc-quick-comms">
+                  <a href="tel:${o.customer_phone}" class="moc-comm-btn call" title="Call Customer">📞</a>
+                  <button type="button" class="moc-comm-btn wa" onclick="sendOrderCustomerWhatsApp('${o.order_number}')" title="Send WhatsApp Message">💬</button>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="moc-details-row">
+              <div class="moc-amount-block">
+                <span class="moc-amount-label">Grand Total</span>
+                <span class="moc-amount-val">${formatCurrency(o.total_amount)}</span>
+              </div>
+              <div class="moc-payment-block">
+                <span class="badge badge-info">${o.payment_method || 'COD'}</span>
+                <select class="status-select status-select-${payStatus}" onchange="updateOrderPaymentStatus('${o.order_number}', this.value); updateOrderSummaryStats();" title="Change Payment Status">
+                  <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
+                  <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
+                  <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                  <option value="refunded" ${payStatus === 'refunded' ? 'selected' : ''}>↩️ Refunded</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="moc-items-preview">
+              <span>📦</span>
+              <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${itemSummary}</span>
+            </div>
+          </div>
+
+          <div class="moc-footer-actions">
+            <button type="button" class="btn btn-secondary btn-sm moc-act-btn" onclick="openOrderDetailsModal('${o.order_number}')">
+              👁️ Details
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm moc-act-btn" onclick="printOrderInvoice('${o.order_number}')">
+              🖨️ Print
+            </button>
+            <a href="/invoice.html?invoice=${o.order_number}&download=true" target="_blank" class="btn btn-primary btn-sm moc-act-btn" style="background: #059669; border-color: #059669; color: #fff;">
+              📥 PDF
+            </a>
+          </div>
+        `;
+        mList.appendChild(card);
+      });
+    }
+  }
 }
 
 // ==============================================================================
@@ -989,19 +1130,25 @@ function openOrderDetailsModal(orderNumber) {
         <h3 class="modal-title">Order Details #${order.order_number}</h3>
         <button class="modal-close" onclick="closeOrderDetailsModal()">&times;</button>
       </div>
-      <div class="modal-body" style="padding: 1.5rem;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; background: #f9fafb; padding: 1.25rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+      <div class="modal-body" style="padding: 1.25rem;">
+        <div class="order-modal-header-grid">
           <div>
-            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 700; text-transform: uppercase;">Customer Info</div>
-            <div style="font-weight: 700; font-size: 1rem; margin-top: 2px;">${order.customer_name || 'Valued Customer'}</div>
-            <div style="font-size: 0.85rem; color: #4b5563;">📞 ${order.customer_phone || '-'}</div>
-            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 4px;">📍 ${order.customer_address || 'Online order'}</div>
+            <div style="font-size: 0.72rem; color: #6b7280; font-weight: 700; text-transform: uppercase;">Customer Info</div>
+            <div style="font-weight: 700; font-size: 1.05rem; margin-top: 2px;">${order.customer_name || 'Valued Customer'}</div>
+            <div style="font-size: 0.85rem; color: #4b5563; margin-top: 4px; display: flex; align-items: center; gap: 8px;">
+              <span>📞 ${order.customer_phone || '-'}</span>
+              ${order.customer_phone ? `
+                <a href="tel:${order.customer_phone}" class="moc-comm-btn call" style="width: 28px; height: 28px; font-size: 0.75rem;" title="Call">📞</a>
+                <button type="button" class="moc-comm-btn wa" style="width: 28px; height: 28px; font-size: 0.75rem;" onclick="sendOrderCustomerWhatsApp('${order.order_number}')" title="WhatsApp">💬</button>
+              ` : ''}
+            </div>
+            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 6px;">📍 ${order.customer_address || 'Online order'}</div>
           </div>
           <div>
-            <div style="font-size: 0.75rem; color: #6b7280; font-weight: 700; text-transform: uppercase;">Order & Payment Controls</div>
+            <div style="font-size: 0.72rem; color: #6b7280; font-weight: 700; text-transform: uppercase;">Status Controls</div>
             <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
-              <span style="font-size: 0.85rem; font-weight: 600;">Order Status:</span>
-              <select class="status-select status-select-${ordStatus}" onchange="updateOrderStatus('${order.order_number}', this.value); openOrderDetailsModal('${order.order_number}');">
+              <span style="font-size: 0.82rem; font-weight: 600;">Order:</span>
+              <select class="status-select status-select-${ordStatus}" onchange="updateOrderStatus('${order.order_number}', this.value); updateOrderSummaryStats(); openOrderDetailsModal('${order.order_number}');">
                 <option value="pending" ${ordStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
                 <option value="confirmed" ${ordStatus === 'confirmed' ? 'selected' : ''}>📋 Confirmed</option>
                 <option value="dispatched" ${ordStatus === 'dispatched' ? 'selected' : ''}>🚚 Dispatched</option>
@@ -1010,35 +1157,35 @@ function openOrderDetailsModal(orderNumber) {
               </select>
             </div>
             <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
-              <span style="font-size: 0.85rem; font-weight: 600;">Payment Status:</span>
-              <select class="status-select status-select-${payStatus}" onchange="updateOrderPaymentStatus('${order.order_number}', this.value); openOrderDetailsModal('${order.order_number}');">
+              <span style="font-size: 0.82rem; font-weight: 600;">Payment:</span>
+              <select class="status-select status-select-${payStatus}" onchange="updateOrderPaymentStatus('${order.order_number}', this.value); updateOrderSummaryStats(); openOrderDetailsModal('${order.order_number}');">
                 <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
                 <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
                 <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
                 <option value="refunded" ${payStatus === 'refunded' ? 'selected' : ''}>↩️ Refunded</option>
               </select>
             </div>
-            <div style="font-size: 0.85rem; margin-top: 8px;">Method: <strong>${order.payment_method || 'COD'}</strong></div>
-            <div style="font-size: 0.78rem; color: #6b7280; margin-top: 4px;">Date: ${new Date(order.created_at || Date.now()).toLocaleString("en-IN")}</div>
+            <div style="font-size: 0.82rem; margin-top: 6px;">Mode: <strong>${order.payment_method || 'COD'}</strong></div>
+            <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">Date: ${new Date(order.created_at || Date.now()).toLocaleString("en-IN")}</div>
           </div>
         </div>
 
-        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem;">Ordered Fireworks Items</h4>
-        <div style="max-height: 200px; overflow-y: auto; margin-bottom: 1.25rem; border: 1px solid #e5e7eb; border-radius: 6px;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+        <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 0.5rem;">Ordered Fireworks Items</h4>
+        <div style="max-height: 220px; overflow-y: auto; margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem;">
             <thead>
               <tr style="background: #f3f4f6; text-align: left;">
                 <th style="padding: 6px 10px;">Item</th>
-                <th style="padding: 6px 10px; width: 60px; text-align: center;">Qty</th>
-                <th style="padding: 6px 10px; width: 85px; text-align: right;">Rate</th>
-                <th style="padding: 6px 10px; width: 95px; text-align: right;">Total</th>
+                <th style="padding: 6px 8px; width: 50px; text-align: center;">Qty</th>
+                <th style="padding: 6px 10px; width: 75px; text-align: right;">Rate</th>
+                <th style="padding: 6px 10px; width: 85px; text-align: right;">Total</th>
               </tr>
             </thead>
             <tbody>
               ${(order.items && order.items.length > 0) ? order.items.map(it => `
                 <tr style="border-top: 1px solid #e5e7eb;">
                   <td style="padding: 6px 10px;">${it.product_name}</td>
-                  <td style="padding: 6px 10px; text-align: center;">${it.quantity}</td>
+                  <td style="padding: 6px 8px; text-align: center;">${it.quantity}</td>
                   <td style="padding: 6px 10px; text-align: right;">${formatCurrency(it.unit_price || it.price)}</td>
                   <td style="padding: 6px 10px; text-align: right; font-weight: 700;">${formatCurrency(it.subtotal || (it.price * it.quantity))}</td>
                 </tr>
@@ -1049,18 +1196,19 @@ function openOrderDetailsModal(orderNumber) {
           </table>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; font-size: 1.2rem; font-weight: 800; color: #c21d1d; margin-bottom: 1.5rem;">
-          Total Payable: ${formatCurrency(order.total_amount)}
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.15rem; font-weight: 800; color: #c21d1d; margin-bottom: 1.25rem; background: #fffbeb; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #fde68a;">
+          <span style="font-size: 0.9rem; color: #92400e; font-weight: 700;">Total Payable:</span>
+          <span>${formatCurrency(order.total_amount)}</span>
         </div>
 
-        <div style="display: flex; justify-content: space-between; gap: 0.75rem; border-top: 1px solid #e5e7eb; padding-top: 1.25rem;">
-          <button class="btn btn-accent btn-sm" onclick="sendOrderCustomerWhatsApp('${order.order_number}')">
+        <div class="order-modal-footer-actions">
+          <button type="button" class="btn btn-accent btn-sm" onclick="sendOrderCustomerWhatsApp('${order.order_number}')">
             📲 WhatsApp Customer
           </button>
-          <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-secondary btn-sm" onclick="closeOrderDetailsModal()">Close</button>
-            <a href="/invoice.html?invoice=${order.order_number}&download=true" target="_blank" class="btn btn-sm" style="background: #059669; color: #fff; display: inline-flex; align-items: center;">📥 PDF</a>
-            <button class="btn btn-primary btn-sm" onclick="closeOrderDetailsModal(); printOrderInvoice('${order.order_number}');">
+          <div class="modal-actions-right">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeOrderDetailsModal()">Close</button>
+            <a href="/invoice.html?invoice=${order.order_number}&download=true" target="_blank" class="btn btn-sm" style="background: #059669; color: #fff; display: inline-flex; align-items: center; justify-content: center;">📥 PDF</a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="closeOrderDetailsModal(); printOrderInvoice('${order.order_number}');">
               🖨️ Print Invoice
             </button>
           </div>

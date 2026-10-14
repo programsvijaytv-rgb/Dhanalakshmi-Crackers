@@ -267,8 +267,50 @@ function updatePOSTotals() {
   if (taxEl) taxEl.textContent = formatCurrency(taxAmount);
   if (grandTotalEl) grandTotalEl.textContent = formatCurrency(grandTotal);
 
+  // Update mobile summary badge and floating bottom bar
+  const totalItemsCount = posCart.reduce((sum, item) => sum + item.quantity, 0);
+  const badgeEl = document.getElementById("posMobileCartBadge");
+  const floatItemsEl = document.getElementById("posFloatItems");
+  const floatTotalEl = document.getElementById("posFloatTotal");
+  const floatBar = document.getElementById("posMobileFloatingBar");
+
+  if (badgeEl) badgeEl.textContent = totalItemsCount;
+  if (floatItemsEl) floatItemsEl.textContent = `${totalItemsCount} item${totalItemsCount === 1 ? '' : 's'} in bill`;
+  if (floatTotalEl) floatTotalEl.textContent = formatCurrency(grandTotal);
+  if (floatBar) {
+    if (totalItemsCount > 0 && window.innerWidth <= 991) {
+      floatBar.style.display = "flex";
+    } else {
+      floatBar.style.display = "none";
+    }
+  }
+
   updateChangeDue();
 }
+
+/**
+ * Mobile POS view switcher (Items Catalog vs Current Bill)
+ */
+function switchPOSTab(tab) {
+  const prodPanel = document.querySelector(".pos-products-panel");
+  const cartPanel = document.querySelector(".pos-cart-panel");
+  const prodTabBtn = document.getElementById("posTabProductsBtn");
+  const cartTabBtn = document.getElementById("posTabCartBtn");
+
+  if (tab === "cart") {
+    if (prodPanel) prodPanel.classList.add("pos-panel-hidden-mobile");
+    if (cartPanel) cartPanel.classList.remove("pos-panel-hidden-mobile");
+    if (prodTabBtn) prodTabBtn.classList.remove("active");
+    if (cartTabBtn) cartTabBtn.classList.add("active");
+    if (cartPanel) cartPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    if (prodPanel) prodPanel.classList.remove("pos-panel-hidden-mobile");
+    if (cartPanel) cartPanel.classList.add("pos-panel-hidden-mobile");
+    if (prodTabBtn) prodTabBtn.classList.add("active");
+    if (cartTabBtn) cartTabBtn.classList.remove("active");
+  }
+}
+window.switchPOSTab = switchPOSTab;
 
 /**
  * Update cash change due in POS

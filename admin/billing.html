@@ -58,6 +58,16 @@
     </header>
 
     <main class="admin-content pos-content-pad">
+      <!-- Mobile POS Tabs Switcher -->
+      <div class="pos-mobile-tabs" id="posMobileTabs">
+        <button type="button" class="pos-tab-btn active" id="posTabProductsBtn" onclick="switchPOSTab('products')">
+          🎆 Select Items
+        </button>
+        <button type="button" class="pos-tab-btn" id="posTabCartBtn" onclick="switchPOSTab('cart')">
+          🛒 Current Bill (<span id="posMobileCartBadge">0</span>)
+        </button>
+      </div>
+
       <div class="pos-layout">
         <!-- Left Panel: Product Search & Quick Catalog Grid -->
         <div class="pos-products-panel">
@@ -157,6 +167,17 @@
           </div>
         </div>
       </div>
+
+      <!-- Mobile Floating Bill Summary Bar -->
+      <div class="pos-mobile-floating-bar" id="posMobileFloatingBar" onclick="switchPOSTab('cart')">
+        <div class="pos-float-info">
+          <span class="pos-float-items" id="posFloatItems">0 items in bill</span>
+          <span class="pos-float-total" id="posFloatTotal">₹0.00</span>
+        </div>
+        <button type="button" class="pos-float-btn">
+          View Bill &amp; Pay &rarr;
+        </button>
+      </div>
     </main>
   </div>
 
@@ -165,6 +186,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../assets/js/supabase-config.js"></script>
   <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin-nav.js"></script>
   <script src="../assets/js/products.js"></script>
   <script src="../assets/js/payments.js"></script>
   <script src="../assets/js/whatsapp.js"></script>

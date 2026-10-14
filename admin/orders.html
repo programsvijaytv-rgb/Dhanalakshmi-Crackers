@@ -47,41 +47,84 @@
   <div class="admin-main">
     <header class="admin-topbar">
       <h1 class="admin-page-title">Customer Online Orders</h1>
-      <div class="topbar-actions filter-actions-bar">
-        <div class="filter-group">
-          <label for="orderStatusFilter" class="filter-label">Order:</label>
-          <select id="orderStatusFilter" class="form-select filter-select">
-            <option value="all">All Orders</option>
-            <option value="pending">⏳ Pending</option>
-            <option value="confirmed">📋 Confirmed</option>
-            <option value="dispatched">🚚 Dispatched</option>
-            <option value="delivered">🎉 Delivered</option>
-            <option value="cancelled">❌ Cancelled</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label for="orderPaymentStatusFilter" class="filter-label">Payment:</label>
-          <select id="orderPaymentStatusFilter" class="form-select filter-select">
-            <option value="all">All Payments</option>
-            <option value="paid">✅ Paid</option>
-            <option value="unpaid">❌ Unpaid</option>
-            <option value="pending">⏳ Pending</option>
-            <option value="refunded">↩️ Refunded</option>
-          </select>
-        </div>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="initAdminOrders()" title="Refresh & Sync Orders">
+          🔄 Sync
+        </button>
       </div>
     </header>
 
     <main class="admin-content">
+      <!-- Orders Quick KPI Summary Strip -->
+      <div class="order-summary-strip" id="orderSummaryStrip">
+        <div class="oss-item">
+          <span class="oss-label">Total Volume</span>
+          <span class="oss-val" id="orderTotalVolume">₹0.00</span>
+        </div>
+        <div class="oss-item">
+          <span class="oss-label">Total Orders</span>
+          <span class="oss-val" id="orderTotalCount">0</span>
+        </div>
+        <div class="oss-item oss-pending">
+          <span class="oss-label">⏳ Pending</span>
+          <span class="oss-val" id="orderPendingCount">0</span>
+        </div>
+        <div class="oss-item oss-delivered">
+          <span class="oss-label">🎉 Delivered</span>
+          <span class="oss-val" id="orderDeliveredCount">0</span>
+        </div>
+      </div>
+
       <div class="admin-table-card">
-        <div class="table-header-bar table-header-spread">
-          <div class="search-input-wrapper">
-            <input type="text" id="orderSearchInput" class="form-input" placeholder="Search by Order #, Customer, or Phone...">
-          </div>
-          <span class="table-header-sub">Instant real-time Status & Payment updater</span>
+        <!-- Interactive Horizontal Status Filter Pills -->
+        <div class="order-pills-bar" id="orderStatusPills">
+          <button type="button" class="order-pill-btn active" data-status="all" onclick="setOrderStatusPill('all')">
+            All Orders <span class="pill-badge" id="pillCountAll">0</span>
+          </button>
+          <button type="button" class="order-pill-btn" data-status="pending" onclick="setOrderStatusPill('pending')">
+            ⏳ Pending <span class="pill-badge" id="pillCountPending">0</span>
+          </button>
+          <button type="button" class="order-pill-btn" data-status="confirmed" onclick="setOrderStatusPill('confirmed')">
+            📋 Confirmed <span class="pill-badge" id="pillCountConfirmed">0</span>
+          </button>
+          <button type="button" class="order-pill-btn" data-status="dispatched" onclick="setOrderStatusPill('dispatched')">
+            🚚 Dispatched <span class="pill-badge" id="pillCountDispatched">0</span>
+          </button>
+          <button type="button" class="order-pill-btn" data-status="delivered" onclick="setOrderStatusPill('delivered')">
+            🎉 Delivered <span class="pill-badge" id="pillCountDelivered">0</span>
+          </button>
+          <button type="button" class="order-pill-btn" data-status="cancelled" onclick="setOrderStatusPill('cancelled')">
+            ❌ Cancelled <span class="pill-badge" id="pillCountCancelled">0</span>
+          </button>
         </div>
 
-        <div class="admin-table-container">
+        <!-- Hidden proxy for backward compatibility with status filter listeners -->
+        <select id="orderStatusFilter" style="display: none;">
+          <option value="all">All</option>
+          <option value="pending">pending</option>
+          <option value="confirmed">confirmed</option>
+          <option value="dispatched">dispatched</option>
+          <option value="delivered">delivered</option>
+          <option value="cancelled">cancelled</option>
+        </select>
+
+        <div class="table-header-bar table-header-spread">
+          <div class="search-input-wrapper">
+            <input type="text" id="orderSearchInput" class="form-input" placeholder="🔍 Search Order #, Customer, or Mobile...">
+          </div>
+          <div class="order-payment-filter-wrap">
+            <select id="orderPaymentStatusFilter" class="form-select filter-select" title="Filter by Payment Status">
+              <option value="all">💳 All Payments</option>
+              <option value="paid">✅ Paid</option>
+              <option value="unpaid">❌ Unpaid</option>
+              <option value="pending">⏳ Pending</option>
+              <option value="refunded">↩️ Refunded</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Desktop Table View (>= 769px) -->
+        <div class="admin-table-container admin-orders-desktop-table">
           <table class="admin-table">
             <thead>
               <tr>
@@ -100,6 +143,11 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Mobile Orders Cards List (< 769px) -->
+        <div class="admin-orders-mobile-list" id="adminOrdersMobileList">
+          <!-- Rendered dynamically by admin.js -->
+        </div>
       </div>
     </main>
   </div>
@@ -109,6 +157,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../assets/js/supabase-config.js"></script>
   <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin-nav.js"></script>
   <script src="../assets/js/whatsapp.js"></script>
   <script src="../assets/js/invoices.js"></script>
   <script src="../assets/js/admin.js"></script>
