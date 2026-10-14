@@ -35,8 +35,8 @@
       <div class="admin-user-info">
         <div class="admin-avatar">AD</div>
         <div>
-          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Admin Staff</div>
-          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+          <div id="adminUserName">Admin Staff</div>
+          <div id="adminUserRole">ADMIN</div>
         </div>
       </div>
       <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
@@ -47,10 +47,10 @@
   <div class="admin-main">
     <header class="admin-topbar">
       <h1 class="admin-page-title">Customer Online Orders</h1>
-      <div class="topbar-actions" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 0.35rem;">
-          <label for="orderStatusFilter" style="font-size: 0.8rem; font-weight: 700; color: #4b5563;">Order:</label>
-          <select id="orderStatusFilter" class="form-select" style="width: 145px; padding: 0.4rem 0.6rem; font-size: 0.85rem;">
+      <div class="topbar-actions filter-actions-bar">
+        <div class="filter-group">
+          <label for="orderStatusFilter" class="filter-label">Order:</label>
+          <select id="orderStatusFilter" class="form-select filter-select">
             <option value="all">All Orders</option>
             <option value="pending">⏳ Pending</option>
             <option value="confirmed">📋 Confirmed</option>
@@ -59,9 +59,9 @@
             <option value="cancelled">❌ Cancelled</option>
           </select>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.35rem;">
-          <label for="orderPaymentStatusFilter" style="font-size: 0.8rem; font-weight: 700; color: #4b5563;">Payment:</label>
-          <select id="orderPaymentStatusFilter" class="form-select" style="width: 145px; padding: 0.4rem 0.6rem; font-size: 0.85rem;">
+        <div class="filter-group">
+          <label for="orderPaymentStatusFilter" class="filter-label">Payment:</label>
+          <select id="orderPaymentStatusFilter" class="form-select filter-select">
             <option value="all">All Payments</option>
             <option value="paid">✅ Paid</option>
             <option value="unpaid">❌ Unpaid</option>
@@ -74,11 +74,11 @@
 
     <main class="admin-content">
       <div class="admin-table-card">
-        <div class="table-header-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-          <div style="display: flex; align-items: center; gap: 0.75rem; flex-grow: 1; max-width: 450px;">
+        <div class="table-header-bar table-header-spread">
+          <div class="search-input-wrapper">
             <input type="text" id="orderSearchInput" class="form-input" placeholder="Search by Order #, Customer, or Phone...">
           </div>
-          <span style="font-size: 0.85rem; color: #6b7280;">Instant real-time Status & Payment updater</span>
+          <span class="table-header-sub">Instant real-time Status & Payment updater</span>
         </div>
 
         <div class="admin-table-container">
@@ -92,7 +92,7 @@
                 <th>Payment Status</th>
                 <th>Order Status</th>
                 <th>Date</th>
-                <th style="width: 200px;">Actions</th>
+                <th class="th-actions">Actions</th>
               </tr>
             </thead>
             <tbody id="adminOrdersTbody">

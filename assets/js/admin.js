@@ -10,6 +10,18 @@ async function initAdminDashboard() {
   await protectAdminRoute();
   syncOrdersAndInvoices();
   await loadDashboardStats();
+
+  if (typeof listenSync === "function") {
+    listenSync(async (event) => {
+      if (["order_created", "order_updated", "products_updated"].includes(event.type)) {
+        syncOrdersAndInvoices();
+        await loadDashboardStats();
+        if (event.type === "order_created" && event.payload) {
+          showToast(`🔔 New Online Order Received: #${event.payload.order_number}`, "success");
+        }
+      }
+    });
+  }
 }
 
 /**
@@ -89,6 +101,7 @@ async function initAdminProducts() {
   await protectAdminRoute();
   adminProductList = await fetchProducts();
   renderAdminProductsTable(adminProductList);
+  checkCloudSyncStatus(false);
 
   const searchInput = document.getElementById("adminProductSearch");
   if (searchInput) {
@@ -100,6 +113,19 @@ async function initAdminProducts() {
       renderAdminProductsTable(filtered);
     });
   }
+
+  if (typeof listenSync === "function") {
+    listenSync(async (event) => {
+      if (event.type === "products_updated" && event.payload?.action !== "save" && event.payload?.action !== "delete") {
+        adminProductList = await fetchProducts();
+        renderAdminProductsTable(adminProductList);
+      }
+    });
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeProductModal();
+  });
 }
 
 function renderAdminProductsTable(products) {
@@ -141,6 +167,23 @@ function renderAdminProductsTable(products) {
   });
 }
 
+async function populateCategoryDropdown(selectedCategoryId = "") {
+  const select = document.getElementById("prodCategory");
+  if (!select) return;
+
+  const categories = await fetchCategories();
+  select.innerHTML = '<option value="">-- Select Category --</option>';
+  categories.forEach(cat => {
+    const opt = document.createElement("option");
+    opt.value = cat.id;
+    opt.textContent = cat.name;
+    if (selectedCategoryId && (String(cat.id) === String(selectedCategoryId) || cat.name.toLowerCase() === String(selectedCategoryId).toLowerCase())) {
+      opt.selected = true;
+    }
+    select.appendChild(opt);
+  });
+}
+
 function openAddProductModal() {
   const form = document.getElementById("productForm");
   if (form) form.reset();
@@ -149,13 +192,31 @@ function openAddProductModal() {
   const title = document.getElementById("productModalTitle");
   if (title) title.textContent = "Add New Firecracker";
 
+  populateCategoryDropdown();
+
+  const featEl = document.getElementById("prodFeatured");
+  if (featEl) featEl.checked = false;
+
   const modal = document.getElementById("productEditModal");
-  if (modal) modal.style.display = "flex";
+  if (modal) {
+    modal.classList.remove("modal-hidden");
+    modal.style.display = "flex";
+    modal.onclick = (e) => {
+      if (e.target === modal) closeProductModal();
+    };
+  }
 }
 
 function openEditProductModal(productId) {
-  const product = adminProductList.find(p => p.id === productId);
-  if (!product) return;
+  let product = adminProductList.find(p => String(p.id) === String(productId));
+  if (!product) {
+    const allProds = typeof getStoredCustomProducts === "function" ? getStoredCustomProducts() : [];
+    product = allProds.find(p => String(p.id) === String(productId));
+  }
+  if (!product) {
+    showToast("Product not found.", "error");
+    return;
+  }
 
   document.getElementById("prodId").value = product.id;
   document.getElementById("prodName").value = product.name;
@@ -167,84 +228,365 @@ function openEditProductModal(productId) {
   document.getElementById("prodImageUrl").value = product.image_url || "";
   document.getElementById("prodDesc").value = product.description || "";
 
+  populateCategoryDropdown(product.category_id || product.category_name);
+
+  const featEl = document.getElementById("prodFeatured");
+  if (featEl) featEl.checked = Boolean(product.is_featured);
+
   document.getElementById("productModalTitle").textContent = "Edit Firecracker";
   const modal = document.getElementById("productEditModal");
-  if (modal) modal.style.display = "flex";
+  if (modal) {
+    modal.classList.remove("modal-hidden");
+    modal.style.display = "flex";
+    modal.onclick = (e) => {
+      if (e.target === modal) closeProductModal();
+    };
+  }
 }
 
 function closeProductModal() {
   const modal = document.getElementById("productEditModal");
-  if (modal) modal.style.display = "none";
+  if (modal) {
+    modal.classList.add("modal-hidden");
+    modal.style.display = "none";
+  }
+}
+
+async function checkCloudSyncStatus(showAlert = false) {
+  const badge = document.getElementById("cloudSyncStatusBadge");
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+
+  if (!isSupabaseConfigured() || !sb) {
+    if (badge) {
+      badge.className = "table-header-sub badge badge-danger";
+      badge.textContent = "☁️ Supabase: Not Configured";
+    }
+    if (showAlert) showToast("Supabase is not configured yet. Configure URL & Key in Store Settings.", "warning");
+    return false;
+  }
+
+  try {
+    const { data, error } = await sb.from("products").select("id").limit(1);
+    if (error) {
+      if (badge) {
+        badge.className = "table-header-sub badge badge-danger";
+        badge.textContent = "☁️ Online Read Error";
+      }
+      if (showAlert) showToast(`Cloud Read Error: ${error.message}`, "error");
+      return false;
+    }
+
+    const testId = data && data[0] ? data[0].id : null;
+    let writeAllowed = false;
+    if (testId) {
+      const { data: testWrite, error: writeErr } = await sb
+        .from("products")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", testId)
+        .select();
+
+      if (!writeErr && testWrite && testWrite.length > 0) {
+        writeAllowed = true;
+      }
+    }
+
+    if (badge) {
+      if (writeAllowed) {
+        badge.className = "table-header-sub badge badge-success";
+        badge.textContent = "☁️ Online Cloud Sync: Active (Live DB)";
+      } else {
+        badge.className = "table-header-sub badge badge-warning";
+        badge.textContent = "☁️ Online Cloud Sync: Write Restricted";
+      }
+    }
+
+    if (showAlert) {
+      if (writeAllowed) {
+        showToast("✅ Online Cloud Sync is ACTIVE! Product edits write directly to Supabase cloud.", "success");
+      } else {
+        showCloudSyncHelpModal("Supabase Row-Level Security requires Service Key or SQL permission for online writes.");
+      }
+    }
+    return writeAllowed;
+  } catch (err) {
+    if (badge) {
+      badge.className = "table-header-sub badge badge-danger";
+      badge.textContent = "☁️ Cloud Check Error";
+    }
+    if (showAlert) showToast(`Cloud check error: ${err.message}`, "error");
+    return false;
+  }
+}
+
+function showCloudSyncHelpModal(reason = "") {
+  let modal = document.getElementById("cloudSyncHelpModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "cloudSyncHelpModal";
+    modal.className = "modal-overlay";
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width: 580px;">
+        <div class="modal-header">
+          <h3 class="modal-title">☁️ Enable Direct Online Cloud Sync</h3>
+          <button type="button" class="modal-close" onclick="document.getElementById('cloudSyncHelpModal').style.display='none'">&times;</button>
+        </div>
+        <div class="modal-body" style="font-size: 0.95rem; line-height: 1.6; color: #374151;">
+          <p style="margin-bottom: 1rem;">
+            Your product was <strong>saved locally</strong>, but writing directly to the online Supabase PostgreSQL database was restricted:
+          </p>
+          <div style="background: #fef2f2; border-left: 4px solid #ef4444; padding: 0.75rem 1rem; border-radius: 4px; font-family: monospace; font-size: 0.85rem; color: #991b1b; margin-bottom: 1.25rem;">
+            ${reason || "Row Level Security (RLS) violation: database write requires authorization."}
+          </div>
+          <h4 style="font-size: 1rem; color: #111827; margin-bottom: 0.5rem;">Two Ways to Enable 100% Online Writes:</h4>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 1rem;">
+            <strong>Option 1 (Quickest): Enter Supabase Service Role Key</strong>
+            <p style="margin: 0.25rem 0 0.5rem; font-size: 0.85rem; color: #6b7280;">
+              Copy your secret <code>service_role</code> key from Supabase Dashboard (Settings → API) and paste it into Store Settings.
+            </p>
+            <a href="settings.html" class="btn btn-primary btn-sm" style="display: inline-block; text-decoration: none;">⚙️ Open Store Settings</a>
+          </div>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <strong>Option 2: Run 1-Click SQL in Supabase Dashboard</strong>
+            <p style="margin: 0.25rem 0 0.5rem; font-size: 0.85rem; color: #6b7280;">
+              In your Supabase Dashboard SQL Editor, run the script from <code>supabase/enable_online_product_updates.sql</code>.
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="document.getElementById('cloudSyncHelpModal').style.display='none'">Got it</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  } else {
+    const reasonBox = modal.querySelector(".modal-body div");
+    if (reasonBox) reasonBox.textContent = reason;
+  }
+  modal.style.display = "flex";
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  };
 }
 
 async function saveProductForm(e) {
-  e.preventDefault();
-  const id = document.getElementById("prodId").value;
+  if (e && e.preventDefault) e.preventDefault();
+  let id = document.getElementById("prodId").value.trim();
   const name = document.getElementById("prodName").value.trim();
   const sku = document.getElementById("prodSku").value.trim();
   const price = Number(document.getElementById("prodPrice").value);
   const original_price = Number(document.getElementById("prodOriginalPrice").value) || price;
   const stock = parseInt(document.getElementById("prodStock").value, 10);
-  const unit = document.getElementById("prodUnit").value.trim();
+  const unit = document.getElementById("prodUnit").value.trim() || "Box";
   const image_url = document.getElementById("prodImageUrl").value.trim();
   const desc = document.getElementById("prodDesc").value.trim();
 
+  const catSelect = document.getElementById("prodCategory");
+  let category_id = catSelect ? catSelect.value : "";
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  const category_name = (catSelect && catSelect.selectedOptions && catSelect.selectedOptions[0] && catSelect.value)
+    ? catSelect.selectedOptions[0].text
+    : "Assorted";
+
+  // Validate or resolve category UUID
+  if (category_id && !uuidRegex.test(category_id)) {
+    const match = typeof DEFAULT_CATEGORIES !== "undefined" ? DEFAULT_CATEGORIES.find(c => c.name.toLowerCase() === category_name.toLowerCase()) : null;
+    category_id = match ? match.id : null;
+  } else if (!category_id) {
+    category_id = null;
+  }
+
+  const featEl = document.getElementById("prodFeatured");
+  const is_featured = featEl ? featEl.checked : false;
+
+  // Ensure id is a valid UUID
+  if (!id || !uuidRegex.test(id)) {
+    id = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : ("c1000000-0000-0000-0000-" + Date.now().toString(16).padStart(12, "0"));
+  }
+
+  // Local object with category_name for frontend display
   const productData = {
+    id,
     name,
     sku,
     price,
     original_price,
     stock_quantity: stock,
     unit,
+    category_id,
+    category_name,
+    is_featured,
     image_url: image_url || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600",
     description: desc,
     is_active: true
   };
 
-  const sb = getSupabase();
+  // Cloud PostgreSQL database payload strictly matching public.products columns
+  const dbPayload = {
+    id,
+    name,
+    sku,
+    price,
+    original_price,
+    stock_quantity: stock,
+    unit,
+    category_id: category_id || null,
+    is_featured,
+    image_url: image_url || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600",
+    description: desc,
+    is_active: true,
+    updated_at: new Date().toISOString()
+  };
+
+  let onlineSaved = false;
+  let onlineError = null;
+
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
   if (isSupabaseConfigured() && sb) {
     try {
-      if (id) {
-        await sb.from("products").update(productData).eq("id", id);
-      } else {
-        await sb.from("products").insert(productData);
+      // 1. Try atomic RPC if available
+      let rpcExecuted = false;
+      try {
+        const { data: rpcData, error: rpcErr } = await sb.rpc("upsert_product_online", {
+          p_id: id,
+          p_name: name,
+          p_sku: sku,
+          p_price: price,
+          p_original_price: original_price,
+          p_stock_quantity: stock,
+          p_unit: unit,
+          p_image_url: dbPayload.image_url,
+          p_description: desc,
+          p_category_id: category_id || null,
+          p_is_featured: is_featured,
+          p_is_active: true
+        });
+        if (!rpcErr && rpcData) {
+          rpcExecuted = true;
+          onlineSaved = true;
+          if (rpcData.id) id = rpcData.id;
+        }
+      } catch (_) {
+        // RPC not configured, proceed to direct REST
+      }
+
+      // 2. Direct Supabase REST call
+      if (!rpcExecuted) {
+        const { data: existing } = await sb.from("products").select("id").eq("id", id).maybeSingle();
+        if (existing) {
+          const { data: updatedRows, error: updateErr } = await sb
+            .from("products")
+            .update(dbPayload)
+            .eq("id", id)
+            .select();
+
+          if (updateErr) {
+            onlineError = updateErr.message;
+          } else if (updatedRows && updatedRows.length > 0) {
+            onlineSaved = true;
+          } else {
+            onlineError = "Row Level Security (RLS) policy prevented update (0 rows changed).";
+          }
+        } else {
+          const { data: insertedRows, error: insertErr } = await sb
+            .from("products")
+            .insert(dbPayload)
+            .select();
+
+          if (insertErr) {
+            onlineError = insertErr.message;
+          } else if (insertedRows && insertedRows.length > 0) {
+            onlineSaved = true;
+            if (insertedRows[0].id) {
+              id = insertedRows[0].id;
+              productData.id = insertedRows[0].id;
+            }
+          } else {
+            onlineError = "Row Level Security (RLS) policy prevented insertion.";
+          }
+        }
       }
     } catch (err) {
+      onlineError = err.message || String(err);
       console.warn("Supabase product save error:", err);
     }
   }
 
-  // Update local copy
-  if (id) {
-    const idx = adminProductList.findIndex(p => p.id === id);
-    if (idx !== -1) adminProductList[idx] = { ...adminProductList[idx], ...productData };
+  // Update local authoritative list
+  const idx = adminProductList.findIndex(p => String(p.id) === String(id) || (p.sku && p.sku === sku));
+  if (idx !== -1) {
+    adminProductList[idx] = { ...adminProductList[idx], ...productData };
   } else {
-    productData.id = "prod-" + Date.now();
     adminProductList.unshift(productData);
   }
 
+  // Remove from deleted list if previously marked
+  const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : JSON.parse(localStorage.getItem("dc_deleted_product_ids") || "[]");
+  const updatedDeletedIds = deletedIds.filter(did => String(did) !== String(id));
+  localStorage.setItem("dc_deleted_product_ids", JSON.stringify(updatedDeletedIds));
+
   localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
+  localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+  // Broadcast real-time sync event to storefront website
+  if (typeof broadcastSync === "function") {
+    broadcastSync("products_updated", { id, action: "save", product: productData });
+  }
+
   renderAdminProductsTable(adminProductList);
   closeProductModal();
-  showToast("Product saved successfully!", "success");
+
+  if (onlineSaved) {
+    showToast("🎉 Product updated ONLINE in Supabase cloud! Storefront is live.", "success");
+    const badge = document.getElementById("cloudSyncStatusBadge");
+    if (badge) {
+      badge.className = "table-header-sub badge badge-success";
+      badge.textContent = "☁️ Online Cloud Sync: Active (Live DB)";
+    }
+  } else if (onlineError) {
+    showToast("⚠️ Saved locally, but online cloud write was blocked.", "warning", 6000);
+    showCloudSyncHelpModal(onlineError);
+  } else {
+    showToast("Product saved successfully!", "success");
+  }
 }
 
 async function deleteProduct(productId) {
-  if (!confirm("Are you sure you want to remove this product?")) return;
+  if (!confirm("Are you sure you want to remove this product? It will be removed from the online store.")) return;
 
-  const sb = getSupabase();
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  let onlineDeleted = false;
   if (isSupabaseConfigured() && sb) {
     try {
-      await sb.from("products").delete().eq("id", productId);
+      const { error } = await sb.from("products").delete().eq("id", productId);
+      if (!error) onlineDeleted = true;
     } catch (e) {
-      console.warn(e);
+      console.warn("Supabase delete error:", e);
     }
   }
 
   adminProductList = adminProductList.filter(p => p.id !== productId);
   localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
+  localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+  // Mark in deleted list
+  const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : JSON.parse(localStorage.getItem("dc_deleted_product_ids") || "[]");
+  if (!deletedIds.includes(productId)) {
+    deletedIds.push(productId);
+    localStorage.setItem("dc_deleted_product_ids", JSON.stringify(deletedIds));
+  }
+
+  // Broadcast real-time sync event to storefront website
+  if (typeof broadcastSync === "function") {
+    broadcastSync("products_updated", { id: productId, action: "delete" });
+  }
+
   renderAdminProductsTable(adminProductList);
-  showToast("Product deleted successfully.", "success");
+  if (onlineDeleted) {
+    showToast("Product removed online from Supabase cloud & storefront.", "success");
+  } else {
+    showToast("Product removed locally.", "info");
+  }
 }
 
 // ==============================================================================
@@ -305,6 +647,18 @@ async function initAdminOrders() {
   if (statusFilter) statusFilter.addEventListener("change", applyOrderFilters);
   if (paymentFilter) paymentFilter.addEventListener("change", applyOrderFilters);
   if (searchInput) searchInput.addEventListener("input", applyOrderFilters);
+
+  if (typeof listenSync === "function") {
+    listenSync(async (event) => {
+      if (event.type === "order_created" || event.type === "order_updated") {
+        adminOrdersList = JSON.parse(localStorage.getItem("dc_orders_list") || "[]");
+        applyOrderFilters();
+        if (event.type === "order_created" && event.payload) {
+          showToast(`🔔 New Online Order: #${event.payload.order_number} (${formatCurrency(event.payload.total_amount)})`, "success");
+        }
+      }
+    });
+  }
 }
 
 function applyOrderFilters() {
@@ -501,6 +855,10 @@ async function updateOrderStatus(orderNumber, newStatus) {
       }
     }
 
+    if (typeof broadcastSync === "function") {
+      broadcastSync("order_updated", { orderNumber, status: newStatus });
+    }
+
     showToast(`Order ${orderNumber} status updated to ${newStatus.toUpperCase()} (Synced to Invoices).`, "success");
     applyOrderFilters();
   }
@@ -552,6 +910,10 @@ async function updateOrderPaymentStatus(orderNumber, newPaymentStatus) {
       } catch (err) {
         console.warn("Supabase payment_status update error:", err);
       }
+    }
+
+    if (typeof broadcastSync === "function") {
+      broadcastSync("order_updated", { orderNumber, paymentStatus: newPaymentStatus });
     }
 
     showToast(`Payment status for Order ${orderNumber} updated to ${newPaymentStatus.toUpperCase()} (Synced to Invoices).`, "success");
@@ -857,6 +1219,15 @@ async function initAdminInvoices() {
   if (searchInput) searchInput.addEventListener("input", applyInvoiceFilters);
   if (channelFilter) channelFilter.addEventListener("change", applyInvoiceFilters);
   if (statusFilter) statusFilter.addEventListener("change", applyInvoiceFilters);
+
+  if (typeof listenSync === "function") {
+    listenSync(async (event) => {
+      if (event.type === "order_created" || event.type === "order_updated") {
+        adminInvoicesList = syncOrdersAndInvoices();
+        applyInvoiceFilters();
+      }
+    });
+  }
 }
 
 function applyInvoiceFilters() {
@@ -1003,6 +1374,10 @@ async function updateInvoicePaymentStatus(invoiceNumber, newPaymentStatus) {
       }
     }
 
+    if (typeof broadcastSync === "function") {
+      broadcastSync("order_updated", { invoiceNumber, paymentStatus: newPaymentStatus });
+    }
+
     showToast(`Payment status for Invoice ${invoiceNumber} updated to ${newPaymentStatus.toUpperCase()} (Synced to Orders).`, "success");
     applyInvoiceFilters();
   }
@@ -1039,6 +1414,10 @@ async function updateInvoiceOrderStatus(invoiceNumber, newOrderStatus) {
       } catch (err) {
         console.warn("Supabase order status update error:", err);
       }
+    }
+
+    if (typeof broadcastSync === "function") {
+      broadcastSync("order_updated", { invoiceNumber, orderStatus: newOrderStatus });
     }
 
     showToast(`Order status for ${invoiceNumber} updated to ${newOrderStatus.toUpperCase()} (Synced to Orders).`, "success");
@@ -1124,12 +1503,61 @@ async function initAdminSettings() {
   // Supabase Credentials Config
   const currentSbUrl = localStorage.getItem("dc_supabase_url");
   const currentSbKey = localStorage.getItem("dc_supabase_anon_key");
+  const currentServiceKey = localStorage.getItem("dc_supabase_service_key");
   document.getElementById("setSupabaseUrl").value = (currentSbUrl && !currentSbUrl.includes("your-project")) ? currentSbUrl : DEFAULT_SUPABASE_URL;
   document.getElementById("setSupabaseAnonKey").value = (currentSbKey && !currentSbKey.includes("your-public-anon-key")) ? currentSbKey : DEFAULT_SUPABASE_ANON_KEY;
+  if (document.getElementById("setSupabaseServiceKey")) {
+    document.getElementById("setSupabaseServiceKey").value = currentServiceKey || "";
+  }
 
   const form = document.getElementById("settingsForm");
   if (form) {
     form.addEventListener("submit", saveAdminSettings);
+  }
+}
+
+async function testSupabaseOnlineSync() {
+  const statusEl = document.getElementById("supabaseSyncStatus");
+  if (statusEl) {
+    statusEl.innerHTML = '<span style="color:#d97706; font-size: 0.9rem;">⏳ Testing cloud connection and online write access...</span>';
+  }
+
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  if (!sb || !isSupabaseConfigured()) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:#dc2626; font-size: 0.9rem;">❌ Supabase is not configured. Check Project URL and Anon Key.</span>';
+    return;
+  }
+
+  try {
+    const { data: readData, error: readErr } = await sb.from("products").select("id, name").limit(1);
+    if (readErr) {
+      if (statusEl) statusEl.innerHTML = `<span style="color:#dc2626; font-size: 0.9rem;">❌ Cloud Read Error: ${readErr.message}</span>`;
+      return;
+    }
+
+    const testId = readData && readData.length > 0 ? readData[0].id : null;
+    if (testId) {
+      const { data: writeData, error: writeErr } = await sb
+        .from("products")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", testId)
+        .select();
+
+      if (writeErr) {
+        if (statusEl) statusEl.innerHTML = `<span style="color:#dc2626; font-size: 0.9rem;">⚠️ Read works (${readData.length} products), but Write failed: ${writeErr.message}. Enter Service Role Key or run SQL policy fix.</span>`;
+        return;
+      }
+
+      if (!writeData || writeData.length === 0) {
+        if (statusEl) statusEl.innerHTML = `<span style="color:#dc2626; font-size: 0.9rem;">⚠️ Read works, but Write was restricted by RLS (0 rows updated). Enter Service Role Key or run SQL policy fix.</span>`;
+        return;
+      }
+    }
+
+    if (statusEl) statusEl.innerHTML = '<span style="color:#16a34a; font-weight:600; font-size: 0.9rem;">✅ Supabase Online Sync Fully Active! Reads & Writes directly connected to Cloud.</span>';
+    showToast("✅ Supabase Cloud Connection & Online Writes are working perfectly!", "success");
+  } catch (err) {
+    if (statusEl) statusEl.innerHTML = `<span style="color:#dc2626; font-size: 0.9rem;">❌ Connection test failed: ${err.message}</span>`;
   }
 }
 
@@ -1161,20 +1589,33 @@ async function saveAdminSettings(e) {
 
   const sbUrl = document.getElementById("setSupabaseUrl").value.trim();
   const sbKey = document.getElementById("setSupabaseAnonKey").value.trim();
+  const sbServiceKey = document.getElementById("setSupabaseServiceKey") ? document.getElementById("setSupabaseServiceKey").value.trim() : "";
 
   if (sbUrl) localStorage.setItem("dc_supabase_url", sbUrl);
   if (sbKey) localStorage.setItem("dc_supabase_anon_key", sbKey);
+  if (sbServiceKey) {
+    localStorage.setItem("dc_supabase_service_key", sbServiceKey);
+  } else {
+    localStorage.removeItem("dc_supabase_service_key");
+  }
 
-  localStorage.setItem("dc_business_settings", JSON.stringify(settings));
-
-  const sb = getSupabase();
-  if (isSupabaseConfigured() && sb) {
-    try {
-      await sb.from("business_settings").upsert({ id: "a0000000-0000-0000-0000-000000000001", ...settings });
-    } catch (err) {
-      console.warn("Supabase settings update error", err);
+  if (typeof saveBusinessSettings === "function") {
+    await saveBusinessSettings(settings);
+  } else {
+    localStorage.setItem("dc_business_settings", JSON.stringify(settings));
+    localStorage.setItem("dc_settings_customized", "true");
+    const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+    if (isSupabaseConfigured() && sb) {
+      try {
+        await sb.from("business_settings").upsert({ id: "a0000000-0000-0000-0000-000000000001", ...settings });
+      } catch (err) {
+        console.warn("Supabase settings update error", err);
+      }
+    }
+    if (typeof broadcastSync === "function") {
+      broadcastSync("settings_updated", settings);
     }
   }
 
-  showToast("Business Settings updated successfully!", "success");
+  showToast("Business Settings updated successfully! Storefront synchronized.", "success");
 }

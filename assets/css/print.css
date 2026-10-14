@@ -204,3 +204,61 @@
     max-width: 56mm !important;
   }
 }
+
+/* Screen and Preview Helper Classes */
+.inv-pay-mode-wrap {
+  font-size: 0.8rem;
+  color: #4b5563;
+  margin-top: 4px;
+}
+
+.cust-name-val {
+  font-weight: 700;
+  color: #111827;
+}
+
+.cust-address-val {
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-top: 2px;
+}
+
+.status-paid-text {
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.th-col-num {
+  width: 40px;
+}
+
+.th-col-sku {
+  width: 90px;
+}
+
+.th-col-qty {
+  width: 70px;
+}
+
+.th-col-rate {
+  width: 110px;
+}
+
+.th-col-amount {
+  width: 120px;
+}
+
+.discount-row-hidden {
+  display: none;
+}
+
+.discount-val-green {
+  color: #10b981;
+}
+
+.inv-footer-greeting-p {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+}
+

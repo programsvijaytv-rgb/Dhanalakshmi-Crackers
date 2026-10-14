@@ -495,6 +495,7 @@ body.admin-body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -651,13 +652,15 @@ body.admin-body {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
   z-index: 2000;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
 }
+
 
 .modal-content {
   background: #ffffff;
@@ -723,3 +726,405 @@ body.admin-body {
     width: 100%;
   }
 }
+
+/* ==============================================================================
+   Admin Component Classes (Eliminates inline styles across admin templates)
+   ============================================================================== */
+#adminUserName,
+.admin-user-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+#adminUserRole,
+.admin-user-role {
+  font-size: 0.7rem;
+  color: #f59e0b;
+}
+
+.table-header-sub {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.table-header-spread {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.search-input-wrapper {
+  flex-grow: 1;
+  max-width: 450px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.modal-hidden {
+  display: none;
+}
+
+.th-img {
+  width: 60px;
+}
+
+.th-actions {
+  width: 200px;
+}
+
+.th-actions-sm {
+  width: 140px;
+}
+
+.filter-actions-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.filter-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #4b5563;
+}
+
+.filter-select {
+  width: 145px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.invoice-filters-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-grow: 1;
+  max-width: 680px;
+  flex-wrap: wrap;
+}
+
+.invoice-search-input {
+  flex: 1;
+  min-width: 220px;
+}
+
+.channel-filter-select {
+  width: 140px;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.6rem;
+}
+
+.payment-status-filter-select {
+  width: 145px;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.6rem;
+}
+
+.pos-highlight-link {
+  color: #fef08a;
+}
+
+.pos-content-pad {
+  padding: 1.5rem;
+}
+
+.pos-customer-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.pos-customer-input {
+  padding: 0.5rem;
+}
+
+.pos-th-item {
+  text-align: left;
+}
+
+.pos-th-rate {
+  width: 70px;
+}
+
+.pos-th-qty {
+  width: 60px;
+  text-align: center;
+}
+
+.pos-th-total {
+  width: 75px;
+  text-align: right;
+}
+
+.pos-th-del {
+  width: 30px;
+}
+
+.pos-discount-row {
+  align-items: center;
+}
+
+.pos-discount-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pos-discount-input {
+  width: 55px;
+  padding: 2px 4px;
+  text-align: right;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.pos-discount-display {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.pos-cash-section {
+  margin-bottom: 0.75rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.pos-cash-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.pos-tender-input {
+  width: 100px;
+  padding: 3px 6px;
+  text-align: right;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.pos-change-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.pos-change-due {
+  color: #2563eb;
+}
+
+.text-danger {
+  color: #ef4444;
+}
+
+.text-success {
+  color: #10b981;
+}
+
+.dashboard-banner-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.dash-banner {
+  color: #fff;
+  padding: 1.5rem;
+  border-radius: 14px;
+}
+
+.dash-banner-pos {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+}
+
+.dash-banner-inventory {
+  background: linear-gradient(135deg, #831843, #9d174d);
+}
+
+.dash-banner-sub {
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.dash-banner-pos .dash-banner-sub {
+  color: #c7d2fe;
+}
+
+.dash-banner-inventory .dash-banner-sub {
+  color: #fbcfe8;
+}
+
+.banner-inv-btn {
+  color: #831843;
+}
+
+.reports-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.settings-card {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.settings-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--admin-border);
+  padding-bottom: 0.5rem;
+}
+
+.settings-section-title-spaced {
+  margin-top: 2rem;
+}
+
+.tax-toggle-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  background: #f9fafb;
+  padding: 0.75rem;
+  border-radius: 8px;
+}
+
+.tax-toggle-box .form-group {
+  margin: 0;
+}
+
+.tax-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.form-help-text {
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: block;
+  margin-top: 4px;
+}
+
+.settings-desc {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.settings-save-bar {
+  margin-top: 2rem;
+}
+
+.settings-save-btn {
+  padding: 1rem;
+  font-size: 1.05rem;
+}
+
+.form-group-checkbox {
+  display: flex;
+  align-items: center;
+  padding-top: 1.8rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary, #c21d1d);
+}
+
+/* Cloud Sync & Service Role Key Styles */
+.cloud-sync-header-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cloud-sync-badge {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-cloud-status {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+.service-key-card {
+  background: rgba(249, 115, 22, 0.04);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px dashed rgba(249, 115, 22, 0.3);
+}
+
+.service-key-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge-service-tag {
+  font-size: 0.7rem;
+}
+
+.service-key-help {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.sync-test-actions {
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+

@@ -35,8 +35,8 @@
       <div class="admin-user-info">
         <div class="admin-avatar">POS</div>
         <div>
-          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Counter Staff</div>
-          <div id="adminUserRole" style="font-size: 0.7rem; color: #10b981;">CASHIER</div>
+          <div id="adminUserName">Counter Staff</div>
+          <div id="adminUserRole" class="text-success">CASHIER</div>
         </div>
       </div>
       <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
@@ -57,7 +57,7 @@
       </div>
     </header>
 
-    <main class="admin-content" style="padding: 1.5rem;">
+    <main class="admin-content pos-content-pad">
       <div class="pos-layout">
         <!-- Left Panel: Product Search & Quick Catalog Grid -->
         <div class="pos-products-panel">
@@ -76,10 +76,10 @@
         <!-- Right Panel: Live Cart, Customer Info, Calculation & Tender -->
         <div class="pos-cart-panel">
           <div class="pos-cart-header">
-            <div style="font-weight: 700; font-size: 0.95rem; color: #111827;">Customer Details</div>
+            <div class="pos-customer-title">Customer Details</div>
             <div class="pos-customer-bar">
-              <input type="text" id="posCustomerName" class="form-input" style="padding: 0.5rem;" placeholder="Customer Name (Walk-in)">
-              <input type="tel" id="posCustomerPhone" class="form-input" style="padding: 0.5rem;" placeholder="Mobile Number (10 digits)">
+              <input type="text" id="posCustomerName" class="form-input pos-customer-input" placeholder="Customer Name (Walk-in)">
+              <input type="tel" id="posCustomerPhone" class="form-input pos-customer-input" placeholder="Mobile Number (10 digits)">
             </div>
           </div>
 
@@ -88,11 +88,11 @@
             <table class="pos-cart-table">
               <thead>
                 <tr>
-                  <th style="text-align: left;">Item</th>
-                  <th style="width: 70px;">Rate</th>
-                  <th style="width: 60px; text-align: center;">Qty</th>
-                  <th style="width: 75px; text-align: right;">Total</th>
-                  <th style="width: 30px;"></th>
+                  <th class="pos-th-item">Item</th>
+                  <th class="pos-th-rate">Rate</th>
+                  <th class="pos-th-qty">Qty</th>
+                  <th class="pos-th-total">Total</th>
+                  <th class="pos-th-del"></th>
                 </tr>
               </thead>
               <tbody id="posCartTbody">
@@ -108,11 +108,11 @@
               <strong id="posSubtotalDisplay">₹0.00</strong>
             </div>
 
-            <div class="pos-totals-row" style="align-items: center;">
+            <div class="pos-totals-row pos-discount-row">
               <span>Discount (%):</span>
-              <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <input type="number" id="posDiscountInput" value="0" min="0" max="100" style="width: 55px; padding: 2px 4px; text-align: right; border: 1px solid #d1d5db; border-radius: 4px;">
-                <span id="posDiscountDisplay" style="color: #10b981; font-weight: 600;">- ₹0.00</span>
+              <div class="pos-discount-box">
+                <input type="number" id="posDiscountInput" class="pos-discount-input" value="0" min="0" max="100" placeholder="0" title="Discount percentage" aria-label="Discount percentage">
+                <span id="posDiscountDisplay" class="pos-discount-display">- ₹0.00</span>
               </div>
             </div>
 
@@ -134,14 +134,14 @@
             </div>
 
             <!-- Cash Tender Section -->
-            <div id="posCashSection" style="margin-bottom: 0.75rem; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.6rem 0.75rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; font-size: 0.85rem;">
+            <div id="posCashSection" class="pos-cash-section">
+              <div class="pos-cash-row">
                 <span>Cash Received:</span>
-                <input type="number" id="posTenderedAmount" placeholder="₹ Amount" style="width: 100px; padding: 3px 6px; text-align: right; border: 1px solid #d1d5db; border-radius: 4px; font-weight: 700;">
+                <input type="number" id="posTenderedAmount" class="pos-tender-input" placeholder="₹ Amount">
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                <span style="color: #6b7280;">Change Due:</span>
-                <strong id="posChangeDueDisplay" style="color: #2563eb;">₹0.00</strong>
+              <div class="pos-change-row">
+                <span class="table-header-sub">Change Due:</span>
+                <strong id="posChangeDueDisplay" class="pos-change-due">₹0.00</strong>
               </div>
             </div>
 

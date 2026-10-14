@@ -36,7 +36,7 @@
           <li><a href="products.html?category=gift-boxes">Festival Gift Boxes</a></li>
           <li><a href="#reviewsSection">Reviews</a></li>
           <li><a href="cart.html">My Cart</a></li>
-          <li><a href="login.html" style="color: var(--secondary);">Staff / Admin</a></li>
+          <li><a href="login.html" class="nav-staff-link">Staff / Admin</a></li>
         </ul>
       </nav>
 
@@ -60,8 +60,8 @@
       <div class="drawer-brand">
         <div class="brand-symbol">🪔</div>
         <div class="brand-text">
-          <h2 style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin: 0;">Dhanalakshmi</h2>
-          <span style="font-size: 0.7rem; color: var(--secondary); font-weight: 600; text-transform: uppercase;">Crackers Sivakasi</span>
+          <h2 class="drawer-brand-title">Dhanalakshmi</h2>
+          <span class="drawer-brand-subtitle">Crackers Sivakasi</span>
         </div>
       </div>
       <button class="drawer-close-btn" id="drawerCloseBtn" aria-label="Close Menu">&times;</button>
@@ -78,16 +78,16 @@
       </ul>
 
       <div class="drawer-footer-card">
-        <div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.25rem;">
+        <div class="drawer-support-title">
           📞 Direct Sivakasi Support
         </div>
-        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+        <div class="drawer-support-sub">
           Wholesale inquiries & fast festive booking
         </div>
-        <a href="https://wa.me/919876543210?text=Hi%20Dhanalakshmi%20Crackers%2C%20I%20would%20like%20to%20order%20Diwali%20crackers" target="_blank" class="btn btn-primary btn-block" style="padding: 0.65rem; font-size: 0.85rem;">
+        <a href="https://wa.me/919876543210?text=Hi%20Dhanalakshmi%20Crackers%2C%20I%20would%20like%20to%20order%20Diwali%20crackers" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-block drawer-btn-wa">
           💬 WhatsApp Fast Order
         </a>
-        <a href="tel:+919876543210" class="btn btn-secondary btn-block" style="padding: 0.65rem; font-size: 0.85rem; margin-top: 0.5rem;">
+        <a href="tel:+919876543210" class="btn btn-secondary btn-block drawer-btn-call">
           📞 Call +91 98765 43210
         </a>
       </div>
@@ -215,7 +215,7 @@
 
       <div class="category-cards-grid">
         <a href="products.html?category=sparklers" class="cat-card">
-          <div class="cat-card-icon-wrap" style="background: linear-gradient(135deg, #fef08a, #f59e0b);">✨</div>
+          <div class="cat-card-icon-wrap cat-icon-sparklers">✨</div>
           <div class="cat-card-info">
             <h3 class="cat-card-title">Sparklers & Flares</h3>
             <p class="cat-card-desc">Low-smoke silver & color sparklers for kids</p>
@@ -224,7 +224,7 @@
         </a>
 
         <a href="products.html?category=ground-chakkars" class="cat-card">
-          <div class="cat-card-icon-wrap" style="background: linear-gradient(135deg, #fed7aa, #ea580c);">🌀</div>
+          <div class="cat-card-icon-wrap cat-icon-chakkars">🌀</div>
           <div class="cat-card-info">
             <h3 class="cat-card-title">Ground Chakkars</h3>
             <p class="cat-card-desc">Whistling, deluxe spinning wheels & chakras</p>
@@ -233,7 +233,7 @@
         </a>
 
         <a href="products.html?category=flower-pots" class="cat-card">
-          <div class="cat-card-icon-wrap" style="background: linear-gradient(135deg, #fbcfe8, #db2777);">🌋</div>
+          <div class="cat-card-icon-wrap cat-icon-pots">🌋</div>
           <div class="cat-card-info">
             <h3 class="cat-card-title">Flower Pots & Fountains</h3>
             <p class="cat-card-desc">Ashoka, tri-color & mega golden spark fountains</p>
@@ -242,7 +242,7 @@
         </a>
 
         <a href="products.html?category=sky-shots" class="cat-card">
-          <div class="cat-card-icon-wrap" style="background: linear-gradient(135deg, #c7d2fe, #6366f1);">🎆</div>
+          <div class="cat-card-icon-wrap cat-icon-shots">🎆</div>
           <div class="cat-card-info">
             <h3 class="cat-card-title">Aerial Sky Repeaters</h3>
             <p class="cat-card-desc">12, 30 & 60 multi-shot night sky brocades</p>
@@ -251,7 +251,7 @@
         </a>
 
         <a href="products.html?category=sound-crackers" class="cat-card">
-          <div class="cat-card-icon-wrap" style="background: linear-gradient(135deg, #fecaca, #dc2626);">💥</div>
+          <div class="cat-card-icon-wrap cat-icon-sound">💥</div>
           <div class="cat-card-info">
             <h3 class="cat-card-title">Sound Crackers</h3>
             <p class="cat-card-desc">28 Chorsa, hydro bombs & red ladi garlands</p>
@@ -260,7 +260,7 @@
         </a>
 
         <a href="products.html?category=gift-boxes" class="cat-card highlight-cat-card">
-          <div class="cat-card-icon-wrap" style="background: linear-gradient(135deg, #fef08a, #d97706);">🎁</div>
+          <div class="cat-card-icon-wrap cat-icon-gift">🎁</div>
           <div class="cat-card-info">
             <h3 class="cat-card-title">Festival Gift Hampers</h3>
             <p class="cat-card-desc">Curated family Diwali boxes with 25-50 items</p>
@@ -287,8 +287,8 @@
         <!-- Rendered dynamically by products.js -->
       </div>
 
-      <div style="text-align: center; margin-top: 3rem;">
-        <a href="products.html" class="btn btn-primary" style="padding: 1rem 2.5rem;">
+      <div class="catalog-cta-wrap">
+        <a href="products.html" class="btn btn-primary btn-cta-lg">
           View Complete Catalog (All Categories) &rarr;
         </a>
       </div>
@@ -298,7 +298,7 @@
   <!-- Verified Google Reviews & Customer Testimonials Section -->
   <section class="reviews-section" id="reviewsSection">
     <div class="container">
-      <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+      <div class="section-header section-header-center">
         <span class="section-tag">⭐ Verified Ratings</span>
         <h2 class="section-title">What Our Customers Say</h2>
         <p class="section-subtitle">
@@ -387,25 +387,25 @@
   </section>
 
   <!-- Modal: Write a Google Review -->
-  <div id="addReviewModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content" style="max-width: 520px;">
+  <div id="addReviewModal" class="modal-overlay modal-hidden">
+    <div class="modal-content modal-content-review">
       <div class="modal-header">
         <div>
-          <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+          <h3 class="modal-title modal-title-flex">
             <span>⭐</span> Write a Review
           </h3>
-          <p style="font-size: 0.8rem; color: #6b7280; margin: 2px 0 0;">
+          <p class="modal-title-sub">
             Share your experience with Dhanalakshmi Crackers
           </p>
         </div>
-        <button type="button" class="modal-close-btn" onclick="closeAddReviewModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #9ca3af;">&times;</button>
+        <button type="button" class="modal-close-btn modal-close-icon-btn" onclick="closeAddReviewModal()">&times;</button>
       </div>
 
-      <div class="modal-body" style="padding: 1.5rem;">
+      <div class="modal-body modal-body-pad">
         <form id="addReviewForm">
-          <div class="form-group" style="text-align: center; margin-bottom: 1.5rem;">
-            <label class="form-label" style="font-weight: 600; margin-bottom: 0.25rem;">Rate Your Experience</label>
-            <div class="star-rating-selector" id="modalStarSelector" style="justify-content: center;">
+          <div class="form-group star-select-group">
+            <label class="form-label form-label-bold">Rate Your Experience</label>
+            <div class="star-rating-selector star-selector-center" id="modalStarSelector">
               <button type="button" class="star-btn" data-val="1">★</button>
               <button type="button" class="star-btn" data-val="2">★</button>
               <button type="button" class="star-btn" data-val="3">★</button>
@@ -415,33 +415,33 @@
             <div id="selectedRatingLabel" class="selected-rating-label">5 Stars - Excellent Experience! 🎆</div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label class="form-label" for="reviewCustomerName" style="font-weight: 600;">Your Name *</label>
+          <div class="form-group form-group-mb1">
+            <label class="form-label form-label-bold" for="reviewCustomerName">Your Name *</label>
             <input type="text" id="reviewCustomerName" class="form-input" placeholder="e.g. S. Karthikeyan" required>
           </div>
 
-          <div class="form-group" style="margin-bottom: 1rem;">
-            <label class="form-label" for="reviewCustomerCity" style="font-weight: 600;">City / District *</label>
+          <div class="form-group form-group-mb1">
+            <label class="form-label form-label-bold" for="reviewCustomerCity">City / District *</label>
             <input type="text" id="reviewCustomerCity" class="form-input" placeholder="e.g. Chennai / Coimbatore / Sivakasi" required>
           </div>
 
-          <div class="form-group" style="margin-bottom: 1.25rem;">
-            <label class="form-label" for="reviewComment" style="font-weight: 600;">Review Feedback *</label>
+          <div class="form-group form-group-mb125">
+            <label class="form-label form-label-bold" for="reviewComment">Review Feedback *</label>
             <textarea id="reviewComment" class="form-textarea" rows="4" placeholder="How was the cracker quality, packing, speed of delivery or festival experience? Tell others..." required></textarea>
           </div>
 
-          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 0.75rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: #92400e; display: flex; align-items: flex-start; gap: 8px;">
-            <span style="font-size: 1.1rem; line-height: 1;">💡</span>
+          <div class="review-notice-box">
+            <span class="review-notice-icon">💡</span>
             <div>
               Your review will be shown immediately on our website and we will open our <strong>Google Business Profile</strong> so you can post it directly to Google Maps!
             </div>
           </div>
 
-          <div style="display: flex; gap: 0.75rem;">
-            <button type="button" class="btn btn-secondary" onclick="closeAddReviewModal()" style="flex: 1;">
+          <div class="modal-btn-row">
+            <button type="button" class="btn btn-secondary btn-flex-1" onclick="closeAddReviewModal()">
               Cancel
             </button>
-            <button type="submit" id="btnSubmitReview" class="btn btn-primary" style="flex: 2;">
+            <button type="submit" id="btnSubmitReview" class="btn btn-primary btn-flex-2">
               Submit & Post to Google 🚀
             </button>
           </div>
@@ -455,17 +455,17 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-            <span style="font-size: 1.75rem;">🪔</span>
-            <h3 style="margin: 0; color: #fff;" data-brand="shop_name">Dhanalakshmi Crackers</h3>
+          <div class="footer-brand-title-wrap">
+            <span class="footer-brand-icon">🪔</span>
+            <h3 class="footer-brand-name" data-brand="shop_name">Dhanalakshmi Crackers</h3>
           </div>
           <p>
             Your trusted destination for Sivakasi fireworks since decades. Certified eco-conscious, low smoke, safe for celebrations.
           </p>
-          <div style="font-size: 0.85rem; color: #d1d5db; margin-bottom: 0.5rem;">
+          <div class="footer-brand-info-item">
             📍 <span data-brand="address">142, By-pass Road, Sivakasi, Tamil Nadu - 626123</span>
           </div>
-          <div style="font-size: 0.85rem; color: #d1d5db;">
+          <div class="footer-brand-info-item">
             ⏰ <span data-brand="hours">Mon - Sun: 09:00 AM - 10:00 PM</span>
           </div>
         </div>
@@ -524,13 +524,13 @@
       <span class="bottom-nav-label">Gifts</span>
     </a>
     <a href="cart.html" class="bottom-nav-item">
-      <span class="bottom-nav-icon" style="position: relative;">
+      <span class="bottom-nav-icon">
         🛒
         <span class="cart-counter bottom-nav-badge">0</span>
       </span>
       <span class="bottom-nav-label">Cart</span>
     </a>
-    <a href="https://wa.me/919876543210?text=Hi%20Dhanalakshmi%20Crackers%2C%20I%20would%20like%20to%20order%20crackers" target="_blank" class="bottom-nav-item highlight">
+    <a href="https://wa.me/919876543210?text=Hi%20Dhanalakshmi%20Crackers%2C%20I%20would%20like%20to%20order%20crackers" target="_blank" rel="noopener noreferrer" class="bottom-nav-item highlight">
       <span class="bottom-nav-icon">💬</span>
       <span class="bottom-nav-label">WhatsApp</span>
     </a>

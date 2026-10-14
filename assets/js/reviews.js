@@ -209,6 +209,7 @@ async function renderReviews() {
 function openAddReviewModal() {
   const modal = document.getElementById("addReviewModal");
   if (modal) {
+    modal.classList.remove("modal-hidden");
     modal.style.display = "flex";
     document.body.style.overflow = "hidden";
     setRating(5);
@@ -221,10 +222,12 @@ function openAddReviewModal() {
 function closeAddReviewModal() {
   const modal = document.getElementById("addReviewModal");
   if (modal) {
+    modal.classList.add("modal-hidden");
     modal.style.display = "none";
     document.body.style.overflow = "";
   }
 }
+
 
 /**
  * Interactive Star Rating Handler

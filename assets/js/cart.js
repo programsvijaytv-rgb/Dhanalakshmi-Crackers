@@ -212,8 +212,15 @@ function renderCartPage() {
   }
 }
 
-// Auto update badge on DOMContentLoaded
+// Auto update badge on DOMContentLoaded and synchronize across tabs
 document.addEventListener("DOMContentLoaded", () => {
   updateCartBadge();
   renderCartPage();
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === CART_STORAGE_KEY) {
+      updateCartBadge();
+      renderCartPage();
+    }
+  });
 });

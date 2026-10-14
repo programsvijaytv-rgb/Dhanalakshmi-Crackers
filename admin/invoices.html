@@ -35,8 +35,8 @@
       <div class="admin-user-info">
         <div class="admin-avatar">AD</div>
         <div>
-          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Admin Staff</div>
-          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+          <div id="adminUserName">Admin Staff</div>
+          <div id="adminUserRole">ADMIN</div>
         </div>
       </div>
       <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
@@ -56,15 +56,15 @@
 
     <main class="admin-content">
       <div class="admin-table-card">
-        <div class="table-header-bar" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-          <div style="display: flex; align-items: center; gap: 0.6rem; flex-grow: 1; max-width: 680px; flex-wrap: wrap;">
-            <input type="text" id="invoiceSearchInput" class="form-input" style="flex: 1; min-width: 220px;" placeholder="Search by Invoice #, Customer, or Phone...">
-            <select id="invoiceChannelFilter" class="form-select" style="width: 140px; font-size: 0.85rem; padding: 0.45rem 0.6rem;">
+        <div class="table-header-bar table-header-spread">
+          <div class="invoice-filters-row">
+            <input type="text" id="invoiceSearchInput" class="form-input invoice-search-input" placeholder="Search by Invoice #, Customer, or Phone...">
+            <select id="invoiceChannelFilter" class="form-select channel-filter-select" title="Filter by sales channel" aria-label="Filter by sales channel">
               <option value="all">All Channels</option>
               <option value="pos">⚡ POS Bills</option>
               <option value="online">📦 Online Orders</option>
             </select>
-            <select id="invoicePaymentStatusFilter" class="form-select" style="width: 145px; font-size: 0.85rem; padding: 0.45rem 0.6rem;">
+            <select id="invoicePaymentStatusFilter" class="form-select payment-status-filter-select" title="Filter by payment status" aria-label="Filter by payment status">
               <option value="all">All Payments</option>
               <option value="paid">✅ Paid</option>
               <option value="unpaid">❌ Unpaid</option>
@@ -72,7 +72,7 @@
               <option value="cancelled">❌ Cancelled</option>
             </select>
           </div>
-          <span style="font-size: 0.85rem; color: #6b7280;">Auto-synced with Online Orders & POS Bills</span>
+          <span class="table-header-sub">Auto-synced with Online Orders & POS Bills</span>
         </div>
 
         <div class="admin-table-container">
@@ -87,7 +87,7 @@
                 <th>Payment Status</th>
                 <th>Order Status</th>
                 <th>Date & Time</th>
-                <th style="width: 200px;">Actions</th>
+                <th class="th-actions">Actions</th>
               </tr>
             </thead>
             <tbody id="adminInvoicesTbody">

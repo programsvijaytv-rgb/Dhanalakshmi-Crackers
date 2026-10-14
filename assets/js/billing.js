@@ -45,6 +45,19 @@ async function initPOS() {
       updatePOSTotals();
     });
   }
+
+  // Real-time catalog sync
+  if (typeof listenSync === "function") {
+    listenSync(async (event) => {
+      if (event.type === "products_updated" && event.payload?.source !== "pos_sale") {
+        const [categories, products] = await Promise.all([fetchCategories(), fetchProducts()]);
+        posCategories = categories;
+        posCatalog = products;
+        renderPOSCategoryPills();
+        renderPOSProductGrid();
+      }
+    });
+  }
 }
 
 /**
@@ -392,6 +405,13 @@ async function processInvoiceSave(invoiceNumber, custName, custPhone, subtotal, 
     }
   });
   localStorage.setItem("dc_custom_products", JSON.stringify(posCatalog));
+  localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+  // Broadcast real-time stock deduction and sale invoice to storefront & admin tabs
+  if (typeof broadcastSync === "function") {
+    broadcastSync("products_updated", { source: "pos_sale" });
+    broadcastSync("order_created", invoiceData);
+  }
 
   showToast(`Invoice ${invoiceNumber} created successfully!`, "success");
 

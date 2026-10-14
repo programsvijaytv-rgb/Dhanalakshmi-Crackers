@@ -22,7 +22,7 @@
 
     <nav class="admin-nav">
       <a href="index.html" class="admin-nav-item active"><span class="icon">📊</span> Dashboard</a>
-      <a href="billing.html" class="admin-nav-item" style="color: #fef08a;"><span class="icon">⚡</span> POS Billing Terminal</a>
+      <a href="billing.html" class="admin-nav-item pos-highlight-link"><span class="icon">⚡</span> POS Billing Terminal</a>
       <a href="products.html" class="admin-nav-item"><span class="icon">🎆</span> Product Catalog</a>
       <a href="orders.html" class="admin-nav-item"><span class="icon">📦</span> Online Orders</a>
       <a href="invoices.html" class="admin-nav-item"><span class="icon">🧾</span> Invoices Archive</a>
@@ -35,8 +35,8 @@
       <div class="admin-user-info">
         <div class="admin-avatar">AD</div>
         <div>
-          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Store Admin</div>
-          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+          <div id="adminUserName">Store Admin</div>
+          <div id="adminUserRole">ADMIN</div>
         </div>
       </div>
       <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
@@ -87,28 +87,28 @@
         <div class="kpi-card">
           <div class="kpi-data">
             <h3>Low Stock Warnings</h3>
-            <div class="kpi-val" id="kpiLowStock" style="color: #ef4444;">0</div>
+            <div class="kpi-val text-danger" id="kpiLowStock">0</div>
           </div>
           <div class="kpi-icon stock">⚠️</div>
         </div>
       </div>
 
       <!-- Quick Action Cards -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        <div style="background: linear-gradient(135deg, #1e1b4b, #312e81); color: #fff; padding: 1.5rem; border-radius: 14px;">
-          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">⚡ POS Billing Terminal</h2>
-          <p style="font-size: 0.85rem; color: #c7d2fe; margin-bottom: 1rem;">
+      <div class="dashboard-banner-grid">
+        <div class="dash-banner dash-banner-pos">
+          <h2>⚡ POS Billing Terminal</h2>
+          <p class="dash-banner-sub">
             Instant barcode/search item addition, cash tender calculation, GST compliance, and thermal printing.
           </p>
           <a href="billing.html" class="btn btn-accent btn-sm">Launch Cashier POS &rarr;</a>
         </div>
 
-        <div style="background: linear-gradient(135deg, #831843, #9d174d); color: #fff; padding: 1.5rem; border-radius: 14px;">
-          <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">🎆 Product Inventory</h2>
-          <p style="font-size: 0.85rem; color: #fbcfe8; margin-bottom: 1rem;">
+        <div class="dash-banner dash-banner-inventory">
+          <h2>🎆 Product Inventory</h2>
+          <p class="dash-banner-sub">
             Add new Sivakasi cracker arrivals, modify wholesale rates, and update batch quantities.
           </p>
-          <a href="products.html" class="btn btn-secondary btn-sm" style="color: #831843;">Manage Products &rarr;</a>
+          <a href="products.html" class="btn btn-secondary btn-sm banner-inv-btn">Manage Products &rarr;</a>
         </div>
       </div>
 

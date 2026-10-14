@@ -34,9 +34,25 @@ async function fetchCategories() {
 }
 
 /**
- * Fetch Products from Supabase or fallback
+ * Fetch Products from hybrid store (LocalStorage + Supabase)
+ * Guarantees admin changes in Admin Panel immediately reflect on storefront without being overwritten
  */
 async function fetchProducts() {
+  // 1. Load local authoritative products (seeded with DEFAULT_PRODUCTS if empty)
+  let localProducts = typeof getStoredCustomProducts === "function" 
+    ? getStoredCustomProducts() 
+    : JSON.parse(localStorage.getItem("dc_custom_products") || "[]");
+
+  if (!localProducts || localProducts.length === 0) {
+    localProducts = [...DEFAULT_PRODUCTS];
+    localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
+  }
+
+  // 2. Filter out products explicitly deleted in Admin Panel
+  const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : [];
+  localProducts = localProducts.filter(p => !deletedIds.includes(p.id));
+
+  // 3. Reconcile with Supabase cloud products if available
   const sb = getSupabase();
   if (isSupabaseConfigured() && sb) {
     try {
@@ -45,21 +61,58 @@ async function fetchProducts() {
         .select("*, categories(name)")
         .eq("is_active", true)
         .order("is_featured", { ascending: false });
-      if (!error && data && data.length > 0) {
-        loadedProducts = data.map(p => ({
-          ...p,
-          category_name: p.categories ? p.categories.name : "Assorted"
-        }));
-        return loadedProducts;
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        // Build map of local products by ID and SKU
+        const localById = new Map();
+        const localBySku = new Map();
+        localProducts.forEach(p => {
+          if (p.id) localById.set(p.id, p);
+          if (p.sku) localBySku.set(p.sku, p);
+        });
+
+        // Remote products from Supabase are the authoritative online source
+        data.forEach(remote => {
+          if (deletedIds.includes(remote.id)) return; // Skipped if deleted by admin
+
+          const catName = (remote.categories && remote.categories.name) 
+            || (DEFAULT_CATEGORIES.find(c => c.id === remote.category_id)?.name) 
+            || "Assorted";
+
+          const remoteItem = {
+            id: remote.id,
+            name: remote.name,
+            sku: remote.sku,
+            category_id: remote.category_id,
+            category_name: catName,
+            price: Number(remote.price),
+            original_price: Number(remote.original_price || remote.price),
+            stock_quantity: Number(remote.stock_quantity),
+            min_stock_alert: Number(remote.min_stock_alert || 10),
+            unit: remote.unit || "Box",
+            description: remote.description || "",
+            image_url: remote.image_url,
+            is_featured: Boolean(remote.is_featured),
+            is_active: remote.is_active !== false
+          };
+
+          const existingIdx = localProducts.findIndex(p => p.id === remote.id || (remote.sku && p.sku === remote.sku));
+          if (existingIdx !== -1) {
+            localProducts[existingIdx] = { ...localProducts[existingIdx], ...remoteItem };
+          } else {
+            localProducts.push(remoteItem);
+          }
+        });
+
+        // Save reconciled products back to local storage
+        localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
       }
     } catch (e) {
-      console.warn("Could not load products from Supabase", e);
+      console.warn("Could not sync remote products from Supabase, using local catalog", e);
     }
   }
 
-  // Load from local storage or fallback
-  const stored = localStorage.getItem("dc_custom_products");
-  loadedProducts = stored ? JSON.parse(stored) : DEFAULT_PRODUCTS;
+  loadedProducts = localProducts;
   return loadedProducts;
 }
 
@@ -209,26 +262,32 @@ function renderProductsGrid(products, targetContainerId = "productsGrid") {
 }
 
 /**
+ * Visual feedback helper for add-to-cart buttons
+ */
+function animateAddButton(btnElement) {
+  if (!btnElement) return;
+  const originalHtml = btnElement.innerHTML;
+  btnElement.classList.add("btn-added-state");
+  btnElement.innerHTML = `<span style="font-weight:700;">✓ Added!</span>`;
+  btnElement.disabled = true;
+
+  setTimeout(() => {
+    btnElement.classList.remove("btn-added-state");
+    btnElement.innerHTML = originalHtml;
+    btnElement.disabled = false;
+  }, 1200);
+}
+
+/**
  * Quick add helper by product ID with animated tactile feedback
  */
 function quickAddProduct(productId, btnElement) {
+  if (btnElement && btnElement.disabled) return;
   const product = loadedProducts.find(p => p.id === productId);
   if (!product) return;
 
   addToCart(product, 1);
-
-  if (btnElement) {
-    const originalHtml = btnElement.innerHTML;
-    btnElement.classList.add("btn-added-state");
-    btnElement.innerHTML = `<span style="font-weight:700;">✓ Added!</span>`;
-    btnElement.disabled = true;
-
-    setTimeout(() => {
-      btnElement.classList.remove("btn-added-state");
-      btnElement.innerHTML = originalHtml;
-      btnElement.disabled = false;
-    }, 1200);
-  }
+  animateAddButton(btnElement);
 }
 
 /**
@@ -260,20 +319,43 @@ async function loadProductDetails() {
   if (titleEl) titleEl.textContent = product.name;
   if (skuEl) skuEl.textContent = product.sku || "N/A";
   if (priceEl) priceEl.textContent = formatCurrency(product.price);
-  if (origPriceEl) origPriceEl.textContent = product.original_price ? formatCurrency(product.original_price) : "";
-  if (descEl) descEl.textContent = product.description;
-  if (imgEl) imgEl.src = product.image_url;
-  if (stockEl) stockEl.textContent = `${product.stock_quantity} Boxes Available`;
+  if (origPriceEl) origPriceEl.textContent = (product.original_price && product.original_price > product.price) ? formatCurrency(product.original_price) : "";
+  if (descEl) descEl.textContent = product.description || "Authentic Sivakasi fireworks with superior safety certification.";
+  if (imgEl && product.image_url) imgEl.src = product.image_url;
+  if (stockEl) {
+    if (product.stock_quantity > 0) {
+      stockEl.textContent = `${product.stock_quantity} Boxes Available`;
+      stockEl.className = "stock-status-pill in-stock";
+    } else {
+      stockEl.textContent = "Out of Stock";
+      stockEl.className = "stock-status-pill out-of-stock";
+    }
+  }
   if (unitEl) unitEl.textContent = product.unit || "Box";
+
+  // Update Page Title dynamically
+  document.title = `${product.name} | Dhanalakshmi Crackers Sivakasi`;
 
   const addBtn = document.getElementById("detailAddToCartBtn");
   if (addBtn) {
-    addBtn.onclick = () => {
-      const qtyInput = document.getElementById("detailQtyInput");
-      const qty = qtyInput ? parseInt(qtyInput.value, 10) : 1;
-      addToCart(product, qty);
-      quickAddProduct(product.id, addBtn);
-    };
+    if (product.stock_quantity <= 0) {
+      addBtn.disabled = true;
+      addBtn.textContent = "Out of Stock";
+      addBtn.style.opacity = "0.6";
+      addBtn.style.cursor = "not-allowed";
+    } else {
+      addBtn.disabled = false;
+      addBtn.textContent = "🛒 Add to Cart";
+      addBtn.style.opacity = "1";
+      addBtn.style.cursor = "pointer";
+      addBtn.onclick = () => {
+        if (addBtn.disabled) return;
+        const qtyInput = document.getElementById("detailQtyInput");
+        const qty = qtyInput ? Math.max(1, parseInt(qtyInput.value, 10) || 1) : 1;
+        addToCart(product, qty);
+        animateAddButton(addBtn);
+      };
+    }
   }
 }
 
@@ -320,3 +402,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadProductDetails();
   }
 });
+
+/**
+ * Re-fetch products and update storefront components without full page reload
+ */
+async function refreshStorefrontProducts() {
+  const prods = await fetchProducts();
+  const isCatalogPage = document.getElementById("productsGrid");
+  const isHomePageFeatured = document.getElementById("featuredProductsGrid");
+  const isDetailsPage = document.getElementById("productDetailsContainer");
+
+  if (isCatalogPage) {
+    applyFilters();
+  }
+  if (isHomePageFeatured) {
+    const featured = prods.filter(p => p.is_featured).slice(0, 6);
+    renderProductsGrid(featured, "featuredProductsGrid");
+  }
+  if (isDetailsPage) {
+    loadProductDetails();
+  }
+}
+
+// Subscribe to real-time sync broadcast
+if (typeof listenSync === "function") {
+  listenSync((event) => {
+    if (event.type === "products_updated") {
+      refreshStorefrontProducts();
+    }
+  });
+}
+

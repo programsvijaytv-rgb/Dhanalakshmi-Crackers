@@ -35,8 +35,8 @@
       <div class="admin-user-info">
         <div class="admin-avatar">AD</div>
         <div>
-          <div id="adminUserName" style="font-size: 0.85rem; font-weight: 700; color: #fff;">Admin Staff</div>
-          <div id="adminUserRole" style="font-size: 0.7rem; color: #f59e0b;">ADMIN</div>
+          <div id="adminUserName">Admin Staff</div>
+          <div id="adminUserRole">ADMIN</div>
         </div>
       </div>
       <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
@@ -50,13 +50,13 @@
     </header>
 
     <main class="admin-content">
-      <div class="admin-table-card" style="max-width: 850px; margin: 0 auto; padding: 2rem;">
+      <div class="admin-table-card settings-card">
         <form id="settingsForm">
-          <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem; border-bottom: 1px solid var(--admin-border); padding-bottom: 0.5rem;">
+          <h2 class="settings-section-title">
             1. Business Identity & Invoicing
           </h2>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-row-2">
             <div class="form-group">
               <label class="form-label" for="setShopName">Business / Shop Name *</label>
               <input type="text" id="setShopName" class="form-input" required>
@@ -67,7 +67,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-row-2">
             <div class="form-group">
               <label class="form-label" for="setTagline">Business Tagline</label>
               <input type="text" id="setTagline" class="form-input">
@@ -78,7 +78,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-row-2">
             <div class="form-group">
               <label class="form-label" for="setPhone">Contact Phone Number *</label>
               <input type="text" id="setPhone" class="form-input" placeholder="+91 98765 43210" required>
@@ -89,7 +89,7 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-row-2">
             <div class="form-group">
               <label class="form-label" for="setEmail">Official Business Email</label>
               <input type="email" id="setEmail" class="form-input">
@@ -110,7 +110,7 @@
             <textarea id="setBusinessDesc" class="form-textarea" rows="2" placeholder="Wholesale and retail distributor of certified Sivakasi fireworks..."></textarea>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+          <div class="form-row-3">
             <div class="form-group">
               <label class="form-label" for="setCurrency">Currency</label>
               <input type="text" id="setCurrency" class="form-input" value="INR (₹)" readonly>
@@ -125,12 +125,12 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: center; margin-bottom: 1rem; background: #f9fafb; padding: 0.75rem; border-radius: 8px;">
-            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.9rem; cursor: pointer;">
+          <div class="tax-toggle-box">
+            <label class="tax-toggle-label">
               <input type="checkbox" id="setTaxApplicable" checked>
               <span>Show Tax / GST on Invoices</span>
             </label>
-            <div class="form-group" style="margin: 0;">
+            <div class="form-group">
               <label class="form-label" for="setTaxRate">Applicable GST Rate (%)</label>
               <input type="number" id="setTaxRate" step="0.5" class="form-input" value="18">
             </div>
@@ -144,14 +144,14 @@
           <div class="form-group">
             <label class="form-label" for="setGoogleReviewUrl">Official Google Business Profile Review URL</label>
             <input type="url" id="setGoogleReviewUrl" class="form-input" placeholder="https://share.google/AwTsdLuk9OtRHQhbR" value="https://share.google/AwTsdLuk9OtRHQhbR">
-            <span style="font-size: 0.75rem; color: #6b7280; display: block; margin-top: 4px;">Direct link used when customers click "Write a Google Review" on the home page.</span>
+            <span class="form-help-text">Direct link used when customers click "Write a Google Review" on the home page.</span>
           </div>
 
-          <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--admin-border); padding-bottom: 0.5rem;">
+          <h2 class="settings-section-title settings-section-title-spaced">
             2. Merchant UPI Payment Settings
           </h2>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-row-2">
             <div class="form-group">
               <label class="form-label" for="setUpiId">Merchant UPI ID (VPA) *</label>
               <input type="text" id="setUpiId" class="form-input" placeholder="dhanalakshmi@upi" required>
@@ -162,11 +162,11 @@
             </div>
           </div>
 
-          <h2 style="font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--admin-border); padding-bottom: 0.5rem;">
+          <h2 class="settings-section-title settings-section-title-spaced">
             3. Supabase Live Cloud Integration
           </h2>
-          <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 1rem;">
-            Configure your Supabase project keys here. Public publishable keys only — never paste service role secret keys.
+          <p class="settings-desc">
+            Configure your live Supabase cloud database credentials. Your settings and product changes are saved directly to PostgreSQL.
           </p>
 
           <div class="form-group">
@@ -179,8 +179,26 @@
             <input type="text" id="setSupabaseAnonKey" class="form-input" placeholder="sb_publishable_...">
           </div>
 
-          <div style="margin-top: 2rem;">
-            <button type="submit" class="btn btn-primary btn-block" style="padding: 1rem; font-size: 1.05rem;">
+          <div class="form-group service-key-card">
+            <label class="form-label service-key-label" for="setSupabaseServiceKey">
+              <span>🔑 Supabase Admin Service Role Key (For 100% Online Writes)</span>
+              <span class="badge badge-warning badge-service-tag">Direct Cloud Writes</span>
+            </label>
+            <input type="password" id="setSupabaseServiceKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off">
+            <span class="form-help-text service-key-help">
+              Stored securely in your admin browser session only. Found in <strong>Supabase Dashboard → Project Settings → API → service_role (secret)</strong>. Bypasses Row-Level Security so product edits instantly write to your cloud PostgreSQL database.
+            </span>
+          </div>
+
+          <div class="sync-test-actions">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="testSupabaseOnlineSync()">
+              ⚡ Test Cloud Connection & Online Write Access
+            </button>
+            <div id="supabaseSyncStatus"></div>
+          </div>
+
+          <div class="settings-save-bar">
+            <button type="submit" class="btn btn-primary btn-block settings-save-btn">
               💾 Save All Settings
             </button>
           </div>

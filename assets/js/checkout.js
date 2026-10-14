@@ -229,7 +229,34 @@ async function executeOrderPlacement(orderPayload, cart) {
   invoicesHistory.unshift(invoiceRecord);
   localStorage.setItem("dc_invoices_history", JSON.stringify(invoicesHistory));
 
-  // 4. Clear shopping cart
+  // 4. Deduct ordered items from local inventory stock
+  try {
+    const products = typeof getStoredCustomProducts === "function" 
+      ? getStoredCustomProducts() 
+      : JSON.parse(localStorage.getItem("dc_custom_products") || "[]");
+    let stockModified = false;
+    cart.forEach(item => {
+      const prod = products.find(p => p.id === item.id || (item.sku && p.sku === item.sku));
+      if (prod) {
+        prod.stock_quantity = Math.max(0, Number(prod.stock_quantity || 0) - Number(item.quantity || 1));
+        stockModified = true;
+      }
+    });
+    if (stockModified) {
+      localStorage.setItem("dc_custom_products", JSON.stringify(products));
+      localStorage.setItem("dc_products_updated_at", Date.now().toString());
+    }
+  } catch (err) {
+    console.warn("Stock deduction error:", err);
+  }
+
+  // 5. Broadcast real-time order creation and stock changes to Admin Panel & Storefront
+  if (typeof broadcastSync === "function") {
+    broadcastSync("order_created", orderPayload);
+    broadcastSync("products_updated", { source: "online_checkout" });
+  }
+
+  // 6. Clear shopping cart
   clearCart();
 
   // Reset Submit Button
@@ -238,7 +265,7 @@ async function executeOrderPlacement(orderPayload, cart) {
     submitBtn.textContent = "Place Fireworks Order Now →";
   }
 
-  // 5. Show Success Confirmation View
+  // 7. Show Success Confirmation View
   showOrderConfirmationModal(orderPayload);
 }
 
