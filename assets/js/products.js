@@ -500,10 +500,36 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  // Initialize store guide videos under product areas
+  initStoreGuideVideos();
+
   if (isDetailsPage) {
     loadProductDetails();
   }
 });
+
+/**
+ * Initialize video guides placed under product areas across storefront
+ */
+async function initStoreGuideVideos() {
+  const homeIframe = document.getElementById("homeGuideVideoIframe");
+  const catalogIframe = document.getElementById("catalogGuideVideoIframe");
+  if (!homeIframe && !catalogIframe) return;
+
+  try {
+    const settings = typeof getBusinessSettings === "function" ? await getBusinessSettings() : null;
+    const rawUrl = settings?.guide_video_url || "https://www.youtube.com/watch?v=kY7XlB8mS78";
+    let embedUrl = rawUrl;
+    if (rawUrl.includes("watch?v=")) embedUrl = rawUrl.replace("watch?v=", "embed/");
+    else if (rawUrl.includes("youtu.be/")) embedUrl = rawUrl.replace("youtu.be/", "www.youtube.com/embed/");
+    if (!embedUrl.includes("rel=0")) embedUrl += (embedUrl.includes("?") ? "&rel=0" : "?rel=0");
+
+    if (homeIframe && homeIframe.src !== embedUrl) homeIframe.src = embedUrl;
+    if (catalogIframe && catalogIframe.src !== embedUrl) catalogIframe.src = embedUrl;
+  } catch (e) {
+    console.warn("Could not load custom guide video", e);
+  }
+}
 
 /**
  * Re-fetch products and update storefront components without full page reload
