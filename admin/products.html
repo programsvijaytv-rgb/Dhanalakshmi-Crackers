@@ -48,19 +48,44 @@
     <header class="admin-topbar">
       <h1 class="admin-page-title">Firecracker Product Catalog</h1>
       <div class="topbar-actions">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="openVariableProductManualModal()" title="View manual on how to create and manage variable products">
-          📖 Variable Product Manual
+        <button type="button" class="btn btn-secondary btn-sm btn-action-import" onclick="openImportModal()" title="Import firecrackers from CSV spreadsheet">
+          📥 Import CSV
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="openInstructionVideoModal()" title="Watch guide & demonstration video">
-          📺 Video Guide
+        <button type="button" class="btn btn-secondary btn-sm btn-action-export" onclick="exportProductsToCSV()" title="Export all products to CSV spreadsheet">
+          📤 Export CSV
         </button>
-        <button type="button" class="btn btn-primary btn-sm" onclick="openAddProductModal()">
-          + Add New Firecracker
+        <button type="button" class="btn btn-secondary btn-sm btn-action-manual" onclick="openVariableProductManualModal()" title="View manual on how to create and manage variable products">
+          📖 Manual
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm btn-action-video" onclick="openInstructionVideoModal()" title="Watch guide & demonstration video">
+          📺 Video
+        </button>
+        <button type="button" class="btn btn-primary btn-sm btn-action-add" onclick="openAddProductModal()">
+          + Add Firecracker
         </button>
       </div>
     </header>
 
     <main class="admin-content">
+      <!-- Mobile & Tablet Responsive Quick Action Bar -->
+      <div class="admin-catalog-quick-bar">
+        <button type="button" class="btn btn-primary btn-sm" onclick="openAddProductModal()">
+          + Add Firecracker
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openImportModal()">
+          📥 Import CSV
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="exportProductsToCSV()">
+          📤 Export CSV
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openVariableProductManualModal()">
+          📖 Manual
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openInstructionVideoModal()">
+          📺 Video
+        </button>
+      </div>
+
       <div class="admin-table-card">
         <div class="table-header-bar">
           <div class="search-input-wrapper">
@@ -73,7 +98,7 @@
         </div>
 
         <div class="admin-table-container">
-          <table class="admin-table">
+          <table class="admin-table" id="adminProductsTable">
             <thead>
               <tr>
                 <th class="th-img">Image</th>
@@ -96,7 +121,7 @@
 
   <!-- Add / Edit Product Modal -->
   <div id="productEditModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 780px;">
+    <div class="modal-content modal-product-dialog">
       <div class="modal-header">
         <h3 class="modal-title" id="productModalTitle">Add New Firecracker</h3>
         <button type="button" class="modal-close" onclick="closeProductModal()">&times;</button>
@@ -107,7 +132,7 @@
 
           <!-- Product Type Selector (Single vs Variable) -->
           <div class="product-type-selector-box">
-            <label class="form-label" style="margin-bottom: 0.25rem;">Choose Product Structure:</label>
+            <label class="form-label form-label-tight">Choose Product Structure:</label>
             <div class="product-type-pills">
               <label class="type-pill-label">
                 <input type="radio" name="prodType" id="typeSimple" value="simple" checked onchange="toggleProductType('simple')">
@@ -144,7 +169,7 @@
                 <option value="">-- Select Category --</option>
               </select>
             </div>
-            <div class="form-group form-group-checkbox" style="padding-top: 1.8rem;">
+            <div class="form-group form-group-checkbox form-group-checkbox-align">
               <label class="checkbox-label">
                 <input type="checkbox" id="prodFeatured" class="checkbox-input">
                 <span>Featured on Home Page</span>
@@ -182,7 +207,7 @@
           </div>
 
           <!-- VARIABLE PRODUCT FIELDS (Variant Builder) -->
-          <div id="variableProductFields" class="variant-builder-card" style="display: none;">
+          <div id="variableProductFields" class="variant-builder-card modal-hidden">
             <div class="variant-builder-header">
               <h4><span>⚡</span> Configure Variants Manually</h4>
               <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantRow()">+ Add Variant Row</button>
@@ -200,16 +225,17 @@
             </div>
 
             <div class="variant-table-wrapper">
+              <div class="variant-mobile-scroll-hint">👉 Swipe horizontally to view/edit all variant columns</div>
               <table class="variant-table">
                 <thead>
                   <tr>
-                    <th style="min-width: 140px;">Variant Option / Name *</th>
-                    <th style="min-width: 90px;">SKU</th>
-                    <th style="width: 85px;">Price (₹) *</th>
-                    <th style="width: 85px;">MRP (₹)</th>
-                    <th style="width: 80px;">Stock *</th>
-                    <th style="width: 90px;">Unit</th>
-                    <th style="width: 35px;"></th>
+                    <th class="th-var-name">Variant Option / Name *</th>
+                    <th class="th-var-sku">SKU</th>
+                    <th class="th-var-price">Price (₹) *</th>
+                    <th class="th-var-mrp">MRP (₹)</th>
+                    <th class="th-var-stock">Stock *</th>
+                    <th class="th-var-unit">Unit</th>
+                    <th class="th-var-action"></th>
                   </tr>
                 </thead>
                 <tbody id="variantTableBody">
@@ -217,7 +243,7 @@
                 </tbody>
               </table>
             </div>
-            <p style="font-size: 0.78rem; color: #64748b; margin-top: 4px;">
+            <p class="variant-note-text">
               💡 <em>Base price and total inventory stock will be automatically synchronized from all defined variants.</em>
             </p>
           </div>
@@ -247,9 +273,79 @@
     </div>
   </div>
 
+  <!-- Bulk Import Products Modal -->
+  <div id="productImportModal" class="modal-overlay modal-hidden">
+    <div class="modal-content modal-import-dialog">
+      <div class="modal-header">
+        <h3 class="modal-title">📥 Bulk Import Firecrackers (CSV)</h3>
+        <button type="button" class="modal-close" onclick="closeImportModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="import-help-box">
+          <div class="video-desc-title">Bulk Add or Update Firecracker Products</div>
+          <p class="video-guide-subtitle">
+            Import your complete firecracker inventory from a CSV file. Supports product names, SKU codes, categories, selling prices, MRP, stock quantity, and descriptions.
+          </p>
+          <div class="video-settings-callout">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadSampleProductTemplate()">
+              <span>📄</span> Download Sample CSV Template
+            </button>
+          </div>
+        </div>
+
+        <div class="import-dropzone" id="importDropzone" onclick="document.getElementById('productCsvFileInput').click()">
+          <input type="file" id="productCsvFileInput" accept=".csv,text/csv" class="modal-hidden" onchange="handleProductCsvSelected(event)">
+          <div class="dropzone-icon">📁</div>
+          <div class="dropzone-text" id="dropzoneText">
+            <strong>Click to select CSV file</strong> or drag & drop here
+          </div>
+          <div class="variant-note-text">Standard Comma-Separated Values (.csv)</div>
+        </div>
+
+        <!-- Import options -->
+        <div class="import-options-card">
+          <label class="import-option-label">
+            <input type="checkbox" id="importUpdateExisting" checked>
+            <span>
+              <strong>Update matching products:</strong> If SKU or Cracker Name already exists, update its price & stock. Otherwise, insert as a new cracker.
+            </span>
+          </label>
+        </div>
+
+        <!-- Preview Container -->
+        <div id="importPreviewContainer" class="modal-hidden">
+          <div class="video-guide-meta-row">
+            <strong id="importPreviewCount" class="video-guide-title"></strong>
+            <span class="badge badge-success">✓ File Loaded</span>
+          </div>
+          <div class="import-preview-table-wrap">
+            <table class="admin-table import-preview-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>SKU</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                </tr>
+              </thead>
+              <tbody id="importPreviewTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btnExecuteImport" onclick="executeImportProducts()" disabled>
+          🚀 Start Bulk Import
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Variable Product User Manual Modal -->
-  <div id="variableProductManualModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content" style="max-width: 760px; max-height: 90vh; overflow-y: auto;">
+  <div id="variableProductManualModal" class="modal-overlay modal-hidden">
+    <div class="modal-content modal-manual-dialog">
       <div class="modal-header">
         <h3 class="modal-title">📖 Variable Product Manual & Guide</h3>
         <button type="button" class="modal-close" onclick="closeVariableProductManualModal()">&times;</button>
@@ -264,7 +360,7 @@
           </p>
           <div class="manual-tip-box">
             <strong>Common Sivakasi Fireworks Examples:</strong>
-            <ul style="margin: 0.35rem 0 0 1.25rem;">
+            <ul class="manual-list-nested">
               <li><strong>Sparklers:</strong> 10cm, 15cm, 30cm, 50cm Jumbo lengths.</li>
               <li><strong>Wala Garlands:</strong> 100 Wala, 1000 Wala, 5000 Wala, 10000 Wala counts.</li>
               <li><strong>Sky Shots:</strong> 12 Shots, 25 Shots, 50 Shots, 120 Shots cakes.</li>
@@ -282,7 +378,7 @@
             <li>In the <strong>Product Structure</strong> switch, select <strong>"Variable Product"</strong>.</li>
             <li>Enter the general <strong>Firecracker Name</strong> (e.g. <em>"Classic Sivakasi Electric Sparklers"</em>) and choose its Category.</li>
             <li>In the <strong>Variant Builder</strong>, you can either:
-              <ul style="margin: 0.25rem 0 0 1.25rem;">
+              <ul class="manual-list-nested-compact">
                 <li>Click a <strong>Quick 1-Click Preset</strong> (e.g. Sparkler Lengths, Wala Garlands, Sky Shots).</li>
                 <li>Or click <strong>"+ Add Variant Row"</strong> to manually type your own variant options.</li>
               </ul>
@@ -300,7 +396,7 @@
           <p>
             On the public storefront, variable items display a <strong>"From ₹XX"</strong> or price range badge. On clicking into the product, customers see sleek option pills (e.g. <em>[ 10cm - ₹35 ] [ 15cm - ₹85 ]</em>). Selecting an option updates the price, SKU, stock indicator, and adds that specific option to the cart and invoice.
           </p>
-          <p style="margin-top: 0.5rem;">
+          <p class="manual-p-spacing">
             In the <strong>POS Billing Terminal</strong>, clicking a variable product opens a 1-tap touch selector for the cashier to choose the exact variant for the receipt.
           </p>
         </div>
@@ -315,30 +411,30 @@
   </div>
 
   <!-- Instruction Video Guide Modal -->
-  <div id="instructionVideoModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content" style="max-width: 720px;">
+  <div id="instructionVideoModal" class="modal-overlay modal-hidden">
+    <div class="modal-content modal-video-dialog">
       <div class="modal-header">
         <h3 class="modal-title">📺 Fireworks Instruction & Video Guide</h3>
         <button type="button" class="modal-close" onclick="closeInstructionVideoModal()">&times;</button>
       </div>
       <div class="modal-body">
         <div class="video-player-responsive" id="adminVideoPlayerContainer">
-          <iframe id="adminVideoPlayerIframe" src="https://www.youtube.com/embed/kY7XlB8mS78?rel=0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+          <iframe id="adminVideoPlayerIframe" src="https://www.youtube.com/embed/kY7XlB8mS78?rel=0" title="Diwali Fireworks Handling & Safety Video Guide" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
         </div>
-        <div style="margin-top: 1rem; line-height: 1.6; font-size: 0.9rem; color: #475569;">
-          <h4 style="font-size: 1rem; color: #0f172a; margin-bottom: 0.35rem;">Diwali Fireworks Handling & Safety Video Guide</h4>
+        <div class="video-desc-wrap">
+          <h4 class="video-desc-title">Diwali Fireworks Handling & Safety Video Guide</h4>
           <p>
             Watch this comprehensive guide covering Sivakasi fireworks safety guidelines, proper aerial repeater placement, children supervision protocols, and safe lighting distances.
           </p>
-          <div style="margin-top: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <div class="video-settings-callout">
             <span>Custom store guide video URL can be changed in <strong>Store Settings</strong>.</span>
-            <a href="settings.html" class="btn btn-secondary btn-sm" style="text-decoration: none;">⚙️ Settings</a>
+            <a href="settings.html" class="btn btn-secondary btn-sm btn-link-unstyled">⚙️ Settings</a>
           </div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" onclick="closeInstructionVideoModal()">Close</button>
-        <a href="https://www.youtube.com/watch?v=kY7XlB8mS78" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration: none;">
+        <a href="https://www.youtube.com/watch?v=kY7XlB8mS78" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-link-unstyled">
           Open in YouTube ↗
         </a>
       </div>

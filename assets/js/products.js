@@ -259,11 +259,11 @@ function renderProductsGrid(products, targetContainerId = "productsGrid") {
       </div>
       <div class="product-content">
         <div class="product-top-row">
-          <span class="product-category-label">${p.category_name || 'Crackers'}</span>
-          <span class="product-sku-tag">SKU: ${p.sku || 'N/A'}</span>
+          <span class="product-category-label" title="${p.category_name || 'Crackers'}">${p.category_name || 'Crackers'}</span>
+          ${p.sku ? `<span class="product-sku-tag" title="SKU: ${p.sku}">#${p.sku}</span>` : ''}
         </div>
         <h3 class="product-title">
-          <a href="product-details.html?id=${p.id}">${p.name}</a>
+          <a href="product-details.html?id=${p.id}" title="${p.name}">${p.name}</a>
         </h3>
         <p class="product-desc">${p.description || 'Genuine Sivakasi firecracker with superior safety testing.'}</p>
         <div class="product-footer">

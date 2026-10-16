@@ -133,44 +133,59 @@ function renderAdminProductsTable(products) {
   if (!tbody) return;
 
   tbody.innerHTML = "";
-  if (products.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #9ca3af; padding: 2rem;">No products found.</td></tr>`;
+  if (!products || products.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2.5rem 1rem;">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎆</div>
+      <strong style="color: #475569; font-size: 1rem;">No firecrackers found.</strong>
+      <p style="font-size: 0.82rem; color: #94a3b8; margin-top: 4px;">Click "+ Add Firecracker" or "📥 Import CSV" to populate your catalog.</p>
+    </td></tr>`;
     return;
   }
 
   products.forEach(p => {
     const isVariable = Boolean(p.has_variants && Array.isArray(p.variants) && p.variants.length > 0);
     const tr = document.createElement("tr");
+    tr.className = "admin-product-row";
     tr.innerHTML = `
-      <td>
-        <div style="position: relative; width: 44px; height: 44px;">
-          <img src="${p.image_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=60'}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;">
-          ${p.video_url ? `<a href="${p.video_url}" target="_blank" rel="noopener" title="Watch Demo Video" style="position: absolute; bottom: -4px; right: -4px; background: #dc2626; color: #fff; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; text-decoration: none;">▶</a>` : ''}
+      <td class="col-img" data-label="Image">
+        <div class="admin-prod-thumb-wrap">
+          <img src="${p.image_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=60'}" alt="${p.name}" class="admin-prod-thumb" loading="lazy">
+          ${p.video_url ? `<a href="${p.video_url}" target="_blank" rel="noopener" title="Watch Demo Video" class="admin-prod-video-badge">▶</a>` : ''}
         </div>
       </td>
-      <td>
-        <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
-          <strong>${p.name}</strong>
-          ${isVariable ? `<span class="badge badge-info" style="font-size: 0.68rem; font-weight: 700;">⚡ ${p.variants.length} Variants</span>` : ''}
+      <td class="col-name" data-label="Product">
+        <div class="admin-prod-title-line">
+          <strong class="admin-prod-title">${p.name}</strong>
+          ${isVariable ? `<span class="badge badge-info admin-variant-pill">⚡ ${p.variants.length} Variants</span>` : ''}
+          ${p.is_featured ? `<span class="badge badge-warning admin-feat-pill">★ Featured</span>` : ''}
         </div>
-        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">
-          ${isVariable ? `Options: ${p.variants.map(v => v.name).slice(0, 3).join(', ')}${p.variants.length > 3 ? '...' : ''}` : `Unit: ${p.unit || 'Box'}`}
+        <div class="admin-prod-sub-meta">
+          <span class="meta-cat-badge">${p.category_name || 'Crackers'}</span>
+          ${p.sku ? `<span class="meta-sku-tag">#${p.sku}</span>` : ''}
+          ${isVariable ? `<span class="meta-options">${p.variants.map(v => v.name).slice(0, 2).join(', ')}${p.variants.length > 2 ? '...' : ''}</span>` : `<span class="meta-unit">${p.unit || 'Box'}</span>`}
         </div>
       </td>
-      <td><code>${p.sku || '-'}</code></td>
-      <td>
-        <strong>${isVariable ? `From ${formatCurrency(p.price)}` : formatCurrency(p.price)}</strong>
+      <td class="col-sku" data-label="SKU">
+        <code class="sku-badge">${p.sku || '-'}</code>
       </td>
-      <td>
-        <span class="badge ${p.stock_quantity <= 10 ? 'badge-danger' : 'badge-success'}">
-          ${p.stock_quantity} in stock
+      <td class="col-price" data-label="Price">
+        <div class="admin-price-cell">
+          <strong class="price-val">${isVariable ? `From ${formatCurrency(p.price)}` : formatCurrency(p.price)}</strong>
+          ${(p.original_price && p.original_price > p.price) ? `<span class="price-mrp-strike">${formatCurrency(p.original_price)}</span>` : ''}
+        </div>
+      </td>
+      <td class="col-stock" data-label="Stock">
+        <span class="badge ${p.stock_quantity <= 10 ? 'badge-danger' : 'badge-success'} admin-stock-pill">
+          ${p.stock_quantity > 0 ? `${p.stock_quantity} in stock` : 'Out of Stock'}
         </span>
       </td>
-      <td>${p.category_name || '-'}</td>
-      <td>
+      <td class="col-category" data-label="Category">
+        <span class="admin-cat-text">${p.category_name || '-'}</span>
+      </td>
+      <td class="col-actions" data-label="Actions">
         <div class="action-btn-group">
-          <button class="action-btn" onclick="openEditProductModal('${p.id}')">✏️ Edit</button>
-          <button class="action-btn delete" onclick="deleteProduct('${p.id}')">🗑️</button>
+          <button type="button" class="action-btn edit" onclick="openEditProductModal('${p.id}')" title="Edit Firecracker">✏️ Edit</button>
+          <button type="button" class="action-btn delete" onclick="deleteProduct('${p.id}')" title="Delete Firecracker">🗑️</button>
         </div>
       </td>
     `;
@@ -2035,3 +2050,494 @@ async function saveAdminSettings(e) {
   if (barDot) barDot.style.color = "#10b981";
 }
 
+/* ==============================================================================
+   PRODUCT CATALOG IMPORT & EXPORT ENGINE
+   Enables bulk CSV Export and Import with validation, preview, and cloud sync
+   ============================================================================== */
+
+let importedParsedProducts = [];
+
+/**
+ * Helper to escape a value for standard CSV formatting (RFC 4180)
+ */
+function escapeCsvValue(val) {
+  if (val === null || val === undefined) return '""';
+  let str = String(val);
+  if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+    str = '"' + str.replace(/"/g, '""') + '"';
+  } else {
+    str = '"' + str + '"';
+  }
+  return str;
+}
+
+/**
+ * Robust CSV text parser supporting quoted strings, escaped quotes, and commas
+ */
+function parseCsvToRows(text) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < text.length) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (inQuotes) {
+      if (char === '"' && nextChar === '"') {
+        cell += '"';
+        i += 2;
+        continue;
+      } else if (char === '"') {
+        inQuotes = false;
+        i++;
+        continue;
+      } else {
+        cell += char;
+        i++;
+        continue;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+        i++;
+        continue;
+      } else if (char === ',') {
+        row.push(cell.trim());
+        cell = '';
+        i++;
+        continue;
+      } else if (char === '\r') {
+        i++;
+        continue;
+      } else if (char === '\n') {
+        row.push(cell.trim());
+        if (row.some(c => c !== '')) rows.push(row);
+        row = [];
+        cell = '';
+        i++;
+        continue;
+      } else {
+        cell += char;
+        i++;
+        continue;
+      }
+    }
+  }
+
+  if (cell !== '' || row.length > 0) {
+    row.push(cell.trim());
+    if (row.some(c => c !== '')) rows.push(row);
+  }
+
+  return rows;
+}
+
+/**
+ * 1-Click Export all Firecrackers to CSV
+ */
+function exportProductsToCSV() {
+  const list = (Array.isArray(adminProductList) && adminProductList.length > 0)
+    ? adminProductList
+    : (typeof getStoredCustomProducts === "function" ? getStoredCustomProducts() : []);
+
+  if (!list || list.length === 0) {
+    showToast("No products found in catalog to export.", "warning");
+    return;
+  }
+
+  const headers = [
+    "name",
+    "sku",
+    "category",
+    "price",
+    "original_price",
+    "stock_quantity",
+    "unit",
+    "is_featured",
+    "image_url",
+    "video_url",
+    "description"
+  ];
+
+  let csvContent = "\uFEFF" + headers.join(",") + "\n"; // \uFEFF UTF-8 BOM for Microsoft Excel
+
+  list.forEach(p => {
+    const row = [
+      escapeCsvValue(p.name || ""),
+      escapeCsvValue(p.sku || ""),
+      escapeCsvValue(p.category_name || "Crackers"),
+      Number(p.price) || 0,
+      Number(p.original_price || p.price) || 0,
+      parseInt(p.stock_quantity, 10) || 0,
+      escapeCsvValue(p.unit || "Box"),
+      p.is_featured ? "true" : "false",
+      escapeCsvValue(p.image_url || ""),
+      escapeCsvValue(p.video_url || ""),
+      escapeCsvValue(p.description || "")
+    ];
+    csvContent += row.join(",") + "\n";
+  });
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const downloadLink = document.createElement("a");
+  const dateStr = new Date().toISOString().split("T")[0];
+  downloadLink.href = url;
+  downloadLink.setAttribute("download", `Dhanalakshmi_Products_${dateStr}.csv`);
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+  URL.revokeObjectURL(url);
+
+  showToast(`📥 Successfully exported ${list.length} products to CSV!`, "success");
+}
+
+/**
+ * Download sample CSV template pre-populated with standard fireworks
+ */
+function downloadSampleProductTemplate() {
+  const headers = [
+    "name",
+    "sku",
+    "category",
+    "price",
+    "original_price",
+    "stock_quantity",
+    "unit",
+    "is_featured",
+    "image_url",
+    "video_url",
+    "description"
+  ];
+
+  const sampleRows = [
+    [
+      "Deluxe 1000 Wala Garland",
+      "WALA-1000",
+      "Wala",
+      320,
+      600,
+      100,
+      "Piece",
+      "true",
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600",
+      "https://www.youtube.com/watch?v=kY7XlB8mS78",
+      "Classic red Sivakasi festive sound garland with rhythmic crackles"
+    ],
+    [
+      "Flower Pots Special (10 Pcs)",
+      "FLP-SPC10",
+      "Flower Pots",
+      160,
+      300,
+      120,
+      "Box (10 Pcs)",
+      "true",
+      "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600",
+      "",
+      "Bright golden spark fountain with multi-color stars"
+    ],
+    [
+      "10cm Electric Sparklers",
+      "SPK-10EL",
+      "Sparklers",
+      35,
+      65,
+      250,
+      "Box (10 Pcs)",
+      "false",
+      "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600",
+      "",
+      "Smooth golden sparks safe for family celebrations"
+    ]
+  ];
+
+  let csvContent = "\uFEFF" + headers.join(",") + "\n";
+  sampleRows.forEach(r => {
+    csvContent += r.map(v => typeof v === "number" ? v : escapeCsvValue(v)).join(",") + "\n";
+  });
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const downloadLink = document.createElement("a");
+  downloadLink.href = url;
+  downloadLink.setAttribute("download", `Dhanalakshmi_Products_Sample_Template.csv`);
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Open Bulk Import Modal
+ */
+function openImportModal() {
+  const modal = document.getElementById("productImportModal");
+  if (!modal) return;
+
+  importedParsedProducts = [];
+  const fileInput = document.getElementById("productCsvFileInput");
+  if (fileInput) fileInput.value = "";
+
+  const dropText = document.getElementById("dropzoneText");
+  if (dropText) dropText.innerHTML = `<strong>Click to select CSV file</strong> or drag & drop here`;
+
+  const prevContainer = document.getElementById("importPreviewContainer");
+  if (prevContainer) prevContainer.style.display = "none";
+
+  const executeBtn = document.getElementById("btnExecuteImport");
+  if (executeBtn) executeBtn.disabled = true;
+
+  modal.style.display = "flex";
+  modal.onclick = (e) => {
+    if (e.target === modal) closeImportModal();
+  };
+}
+
+/**
+ * Close Bulk Import Modal
+ */
+function closeImportModal() {
+  const modal = document.getElementById("productImportModal");
+  if (modal) modal.style.display = "none";
+}
+
+/**
+ * Handle CSV File selection and real-time preview parsing
+ */
+function handleProductCsvSelected(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const dropText = document.getElementById("dropzoneText");
+  if (dropText) dropText.innerHTML = `📄 <strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const text = e.target.result;
+    parseAndPreviewProductCsv(text);
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+/**
+ * Parse CSV and render live table preview
+ */
+function parseAndPreviewProductCsv(csvText) {
+  const allRows = parseCsvToRows(csvText);
+  if (!allRows || allRows.length < 2) {
+    showToast("CSV file must contain a header row and at least one product.", "warning");
+    return;
+  }
+
+  const rawHeaders = allRows[0].map(h => h.toLowerCase().trim().replace(/[\s_-]+/g, ""));
+  const headerMap = {};
+  rawHeaders.forEach((h, idx) => {
+    if (h.includes("name") || h.includes("title") || h.includes("product")) headerMap.name = idx;
+    else if (h.includes("sku") || h.includes("code")) headerMap.sku = idx;
+    else if (h.includes("cat")) headerMap.category = idx;
+    else if (h.includes("original") || h.includes("mrp")) headerMap.original_price = idx;
+    else if (h.includes("price") || h.includes("rate")) headerMap.price = idx;
+    else if (h.includes("stock") || h.includes("qty")) headerMap.stock_quantity = idx;
+    else if (h.includes("unit") || h.includes("pack")) headerMap.unit = idx;
+    else if (h.includes("image") || h.includes("photo") || h.includes("img")) headerMap.image_url = idx;
+    else if (h.includes("video") || h.includes("youtube")) headerMap.video_url = idx;
+    else if (h.includes("desc")) headerMap.description = idx;
+    else if (h.includes("feat")) headerMap.is_featured = idx;
+  });
+
+  if (headerMap.name === undefined || headerMap.price === undefined) {
+    showToast("CSV must at least contain 'name' and 'price' columns.", "warning");
+    return;
+  }
+
+  const parsed = [];
+  for (let i = 1; i < allRows.length; i++) {
+    const r = allRows[i];
+    if (!r || r.length === 0 || !r.some(cell => cell.trim() !== "")) continue;
+
+    const name = headerMap.name !== undefined ? (r[headerMap.name] || "").trim() : "";
+    if (!name) continue;
+
+    const sku = headerMap.sku !== undefined ? (r[headerMap.sku] || "").trim() : "";
+    const category = headerMap.category !== undefined ? (r[headerMap.category] || "Crackers").trim() : "Crackers";
+    const price = headerMap.price !== undefined ? (Number(r[headerMap.price]) || 0) : 0;
+    const mrp = headerMap.original_price !== undefined ? (Number(r[headerMap.original_price]) || price) : price;
+    const stock = headerMap.stock_quantity !== undefined ? (parseInt(r[headerMap.stock_quantity], 10) || 50) : 50;
+    const unit = headerMap.unit !== undefined ? (r[headerMap.unit] || "Box").trim() : "Box";
+    const image_url = headerMap.image_url !== undefined ? (r[headerMap.image_url] || "").trim() : "";
+    const video_url = headerMap.video_url !== undefined ? (r[headerMap.video_url] || "").trim() : "";
+    const desc = headerMap.description !== undefined ? (r[headerMap.description] || "").trim() : "";
+    const feat = headerMap.is_featured !== undefined ? (String(r[headerMap.is_featured]).toLowerCase().includes("true") || r[headerMap.is_featured] === "1") : false;
+
+    parsed.push({
+      name,
+      sku: sku || `SKU-${Date.now().toString(36).toUpperCase()}-${i}`,
+      category_name: category,
+      price,
+      original_price: mrp >= price ? mrp : price,
+      stock_quantity: stock,
+      unit: unit || "Box",
+      image_url: image_url || "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600",
+      video_url,
+      description: desc || "Authentic Sivakasi festive fireworks with certified safety standards.",
+      is_featured: feat
+    });
+  }
+
+  if (parsed.length === 0) {
+    showToast("No valid product rows could be read from this CSV.", "warning");
+    return;
+  }
+
+  importedParsedProducts = parsed;
+
+  // Render preview table
+  const prevCount = document.getElementById("importPreviewCount");
+  if (prevCount) prevCount.textContent = `📦 Ready to Import: ${parsed.length} Products`;
+
+  const tbody = document.getElementById("importPreviewTbody");
+  if (tbody) {
+    tbody.innerHTML = "";
+    parsed.slice(0, 5).forEach(p => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${p.name}</strong></td>
+        <td><code>${p.sku}</code></td>
+        <td>${p.category_name}</td>
+        <td><strong>${formatCurrency(p.price)}</strong></td>
+        <td><span class="badge badge-success">${p.stock_quantity} in stock</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    if (parsed.length > 5) {
+      const moreTr = document.createElement("tr");
+      moreTr.innerHTML = `<td colspan="5" style="text-align:center; color:#64748b; font-style:italic;">... and ${parsed.length - 5} more firecrackers</td>`;
+      tbody.appendChild(moreTr);
+    }
+  }
+
+  const prevContainer = document.getElementById("importPreviewContainer");
+  if (prevContainer) prevContainer.style.display = "block";
+
+  const executeBtn = document.getElementById("btnExecuteImport");
+  if (executeBtn) executeBtn.disabled = false;
+}
+
+/**
+ * Execute Bulk Import into memory, Supabase cloud, and local persistence
+ */
+async function executeImportProducts() {
+  if (!importedParsedProducts || importedParsedProducts.length === 0) {
+    showToast("Please choose a valid CSV file first.", "warning");
+    return;
+  }
+
+  const executeBtn = document.getElementById("btnExecuteImport");
+  if (executeBtn) {
+    executeBtn.disabled = true;
+    executeBtn.textContent = "⏳ Importing Products...";
+  }
+
+  const updateExisting = document.getElementById("importUpdateExisting")?.checked ?? true;
+  const categories = await fetchCategories();
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  const isOnline = isSupabaseConfigured() && sb;
+
+  let addedCount = 0;
+  let updatedCount = 0;
+
+  for (const item of importedParsedProducts) {
+    // Resolve Category ID
+    let matchedCat = categories.find(c => c.name.toLowerCase() === item.category_name.toLowerCase());
+    let catId = matchedCat ? matchedCat.id : null;
+
+    let existingIdx = -1;
+    if (updateExisting) {
+      existingIdx = adminProductList.findIndex(p => 
+        (p.sku && item.sku && p.sku.toLowerCase() === item.sku.toLowerCase()) ||
+        (p.name && item.name && p.name.toLowerCase() === item.name.toLowerCase())
+      );
+    }
+
+    let prodId = existingIdx !== -1 ? adminProductList[existingIdx].id : null;
+    if (!prodId) {
+      prodId = (typeof crypto !== "undefined" && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : ("c1000000-0000-0000-0000-" + Date.now().toString(16).padStart(12, "0"));
+    }
+
+    const fullProduct = {
+      id: prodId,
+      name: item.name,
+      sku: item.sku,
+      category_id: catId,
+      category_name: item.category_name,
+      price: item.price,
+      original_price: item.original_price,
+      stock_quantity: item.stock_quantity,
+      unit: item.unit,
+      image_url: item.image_url,
+      video_url: item.video_url,
+      description: item.description,
+      is_featured: item.is_featured,
+      has_variants: false,
+      variants: [],
+      is_active: true
+    };
+
+    if (existingIdx !== -1) {
+      adminProductList[existingIdx] = { ...adminProductList[existingIdx], ...fullProduct };
+      updatedCount++;
+    } else {
+      adminProductList.unshift(fullProduct);
+      addedCount++;
+    }
+
+    // Direct cloud sync to Supabase products table
+    if (isOnline) {
+      try {
+        await sb.from("products").upsert({
+          id: prodId,
+          name: fullProduct.name,
+          sku: fullProduct.sku,
+          price: fullProduct.price,
+          original_price: fullProduct.original_price,
+          stock_quantity: fullProduct.stock_quantity,
+          unit: fullProduct.unit,
+          category_id: catId,
+          is_featured: fullProduct.is_featured,
+          image_url: fullProduct.image_url,
+          description: fullProduct.description,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        });
+      } catch (err) {
+        console.warn("Supabase import item sync error", err);
+      }
+    }
+  }
+
+  // Persist authoritative catalog locally
+  localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
+  localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+  // Broadcast real-time sync event across storefront
+  if (typeof broadcastSync === "function") {
+    broadcastSync("products_updated", { action: "import", total: adminProductList.length });
+  }
+
+  // Refresh Table Display
+  renderAdminProductsTable(adminProductList);
+
+  closeImportModal();
+  if (executeBtn) {
+    executeBtn.disabled = false;
+    executeBtn.textContent = "🚀 Start Bulk Import";
+  }
+
+  showToast(`🎉 Import Complete! Added: ${addedCount}, Updated: ${updatedCount}.`, "success", 5000);
+}

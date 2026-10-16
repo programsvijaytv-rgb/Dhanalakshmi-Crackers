@@ -2896,6 +2896,526 @@ body.admin-drawer-locked {
   border: 0;
 }
 
+/* ==============================================================================
+   RESPONSIVE PRODUCT MANAGEMENT & MOBILE UX ENHANCEMENTS
+   ============================================================================== */
 
+/* Catalog Quick Action Toolbar */
+.admin-catalog-quick-bar {
+  display: none;
+}
 
+@media (max-width: 991px) {
+  .admin-catalog-quick-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.25rem 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+    scrollbar-width: none;
+  }
 
+  .admin-catalog-quick-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-catalog-quick-bar .btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 0.45rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 6px;
+  }
+
+  .topbar-actions .btn-action-manual,
+  .topbar-actions .btn-action-video,
+  .topbar-actions .btn-action-import,
+  .topbar-actions .btn-action-export {
+    display: none; /* Safely accessible in quick action bar directly underneath */
+  }
+
+  .topbar-actions .btn-action-add {
+    padding: 0.45rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+}
+
+/* Product Table Components */
+.admin-prod-thumb-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.admin-prod-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-prod-video-badge {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.62rem;
+  padding: 1px 3px;
+  border-radius: 3px 0 0 0;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.admin-prod-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.admin-prod-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.admin-variant-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+}
+
+.admin-feat-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #b45309;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.admin-prod-sub-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+
+.meta-cat-badge {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #d97706;
+  font-weight: 700;
+  font-size: 0.68rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.meta-sku-tag {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.68rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+}
+
+.sku-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.78rem;
+  color: #475569;
+  background: #f8fafc;
+  padding: 0.18rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-price-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-val {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.price-mrp-strike {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.admin-stock-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+}
+
+.admin-cat-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Variant Table Mobile Swipe Indicator */
+.variant-mobile-scroll-hint {
+  display: none;
+}
+
+/* ==============================================================================
+   MOBILE RESPONSIVE CARD VIEW FOR ADMIN PRODUCT TABLE (<= 768px)
+   Eliminates horizontal table scroll, exposes Price, Stock, Edit and Delete
+   ============================================================================== */
+@media (max-width: 768px) {
+  .admin-table-container {
+    background: transparent !important;
+    border: none !important;
+    overflow-x: visible !important;
+  }
+
+  .admin-table {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .admin-table thead {
+    display: none !important;
+  }
+
+  .admin-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+
+  .admin-table tr.admin-product-row {
+    display: grid !important;
+    grid-template-columns: 46px 1fr !important;
+    column-gap: 0.75rem !important;
+    row-gap: 0.45rem !important;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 0.75rem !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .admin-table td {
+    border: none !important;
+    padding: 0 !important;
+    white-space: normal !important;
+  }
+
+  .admin-table td.col-img {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+  }
+
+  .admin-table td.col-name {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+  }
+
+  .admin-table td.col-sku,
+  .admin-table td.col-category {
+    display: none !important; /* Meta and SKU already rendered in sub-meta line */
+  }
+
+  .admin-table td.col-price {
+    grid-column: 1 / 3 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    background: #f8fafc !important;
+    padding: 0.4rem 0.65rem !important;
+    border-radius: 6px !important;
+    border: 1px solid #f1f5f9 !important;
+  }
+
+  .admin-table td.col-price .admin-price-cell {
+    flex-direction: row !important;
+    align-items: baseline !important;
+    gap: 0.4rem !important;
+  }
+
+  .admin-table td.col-price .price-val {
+    font-size: 1rem !important;
+    color: #dc2626 !important;
+    font-weight: 800 !important;
+  }
+
+  .admin-table td.col-stock {
+    grid-column: 1 / 3 !important;
+    grid-row: 2 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    pointer-events: none;
+  }
+
+  .admin-table td.col-actions {
+    grid-column: 1 / 3 !important;
+    grid-row: 3 !important;
+    display: flex !important;
+    padding-top: 0.35rem !important;
+    border-top: 1px dashed #e2e8f0 !important;
+  }
+
+  .admin-table td.col-actions .action-btn-group {
+    width: 100% !important;
+    display: flex !important;
+    gap: 0.5rem !important;
+  }
+
+  .admin-table td.col-actions .action-btn.edit {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    background: #f1f5f9 !important;
+    color: #1e293b !important;
+    border-radius: 6px !important;
+  }
+
+  .admin-table td.col-actions .action-btn.delete {
+    padding: 0.5rem 0.85rem !important;
+    font-size: 0.95rem !important;
+    background: #fee2e2 !important;
+    border-radius: 6px !important;
+  }
+
+  /* Product Add/Edit Modal Mobile Optimization */
+  #productEditModal .modal-content,
+  #productImportModal .modal-content {
+    border-radius: 16px 16px 0 0 !important;
+    max-height: 94vh !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .product-type-pills {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  .type-pill-card {
+    padding: 0.65rem 0.85rem !important;
+    width: 100% !important;
+  }
+
+  .variant-mobile-scroll-hint {
+    display: block !important;
+    font-size: 0.72rem !important;
+    color: #b45309 !important;
+    background: #fef3c7 !important;
+    padding: 0.35rem 0.6rem !important;
+    border-radius: 4px !important;
+    margin-bottom: 0.4rem !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+  }
+
+  .variant-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+  }
+
+  .variant-presets-btns {
+    gap: 0.35rem !important;
+  }
+
+  .btn-variant-preset {
+    font-size: 0.72rem !important;
+    padding: 0.3rem 0.55rem !important;
+  }
+}
+
+/* ==============================================================================
+   BULK IMPORT MODAL STYLES
+   ============================================================================== */
+.import-help-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.import-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 1.75rem 1rem;
+  text-align: center;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.import-dropzone:hover {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.dropzone-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.35rem;
+}
+
+.dropzone-text {
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.import-options-card {
+  margin-top: 1rem;
+  background: #f8fafc;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.import-option-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  color: #334155;
+  cursor: pointer;
+  line-height: 1.45;
+}
+
+.import-option-label input {
+  margin-top: 3px;
+}
+
+.import-preview-table-wrap {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.import-preview-table {
+  font-size: 0.78rem;
+  width: 100%;
+}
+
+.import-preview-table th {
+  padding: 0.4rem 0.6rem;
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #475569;
+}
+
+.import-preview-table td {
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* Modal Helper & Accessibility Utility Classes (Eliminates inline styles) */
+.modal-product-dialog {
+  max-width: 780px !important;
+}
+
+.modal-manual-dialog {
+  max-width: 760px !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+.modal-video-dialog {
+  max-width: 720px !important;
+}
+
+.modal-import-dialog {
+  max-width: 680px !important;
+  max-height: 92vh !important;
+  overflow-y: auto !important;
+}
+
+.form-label-tight {
+  margin-bottom: 0.25rem !important;
+}
+
+.form-group-checkbox-align {
+  padding-top: 1.8rem !important;
+}
+
+.th-var-name { min-width: 140px; }
+.th-var-sku { min-width: 90px; }
+.th-var-price { width: 85px; }
+.th-var-mrp { width: 85px; }
+.th-var-stock { width: 80px; }
+.th-var-unit { width: 90px; }
+.th-var-action { width: 35px; }
+
+.variant-note-text {
+  font-size: 0.78rem !important;
+  color: #64748b !important;
+  margin-top: 4px !important;
+}
+
+.manual-list-nested {
+  margin: 0.35rem 0 0 1.25rem !important;
+}
+
+.manual-list-nested-compact {
+  margin: 0.25rem 0 0 1.25rem !important;
+}
+
+.manual-p-spacing {
+  margin-top: 0.5rem !important;
+}
+
+.video-desc-wrap {
+  margin-top: 1rem !important;
+  line-height: 1.6 !important;
+  font-size: 0.9rem !important;
+  color: #475569 !important;
+}
+
+.video-desc-title {
+  font-size: 1rem !important;
+  color: #0f172a !important;
+  margin-bottom: 0.35rem !important;
+}
+
+.video-settings-callout {
+  margin-top: 0.75rem !important;
+  background: #f8fafc !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 6px !important;
+  border: 1px solid #e2e8f0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.btn-link-unstyled {
+  text-decoration: none !important;
+}
