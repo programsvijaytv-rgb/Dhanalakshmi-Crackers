@@ -109,7 +109,7 @@ function filterPOSProducts() {
 }
 
 /**
- * Render Product grid for fast cashier selection
+ * Render Product grid for fast cashier selection (supports variable products)
  */
 function renderPOSProductGrid(products = posCatalog) {
   const container = document.getElementById("posProductsGrid");
@@ -122,17 +122,18 @@ function renderPOSProductGrid(products = posCatalog) {
 
   container.innerHTML = "";
   products.forEach(p => {
+    const isVar = Boolean(p.has_variants && Array.isArray(p.variants) && p.variants.length > 0);
     const card = document.createElement("div");
     card.className = "pos-item-card";
-    card.onclick = () => addItemToPOSCart(p);
+    card.onclick = () => isVar ? openPOSVariantPicker(p) : addItemToPOSCart(p);
 
     card.innerHTML = `
       <div>
         <div class="pos-item-name">${p.name}</div>
-        <div class="pos-item-sku">SKU: ${p.sku || '-'}</div>
+        <div class="pos-item-sku">${isVar ? `<span class="badge badge-info" style="font-size:0.65rem;">⚡ ${p.variants.length} Options</span>` : `SKU: ${p.sku || '-'}`}</div>
       </div>
       <div class="pos-item-bottom">
-        <span class="pos-item-price">${formatCurrency(p.price)}</span>
+        <span class="pos-item-price">${isVar ? `From ${formatCurrency(p.price)}` : formatCurrency(p.price)}</span>
         <span class="pos-item-stock">Stock: ${p.stock_quantity}</span>
       </div>
     `;
@@ -141,7 +142,86 @@ function renderPOSProductGrid(products = posCatalog) {
 }
 
 /**
- * Add product to POS live bill
+ * Open touch-friendly variant picker popover for cashiers
+ */
+function openPOSVariantPicker(product) {
+  let modal = document.getElementById("posVariantPickerModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "posVariantPickerModal";
+    modal.className = "modal-overlay";
+    document.body.appendChild(modal);
+  }
+
+  modal.innerHTML = `
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">⚡ Select Option: ${product.name}</h3>
+        <button type="button" class="modal-close" onclick="document.getElementById('posVariantPickerModal').style.display='none'">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 60vh; overflow-y: auto;">
+        ${product.variants.map((v, i) => `
+          <button type="button" class="btn btn-secondary" style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; text-align: left; width: 100%; border: 1.5px solid #e2e8f0;" onclick="selectPOSVariant('${product.id}', ${i})">
+            <div>
+              <strong style="font-size: 0.95rem; color: #111827;">${v.name}</strong>
+              <div style="font-size: 0.75rem; color: #6b7280;">SKU: ${v.sku || '-'} • Unit: ${v.unit || 'Box'} • Stock: ${v.stock_quantity}</div>
+            </div>
+            <div style="font-weight: 800; font-size: 1.05rem; color: var(--admin-primary, #dc2626);">
+              ${formatCurrency(v.price)}
+            </div>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  modal.style.display = "flex";
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  };
+}
+
+/**
+ * Add selected variant to POS cart
+ */
+function selectPOSVariant(productId, variantIndex) {
+  const modal = document.getElementById("posVariantPickerModal");
+  if (modal) modal.style.display = "none";
+
+  const product = posCatalog.find(p => String(p.id) === String(productId));
+  if (!product || !product.variants || !product.variants[variantIndex]) return;
+
+  const variant = product.variants[variantIndex];
+  const itemKey = `${product.id}_${variant.id}`;
+  const existing = posCart.find(i => i.id === itemKey);
+
+  if (existing) {
+    if (existing.quantity + 1 > variant.stock_quantity) {
+      showToast(`Warning: Only ${variant.stock_quantity} in stock for ${variant.name}!`, "error");
+      return;
+    }
+    existing.quantity += 1;
+    existing.subtotal = existing.quantity * existing.price;
+  } else {
+    if (variant.stock_quantity < 1) {
+      showToast(`${variant.name} is out of stock!`, "error");
+      return;
+    }
+    posCart.push({
+      id: itemKey,
+      parent_id: product.id,
+      name: `${product.name} (${variant.name})`,
+      sku: variant.sku || product.sku || "",
+      price: Number(variant.price),
+      quantity: 1,
+      subtotal: Number(variant.price),
+      stock: variant.stock_quantity
+    });
+  }
+  renderPOSCart();
+}
+
+/**
+ * Add simple product to POS live bill
  */
 function addItemToPOSCart(product) {
   const existing = posCart.find(i => i.id === product.id);

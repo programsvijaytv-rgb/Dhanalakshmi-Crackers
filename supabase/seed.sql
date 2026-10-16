@@ -49,13 +49,21 @@ INSERT INTO public.business_settings (
 
 -- 2. Insert Categories
 INSERT INTO public.categories (id, name, slug, description, display_order, is_active) VALUES
-('b1000000-0000-0000-0000-000000000001', 'Sparklers & Flares', 'sparklers', 'Classic golden, silver, red, green and crackling sparklers safe for kids', 1, true),
-('b1000000-0000-0000-0000-000000000002', 'Ground Chakkars', 'ground-chakkars', 'Vibrant whirling wheels, special deluxe zamin chakkars with glittering sparks', 2, true),
-('b1000000-0000-0000-0000-000000000003', 'Flower Pots', 'flower-pots', 'Towering fountains of multicolored sparks and ashoka showers', 3, true),
-('b1000000-0000-0000-0000-000000000004', 'Rockets & Missiles', 'rockets', 'Whistling sound rockets, parachute showers, and tri-color sky soaring rockets', 4, true),
-('b1000000-0000-0000-0000-000000000005', 'Aerial Repeaters (Sky Shots)', 'sky-shots', 'Multi-shot night show aerial repeaters with mesmerizing peony, brocade and willow bursts', 5, true),
-('b1000000-0000-0000-0000-000000000006', 'Sound Crackers & Garlands', 'sound-crackers', 'Traditional Sivakasi atom bombs, hydro bombs, and auspicious festive garlands', 6, true),
-('b1000000-0000-0000-0000-000000000007', 'Festival Gift Boxes', 'gift-boxes', 'Curated family assortment packages with the finest variety of crackers at wholesale discounts', 7, true)
+('b1000000-0000-0000-0000-000000000001', 'Gift Box', 'gift-box', 'Family festival gift boxes with assortments of Sivakasi crackers', 1, true),
+('b1000000-0000-0000-0000-000000000002', 'Sparklers - ஸ்பார்க்லர்', 'sparklers', 'Classic golden, silver, red, green and crackling sparklers safe for kids', 2, true),
+('b1000000-0000-0000-0000-000000000003', 'Chakkar - சக்கரம்', 'chakkar', 'Vibrant whirling wheels, special deluxe zamin chakkars with glittering sparks', 3, true),
+('b1000000-0000-0000-0000-000000000004', 'Flower Pots - பூச்சட்டி', 'flower-pots', 'Towering fountains of multicolored sparks and ashoka showers', 4, true),
+('b1000000-0000-0000-0000-000000000005', 'Pencil | Twinkling Star', 'pencil-twinkling-star', 'Handheld sparkling magical pencils and twinkling festive torches', 5, true),
+('b1000000-0000-0000-0000-000000000006', 'Match Sticks - தீப்பெட்டி', 'match-sticks', 'Mega deluxe fireworks safety strike matchboxes for easy lighting', 6, true),
+('b1000000-0000-0000-0000-000000000007', 'Bijili - பிஜிலி', 'bijili', 'Traditional striped Sivakasi crackling sound pouches', 7, true),
+('b1000000-0000-0000-0000-000000000008', 'Wala - வாலா', 'wala', '100, 1000, 5000 and 10000 auspicious garland ladis', 8, true),
+('b1000000-0000-0000-0000-000000000009', 'Rocket - ராக்கெட்', 'rocket', 'Whistling sound rockets, parachute showers, and tri-color sky soaring rockets', 9, true),
+('b1000000-0000-0000-0000-000000000010', 'Fancy Crackers - பேன்சி கிராக்கர்', 'fancy-crackers', 'Peacock wheels, butterfly and helicopter flying spinners', 10, true),
+('b1000000-0000-0000-0000-000000000011', 'Night Out - நைட் அவுட்', 'night-out', 'Golden waterfall fountains, sirens and night novelty fountains', 11, true),
+('b1000000-0000-0000-0000-000000000012', 'Multi Colour Fancy out - மல்டி கலர் பேன்சி அவுட்', 'multi-colour-fancy-out', 'Multi-shot night show aerial repeaters with mesmerizing bursts', 12, true),
+('b1000000-0000-0000-0000-000000000013', 'Bombs - பாம்', 'bombs', 'Traditional Sivakasi hydro atom bombs and thunder sound crackers', 13, true),
+('b1000000-0000-0000-0000-000000000014', 'Gun - கன்', 'gun', 'Die-cast metal toy cracker pistols and 8-shot ring caps refills', 14, true),
+('b1000000-0000-0000-0000-000000000015', 'Others', 'others', 'Snake tablets, musical whistles and novelties', 15, true)
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. Insert Products

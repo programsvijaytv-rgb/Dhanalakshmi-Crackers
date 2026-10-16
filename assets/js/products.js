@@ -28,8 +28,7 @@ async function fetchCategories() {
   }
 
   // Load from local storage or fallback
-  const stored = localStorage.getItem("dc_custom_categories");
-  loadedCategories = stored ? JSON.parse(stored) : DEFAULT_CATEGORIES;
+  loadedCategories = typeof getStoredCategories === "function" ? getStoredCategories() : DEFAULT_CATEGORIES;
   return loadedCategories;
 }
 
@@ -46,6 +45,30 @@ async function fetchProducts() {
   if (!localProducts || localProducts.length === 0) {
     localProducts = [...DEFAULT_PRODUCTS];
     localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
+  } else {
+    // Automatically upgrade any legacy dummy/unrelated placeholder images in stored catalog
+    const DUMMY_FIXES = {
+      "photo-1509198397868-475647b2a1e5": "https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=600&auto=format&fit=crop&q=80",
+      "photo-1533227268428-f9ed0900fb3b": "https://images.unsplash.com/photo-1531844251246-9a1bfaae09fc?w=600&auto=format&fit=crop&q=80",
+      "photo-1514525253161-7a46d19cd819": "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600&auto=format&fit=crop&q=80",
+      "photo-1513297887119-d46091b24bfa": "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&auto=format&fit=crop&q=80"
+    };
+
+    let hadFixes = false;
+    localProducts = localProducts.map(p => {
+      if (p.image_url) {
+        for (const [badKey, goodUrl] of Object.entries(DUMMY_FIXES)) {
+          if (p.image_url.includes(badKey)) {
+            p.image_url = goodUrl;
+            hadFixes = true;
+          }
+        }
+      }
+      return p;
+    });
+    if (hadFixes) {
+      localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
+    }
   }
 
   // 2. Filter out products explicitly deleted in Admin Panel
@@ -215,6 +238,7 @@ function renderProductsGrid(products, targetContainerId = "productsGrid") {
 
   container.innerHTML = "";
   products.forEach(p => {
+    const isVariable = Boolean(p.has_variants && Array.isArray(p.variants) && p.variants.length > 0);
     const original = Number(p.original_price || p.price);
     const current = Number(p.price);
     const discount = original > current ? Math.round(((original - current) / original) * 100) : null;
@@ -224,10 +248,10 @@ function renderProductsGrid(products, targetContainerId = "productsGrid") {
     card.className = "product-card";
     card.innerHTML = `
       <div class="product-img-wrapper">
-        <img src="${p.image_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500'}" alt="${p.name}" class="product-img" loading="lazy">
+        <img src="${p.image_url || 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600&auto=format&fit=crop&q=80'}" alt="${p.name}" class="product-img" loading="lazy">
         <div class="product-badges-corner">
           ${discount ? `<span class="product-badge-discount">🔥 ${discount}% OFF</span>` : ""}
-          <span class="product-badge-green" title="Certified Green Cracker">🌿 Green</span>
+          ${isVariable ? `<span class="product-badge-variable">⚡ ${p.variants.length} Options</span>` : `<span class="product-badge-green" title="Certified Green Cracker">🌿 Green</span>`}
         </div>
         <span class="product-badge-stock ${p.stock_quantity > 0 ? 'in-stock' : 'out-of-stock'}">
           ${p.stock_quantity > 0 ? '● In Stock' : 'Out of Stock'}
@@ -245,15 +269,22 @@ function renderProductsGrid(products, targetContainerId = "productsGrid") {
         <div class="product-footer">
           <div class="price-box">
             <div class="price-row">
-              <span class="price-current">${formatCurrency(p.price)}</span>
+              <span class="price-current">${isVariable ? `From ${formatCurrency(p.price)}` : formatCurrency(p.price)}</span>
               ${original > current ? `<span class="price-original">${formatCurrency(original)}</span>` : ""}
             </div>
             ${savings ? `<span class="price-savings-pill">Save ${formatCurrency(savings)}</span>` : ""}
           </div>
-          <button class="btn-add-cart" onclick="quickAddProduct('${p.id}', this)" aria-label="Add ${p.name} to cart">
-            <span class="cart-btn-icon">🛒</span>
-            <span class="cart-btn-text">Add</span>
-          </button>
+          ${isVariable ? `
+            <a href="product-details.html?id=${p.id}" class="btn-add-cart" style="text-decoration:none;" aria-label="Choose options for ${p.name}">
+              <span class="cart-btn-icon">⚡</span>
+              <span class="cart-btn-text">Options</span>
+            </a>
+          ` : `
+            <button class="btn-add-cart" onclick="quickAddProduct('${p.id}', this)" aria-label="Add ${p.name} to cart">
+              <span class="cart-btn-icon">🛒</span>
+              <span class="cart-btn-text">Add</span>
+            </button>
+          `}
         </div>
       </div>
     `;
@@ -291,7 +322,7 @@ function quickAddProduct(productId, btnElement) {
 }
 
 /**
- * Load and display single product details on product-details.html
+ * Load and display single product details on product-details.html (supports variable options & video)
  */
 async function loadProductDetails() {
   const params = new URLSearchParams(window.location.search);
@@ -317,28 +348,83 @@ async function loadProductDetails() {
   const unitEl = document.getElementById("detailUnit");
 
   if (titleEl) titleEl.textContent = product.name;
-  if (skuEl) skuEl.textContent = product.sku || "N/A";
-  if (priceEl) priceEl.textContent = formatCurrency(product.price);
-  if (origPriceEl) origPriceEl.textContent = (product.original_price && product.original_price > product.price) ? formatCurrency(product.original_price) : "";
   if (descEl) descEl.textContent = product.description || "Authentic Sivakasi fireworks with superior safety certification.";
   if (imgEl && product.image_url) imgEl.src = product.image_url;
-  if (stockEl) {
-    if (product.stock_quantity > 0) {
-      stockEl.textContent = `${product.stock_quantity} Boxes Available`;
-      stockEl.className = "stock-status-pill in-stock";
-    } else {
-      stockEl.textContent = "Out of Stock";
-      stockEl.className = "stock-status-pill out-of-stock";
-    }
-  }
-  if (unitEl) unitEl.textContent = product.unit || "Box";
 
   // Update Page Title dynamically
   document.title = `${product.name} | Dhanalakshmi Crackers Sivakasi`;
 
+  // Variable Product Handling
+  const isVariable = Boolean(product.has_variants && Array.isArray(product.variants) && product.variants.length > 0);
+  const variantsGroup = document.getElementById("detailVariantsGroup");
+  const pillsContainer = document.getElementById("detailVariantsPills");
+  const variantBadge = document.getElementById("selectedVariantBadge");
+
+  let activeVariant = isVariable ? product.variants[0] : null;
+
+  function updateDisplayedVariant(v) {
+    activeVariant = v;
+    if (skuEl) skuEl.textContent = v.sku || product.sku || "N/A";
+    if (priceEl) priceEl.textContent = formatCurrency(v.price);
+    if (origPriceEl) origPriceEl.textContent = (v.original_price && v.original_price > v.price) ? formatCurrency(v.original_price) : "";
+    if (unitEl) unitEl.textContent = v.unit || product.unit || "Box";
+    if (variantBadge) variantBadge.textContent = v.name;
+
+    if (stockEl) {
+      if (v.stock_quantity > 0) {
+        stockEl.textContent = `${v.stock_quantity} Available`;
+        stockEl.className = "stock-status-pill in-stock";
+      } else {
+        stockEl.textContent = "Out of Stock";
+        stockEl.className = "stock-status-pill out-of-stock";
+      }
+    }
+  }
+
+  if (isVariable && variantsGroup && pillsContainer) {
+    variantsGroup.style.display = "block";
+    pillsContainer.innerHTML = "";
+
+    product.variants.forEach((v, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `variant-pill-btn ${idx === 0 ? 'active' : ''}`;
+      btn.innerHTML = `
+        <span class="pill-name">${v.name}</span>
+        <span class="pill-price">${formatCurrency(v.price)}</span>
+      `;
+      btn.onclick = () => {
+        pillsContainer.querySelectorAll(".variant-pill-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        updateDisplayedVariant(v);
+      };
+      pillsContainer.appendChild(btn);
+    });
+
+    updateDisplayedVariant(product.variants[0]);
+  } else {
+    if (variantsGroup) variantsGroup.style.display = "none";
+    if (skuEl) skuEl.textContent = product.sku || "N/A";
+    if (priceEl) priceEl.textContent = formatCurrency(product.price);
+    if (origPriceEl) origPriceEl.textContent = (product.original_price && product.original_price > product.price) ? formatCurrency(product.original_price) : "";
+    if (unitEl) unitEl.textContent = product.unit || "Box";
+
+    if (stockEl) {
+      if (product.stock_quantity > 0) {
+        stockEl.textContent = `${product.stock_quantity} Boxes Available`;
+        stockEl.className = "stock-status-pill in-stock";
+      } else {
+        stockEl.textContent = "Out of Stock";
+        stockEl.className = "stock-status-pill out-of-stock";
+      }
+    }
+  }
+
+  // Setup Add to Cart button
   const addBtn = document.getElementById("detailAddToCartBtn");
   if (addBtn) {
-    if (product.stock_quantity <= 0) {
+    const isOutOfStock = isVariable ? (activeVariant && activeVariant.stock_quantity <= 0) : (product.stock_quantity <= 0);
+    if (isOutOfStock) {
       addBtn.disabled = true;
       addBtn.textContent = "Out of Stock";
       addBtn.style.opacity = "0.6";
@@ -352,10 +438,25 @@ async function loadProductDetails() {
         if (addBtn.disabled) return;
         const qtyInput = document.getElementById("detailQtyInput");
         const qty = qtyInput ? Math.max(1, parseInt(qtyInput.value, 10) || 1) : 1;
-        addToCart(product, qty);
+        addToCart(product, qty, activeVariant);
         animateAddButton(addBtn);
       };
     }
+  }
+
+  // Video Demonstration / Institution Guide
+  const videoCard = document.getElementById("detailVideoCard");
+  const videoIframe = document.getElementById("detailVideoIframe");
+  const videoUrl = product.video_url || "https://www.youtube.com/watch?v=kY7XlB8mS78";
+
+  if (videoCard && videoIframe && videoUrl) {
+    let embedUrl = videoUrl;
+    if (videoUrl.includes("watch?v=")) embedUrl = videoUrl.replace("watch?v=", "embed/");
+    else if (videoUrl.includes("youtu.be/")) embedUrl = videoUrl.replace("youtu.be/", "www.youtube.com/embed/");
+    videoIframe.src = embedUrl;
+    videoCard.style.display = "block";
+  } else if (videoCard) {
+    videoCard.style.display = "none";
   }
 }
 
@@ -368,13 +469,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (isCatalogPage || isHomePageFeatured) {
     const [cats, prods] = await Promise.all([fetchCategories(), fetchProducts()]);
     
-    // Check if URL specified category parameter (e.g. ?category=gift-boxes or ?category=cat-7)
+    // Check if URL specified category parameter (e.g. ?category=gift-box, ?category=sparklers)
     const urlParams = new URLSearchParams(window.location.search);
     const catQuery = urlParams.get("category");
     if (catQuery) {
       const matchedCat = cats.find(c => 
         c.id === catQuery || 
         c.slug === catQuery || 
+        (catQuery === "gift-boxes" && c.slug === "gift-box") ||
         c.name.toLowerCase().includes(catQuery.toLowerCase())
       );
       if (matchedCat) {

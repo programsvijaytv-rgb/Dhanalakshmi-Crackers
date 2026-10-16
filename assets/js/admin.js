@@ -139,20 +139,31 @@ function renderAdminProductsTable(products) {
   }
 
   products.forEach(p => {
+    const isVariable = Boolean(p.has_variants && Array.isArray(p.variants) && p.variants.length > 0);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>
-        <img src="${p.image_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=60'}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;">
+        <div style="position: relative; width: 44px; height: 44px;">
+          <img src="${p.image_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=60'}" style="width: 44px; height: 44px; border-radius: 6px; object-fit: cover;">
+          ${p.video_url ? `<a href="${p.video_url}" target="_blank" rel="noopener" title="Watch Demo Video" style="position: absolute; bottom: -4px; right: -4px; background: #dc2626; color: #fff; font-size: 0.65rem; padding: 2px 4px; border-radius: 3px; text-decoration: none;">▶</a>` : ''}
+        </div>
       </td>
       <td>
-        <strong>${p.name}</strong>
-        <div style="font-size: 0.75rem; color: #6b7280;">Unit: ${p.unit || 'Box'}</div>
+        <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+          <strong>${p.name}</strong>
+          ${isVariable ? `<span class="badge badge-info" style="font-size: 0.68rem; font-weight: 700;">⚡ ${p.variants.length} Variants</span>` : ''}
+        </div>
+        <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">
+          ${isVariable ? `Options: ${p.variants.map(v => v.name).slice(0, 3).join(', ')}${p.variants.length > 3 ? '...' : ''}` : `Unit: ${p.unit || 'Box'}`}
+        </div>
       </td>
       <td><code>${p.sku || '-'}</code></td>
-      <td><strong>${formatCurrency(p.price)}</strong></td>
+      <td>
+        <strong>${isVariable ? `From ${formatCurrency(p.price)}` : formatCurrency(p.price)}</strong>
+      </td>
       <td>
         <span class="badge ${p.stock_quantity <= 10 ? 'badge-danger' : 'badge-success'}">
-          ${p.stock_quantity} left
+          ${p.stock_quantity} in stock
         </span>
       </td>
       <td>${p.category_name || '-'}</td>
@@ -184,6 +195,119 @@ async function populateCategoryDropdown(selectedCategoryId = "") {
   });
 }
 
+/**
+ * Switch product modal between Simple and Variable product layouts
+ */
+function toggleProductType(type) {
+  const isVar = type === "variable";
+  const simpleRadio = document.getElementById("typeSimple");
+  const varRadio = document.getElementById("typeVariable");
+  if (simpleRadio) simpleRadio.checked = !isVar;
+  if (varRadio) varRadio.checked = isVar;
+
+  const simpleFields = document.getElementById("simpleProductFields");
+  const varFields = document.getElementById("variableProductFields");
+  if (simpleFields) simpleFields.style.display = isVar ? "none" : "block";
+  if (varFields) varFields.style.display = isVar ? "block" : "none";
+
+  // Toggle required attribute on simple inputs
+  const priceInput = document.getElementById("prodPrice");
+  const stockInput = document.getElementById("prodStock");
+  if (priceInput) priceInput.required = !isVar;
+  if (stockInput) stockInput.required = !isVar;
+
+  // If variable is chosen and table is empty, add default row
+  if (isVar) {
+    const tbody = document.getElementById("variantTableBody");
+    if (tbody && tbody.children.length === 0) {
+      addVariantRow();
+    }
+  }
+}
+
+/**
+ * Add a new variant row to the manual variant builder
+ */
+function addVariantRow(variant = {}) {
+  const tbody = document.getElementById("variantTableBody");
+  if (!tbody) return;
+
+  const tr = document.createElement("tr");
+  tr.className = "variant-row";
+  tr.innerHTML = `
+    <td>
+      <input type="text" class="var-name" placeholder="e.g. 10cm / 100 Wala" value="${variant.name || ''}" required>
+    </td>
+    <td>
+      <input type="text" class="var-sku" placeholder="e.g. SPK-10" value="${variant.sku || ''}">
+    </td>
+    <td>
+      <input type="number" step="0.5" class="var-price" placeholder="35.00" value="${variant.price !== undefined ? variant.price : ''}" required>
+    </td>
+    <td>
+      <input type="number" step="0.5" class="var-mrp" placeholder="60.00" value="${variant.original_price !== undefined ? variant.original_price : ''}">
+    </td>
+    <td>
+      <input type="number" class="var-stock" placeholder="100" value="${variant.stock_quantity !== undefined ? variant.stock_quantity : 100}" required>
+    </td>
+    <td>
+      <input type="text" class="var-unit" placeholder="Box, Pcs" value="${variant.unit || 'Box'}">
+    </td>
+    <td style="text-align: center;">
+      <button type="button" class="btn-remove-variant" onclick="removeVariantRow(this)" title="Remove Option">&times;</button>
+    </td>
+  `;
+  tbody.appendChild(tr);
+}
+
+function removeVariantRow(btn) {
+  const tr = btn.closest("tr");
+  if (tr) tr.remove();
+  const tbody = document.getElementById("variantTableBody");
+  if (tbody && tbody.children.length === 0) {
+    addVariantRow();
+  }
+}
+
+/**
+ * Apply 1-click fireworks preset variations into variant builder
+ */
+function applyVariantPreset(type) {
+  const tbody = document.getElementById("variantTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  const PRESETS = {
+    sparklers: [
+      { name: "10cm Electric (10 Pcs)", sku: "SPK-10", price: 35, original_price: 60, stock_quantity: 250, unit: "Box (10 Pcs)" },
+      { name: "15cm Multi-Color (10 Pcs)", sku: "SPK-15", price: 85, original_price: 150, stock_quantity: 180, unit: "Box (10 Pcs)" },
+      { name: "30cm Giant Gold (5 Pcs)", sku: "SPK-30", price: 130, original_price: 220, stock_quantity: 140, unit: "Box (5 Pcs)" },
+      { name: "50cm Jumbo Mega (5 Pcs)", sku: "SPK-50", price: 210, original_price: 380, stock_quantity: 80, unit: "Box (5 Pcs)" }
+    ],
+    wala: [
+      { name: "100 Wala Garland", sku: "WALA-100", price: 45, original_price: 90, stock_quantity: 200, unit: "Piece" },
+      { name: "1000 Wala Festive Deluxe", sku: "WALA-1000", price: 320, original_price: 600, stock_quantity: 100, unit: "Piece" },
+      { name: "5000 Wala Grand Garland", sku: "WALA-5000", price: 1450, original_price: 2800, stock_quantity: 40, unit: "Piece" },
+      { name: "10000 Wala Royal Garland", sku: "WALA-10000", price: 2800, original_price: 5200, stock_quantity: 15, unit: "Piece" }
+    ],
+    shots: [
+      { name: "12 Shots Sky Peony", sku: "SHT-12", price: 380, original_price: 750, stock_quantity: 90, unit: "Piece" },
+      { name: "25 Shots Golden Palm", sku: "SHT-25", price: 750, original_price: 1400, stock_quantity: 50, unit: "Piece" },
+      { name: "50 Shots Grand Peony", sku: "SHT-50", price: 1450, original_price: 2700, stock_quantity: 30, unit: "Piece" },
+      { name: "120 Shots Royal Finale", sku: "SHT-120", price: 3200, original_price: 5900, stock_quantity: 15, unit: "Piece" }
+    ],
+    packs: [
+      { name: "Single Box", sku: "PCK-1", price: 95, original_price: 180, stock_quantity: 150, unit: "Box" },
+      { name: "Pack of 5 Boxes", sku: "PCK-5", price: 440, original_price: 900, stock_quantity: 40, unit: "Pack (5 Boxes)" },
+      { name: "Pack of 10 Boxes", sku: "PCK-10", price: 820, original_price: 1800, stock_quantity: 20, unit: "Pack (10 Boxes)" },
+      { name: "Master Case (50 Boxes)", sku: "PCK-CASE", price: 3800, original_price: 9000, stock_quantity: 8, unit: "Case (50 Boxes)" }
+    ]
+  };
+
+  const selected = PRESETS[type] || [];
+  selected.forEach(v => addVariantRow(v));
+}
+
 function openAddProductModal() {
   const form = document.getElementById("productForm");
   if (form) form.reset();
@@ -193,6 +317,13 @@ function openAddProductModal() {
   if (title) title.textContent = "Add New Firecracker";
 
   populateCategoryDropdown();
+
+  toggleProductType("simple");
+  const varBody = document.getElementById("variantTableBody");
+  if (varBody) varBody.innerHTML = "";
+
+  const videoField = document.getElementById("prodVideoUrl");
+  if (videoField) videoField.value = "";
 
   const featEl = document.getElementById("prodFeatured");
   if (featEl) featEl.checked = false;
@@ -205,6 +336,11 @@ function openAddProductModal() {
       if (e.target === modal) closeProductModal();
     };
   }
+}
+
+function openAddProductModalWithVariable() {
+  openAddProductModal();
+  toggleProductType("variable");
 }
 
 function openEditProductModal(productId) {
@@ -228,10 +364,25 @@ function openEditProductModal(productId) {
   document.getElementById("prodImageUrl").value = product.image_url || "";
   document.getElementById("prodDesc").value = product.description || "";
 
+  const videoEl = document.getElementById("prodVideoUrl");
+  if (videoEl) videoEl.value = product.video_url || "";
+
   populateCategoryDropdown(product.category_id || product.category_name);
 
   const featEl = document.getElementById("prodFeatured");
   if (featEl) featEl.checked = Boolean(product.is_featured);
+
+  // Check if variable product
+  if (product.has_variants && Array.isArray(product.variants) && product.variants.length > 0) {
+    toggleProductType("variable");
+    const tbody = document.getElementById("variantTableBody");
+    if (tbody) {
+      tbody.innerHTML = "";
+      product.variants.forEach(v => addVariantRow(v));
+    }
+  } else {
+    toggleProductType("simple");
+  }
 
   document.getElementById("productModalTitle").textContent = "Edit Firecracker";
   const modal = document.getElementById("productEditModal");
@@ -250,6 +401,55 @@ function closeProductModal() {
     modal.classList.add("modal-hidden");
     modal.style.display = "none";
   }
+}
+
+/**
+ * Variable Product Manual Modal handlers
+ */
+function openVariableProductManualModal() {
+  const modal = document.getElementById("variableProductManualModal");
+  if (modal) {
+    modal.style.display = "flex";
+    modal.onclick = (e) => {
+      if (e.target === modal) closeVariableProductManualModal();
+    };
+  }
+}
+
+function closeVariableProductManualModal() {
+  const modal = document.getElementById("variableProductManualModal");
+  if (modal) modal.style.display = "none";
+}
+
+/**
+ * Instruction Video Modal handlers
+ */
+async function openInstructionVideoModal() {
+  const modal = document.getElementById("instructionVideoModal");
+  if (modal) {
+    // Check if store settings have custom guide video url
+    try {
+      const settings = typeof fetchBusinessSettings === "function" ? await fetchBusinessSettings() : {};
+      const customUrl = settings?.guide_video_url;
+      if (customUrl) {
+        let embed = customUrl;
+        if (customUrl.includes("watch?v=")) embed = customUrl.replace("watch?v=", "embed/");
+        else if (customUrl.includes("youtu.be/")) embed = customUrl.replace("youtu.be/", "www.youtube.com/embed/");
+        const iframe = document.getElementById("adminVideoPlayerIframe");
+        if (iframe) iframe.src = embed;
+      }
+    } catch (_) {}
+
+    modal.style.display = "flex";
+    modal.onclick = (e) => {
+      if (e.target === modal) closeInstructionVideoModal();
+    };
+  }
+}
+
+function closeInstructionVideoModal() {
+  const modal = document.getElementById("instructionVideoModal");
+  if (modal) modal.style.display = "none";
 }
 
 async function checkCloudSyncStatus(showAlert = false) {
@@ -372,13 +572,55 @@ async function saveProductForm(e) {
   if (e && e.preventDefault) e.preventDefault();
   let id = document.getElementById("prodId").value.trim();
   const name = document.getElementById("prodName").value.trim();
-  const sku = document.getElementById("prodSku").value.trim();
-  const price = Number(document.getElementById("prodPrice").value);
-  const original_price = Number(document.getElementById("prodOriginalPrice").value) || price;
-  const stock = parseInt(document.getElementById("prodStock").value, 10);
-  const unit = document.getElementById("prodUnit").value.trim() || "Box";
-  const image_url = document.getElementById("prodImageUrl").value.trim();
-  const desc = document.getElementById("prodDesc").value.trim();
+  const prodType = document.querySelector('input[name="prodType"]:checked')?.value || "simple";
+  const isVariable = prodType === "variable";
+
+  let sku = document.getElementById("prodSku")?.value.trim() || "";
+  let price = Number(document.getElementById("prodPrice")?.value) || 0;
+  let original_price = Number(document.getElementById("prodOriginalPrice")?.value) || price;
+  let stock = parseInt(document.getElementById("prodStock")?.value, 10) || 0;
+  let unit = document.getElementById("prodUnit")?.value.trim() || "Box";
+  const image_url = document.getElementById("prodImageUrl")?.value.trim();
+  const video_url = document.getElementById("prodVideoUrl")?.value.trim();
+  const desc = document.getElementById("prodDesc")?.value.trim();
+
+  let variants = [];
+
+  if (isVariable) {
+    const rows = document.querySelectorAll("#variantTableBody tr.variant-row");
+    rows.forEach((row, idx) => {
+      const vName = row.querySelector(".var-name")?.value.trim();
+      const vSku = row.querySelector(".var-sku")?.value.trim() || (sku ? `${sku}-V${idx + 1}` : `VAR-${idx + 1}`);
+      const vPrice = Number(row.querySelector(".var-price")?.value);
+      const vMrp = Number(row.querySelector(".var-mrp")?.value) || vPrice;
+      const vStock = parseInt(row.querySelector(".var-stock")?.value, 10) || 0;
+      const vUnit = row.querySelector(".var-unit")?.value.trim() || unit;
+
+      if (vName && !isNaN(vPrice) && vPrice >= 0) {
+        variants.push({
+          id: `var-${Date.now()}-${idx}`,
+          name: vName,
+          sku: vSku,
+          price: vPrice,
+          original_price: vMrp,
+          stock_quantity: vStock,
+          unit: vUnit
+        });
+      }
+    });
+
+    if (variants.length === 0) {
+      showToast("Please add at least one valid variant with name and price.", "warning");
+      return;
+    }
+
+    // Compute base values from variants
+    price = Math.min(...variants.map(v => v.price));
+    original_price = Math.min(...variants.map(v => v.original_price || v.price));
+    stock = variants.reduce((sum, v) => sum + v.stock_quantity, 0);
+    if (!sku) sku = variants[0]?.sku || `VAR-${Date.now().toString(36).toUpperCase()}`;
+    if (!unit) unit = variants[0]?.unit || "Box";
+  }
 
   const catSelect = document.getElementById("prodCategory");
   let category_id = catSelect ? catSelect.value : "";
@@ -404,7 +646,7 @@ async function saveProductForm(e) {
     id = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : ("c1000000-0000-0000-0000-" + Date.now().toString(16).padStart(12, "0"));
   }
 
-  // Local object with category_name for frontend display
+  // Local object with category_name and variants for frontend display
   const productData = {
     id,
     name,
@@ -417,7 +659,10 @@ async function saveProductForm(e) {
     category_name,
     is_featured,
     image_url: image_url || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600",
+    video_url: video_url || "",
     description: desc,
+    has_variants: isVariable,
+    variants: isVariable ? variants : [],
     is_active: true
   };
 
@@ -1645,8 +1890,14 @@ async function initAdminSettings() {
   if (document.getElementById("setGoogleReviewUrl")) {
     document.getElementById("setGoogleReviewUrl").value = settings.google_review_url || "https://share.google/AwTsdLuk9OtRHQhbR";
   }
+  if (document.getElementById("setGuideVideoUrl")) {
+    document.getElementById("setGuideVideoUrl").value = settings.guide_video_url || "https://www.youtube.com/watch?v=kY7XlB8mS78";
+  }
   document.getElementById("setUpiId").value = settings.upi_id || "";
   document.getElementById("setUpiName").value = settings.upi_name || "";
+  if (document.getElementById("setDefaultPrintFormat")) {
+    document.getElementById("setDefaultPrintFormat").value = settings.default_print_format || localStorage.getItem("dc_default_print_format") || "80mm";
+  }
 
   // Supabase Credentials Config
   const currentSbUrl = localStorage.getItem("dc_supabase_url");
@@ -1732,8 +1983,13 @@ async function saveAdminSettings(e) {
     upi_name: document.getElementById("setUpiName").value.trim(),
     default_tax_rate: Number(document.getElementById("setTaxRate").value) || 18,
     invoice_footer: document.getElementById("setInvoiceFooter").value.trim(),
-    google_review_url: (document.getElementById("setGoogleReviewUrl") ? document.getElementById("setGoogleReviewUrl").value.trim() : "") || "https://share.google/AwTsdLuk9OtRHQhbR"
+    default_print_format: document.getElementById("setDefaultPrintFormat") ? document.getElementById("setDefaultPrintFormat").value : "80mm",
+    google_review_url: (document.getElementById("setGoogleReviewUrl") ? document.getElementById("setGoogleReviewUrl").value.trim() : "") || "https://share.google/AwTsdLuk9OtRHQhbR",
+    guide_video_url: (document.getElementById("setGuideVideoUrl") ? document.getElementById("setGuideVideoUrl").value.trim() : "") || "https://www.youtube.com/watch?v=kY7XlB8mS78"
   };
+
+  const chosenFormat = document.getElementById("setDefaultPrintFormat") ? document.getElementById("setDefaultPrintFormat").value : "80mm";
+  localStorage.setItem("dc_default_print_format", chosenFormat);
 
   const sbUrl = document.getElementById("setSupabaseUrl").value.trim();
   const sbKey = document.getElementById("setSupabaseAnonKey").value.trim();
@@ -1766,4 +2022,16 @@ async function saveAdminSettings(e) {
   }
 
   showToast("Business Settings updated successfully! Storefront synchronized.", "success");
+
+  // Update status strip and mobile save bar
+  const sName = document.getElementById("statusShopName");
+  const sUpi = document.getElementById("statusUpiId");
+  if (sName) sName.textContent = settings.shop_name || "Dhanalakshmi Crackers";
+  if (sUpi) sUpi.textContent = settings.upi_id || "Not Configured";
+
+  const barText = document.querySelector(".mobile-save-text");
+  const barDot = document.querySelector(".mobile-save-dot");
+  if (barText) barText.textContent = "Saved to Cloud & Local";
+  if (barDot) barDot.style.color = "#10b981";
 }
+

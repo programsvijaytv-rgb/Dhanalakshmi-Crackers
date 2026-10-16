@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Customer Invoice | Dhanalakshmi Crackers Sivakasi</title>
-  <meta name="description" content="View and download your official Dhanalakshmi Crackers tax invoice and receipt.">
+  <title>Tax Invoice & Receipt | Dhanalakshmi Crackers Sivakasi</title>
+  <meta name="description" content="Official GST Tax Invoice and POS thermal receipt generator for Dhanalakshmi Crackers.">
   <link rel="stylesheet" href="assets/css/style.css">
   <link rel="stylesheet" href="assets/css/print.css">
   <style>
     body {
-      background-color: #f3f4f6;
-      color: #1f2937;
+      background-color: #f1f5f9;
+      color: #0f172a;
       font-family: 'Plus Jakarta Sans', sans-serif;
       margin: 0;
       padding: 0;
@@ -18,7 +18,7 @@
 
     .invoice-page-wrapper {
       max-width: 860px;
-      margin: 2rem auto;
+      margin: 1.5rem auto;
       padding: 0 1rem;
     }
 
@@ -27,17 +27,17 @@
       justify-content: space-between;
       align-items: center;
       background: #ffffff;
-      padding: 1rem 1.5rem;
+      padding: 0.85rem 1.25rem;
       border-radius: 12px;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .toolbar-title {
       font-family: 'Outfit', sans-serif;
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: #111827;
       display: flex;
@@ -47,196 +47,65 @@
 
     .toolbar-actions {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.5rem;
       flex-wrap: wrap;
     }
 
-    .invoice-paper {
-      background: #ffffff;
-      padding: 3rem;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-      position: relative;
-    }
-
-    /* Paid Watermark Badge */
-    .paid-stamp {
-      position: absolute;
-      top: 3rem;
-      right: 3rem;
-      border: 3px dashed #16a34a;
-      color: #16a34a;
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.5rem;
-      font-weight: 800;
-      padding: 0.35rem 1.25rem;
-      border-radius: 8px;
-      transform: rotate(-10deg);
-      letter-spacing: 2px;
-      opacity: 0.85;
-      text-transform: uppercase;
-      pointer-events: none;
-    }
-
-    .invoice-header-row {
-      display: flex;
-      justify-content: space-between;
-      border-bottom: 2px solid #e5e7eb;
-      padding-bottom: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .shop-brand {
-      max-width: 55%;
-    }
-
-    .shop-name {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: #c21d1d;
-      margin-bottom: 0.25rem;
-    }
-
-    .shop-meta {
-      font-size: 0.85rem;
-      color: #4b5563;
-      line-height: 1.4;
-    }
-
-    .invoice-meta-col {
-      text-align: right;
-    }
-
-    .inv-number-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: #111827;
-      margin-bottom: 0.25rem;
-    }
-
-    .inv-date {
-      font-size: 0.85rem;
-      color: #6b7280;
-    }
-
-    .customer-info-box {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1.5rem;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      font-size: 0.9rem;
-    }
-
-    .info-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
-    }
-
-    .invoice-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 1.5rem;
-      font-size: 0.9rem;
-    }
-
-    .invoice-table th {
-      background: #f9fafb;
-      color: #374151;
-      font-weight: 700;
-      padding: 0.75rem 1rem;
-      border-top: 1px solid #e5e7eb;
-      border-bottom: 2px solid #e5e7eb;
-      text-align: left;
-    }
-
-    .invoice-table td {
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .text-right {
-      text-align: right;
-    }
-
-    .text-center {
-      text-align: center;
-    }
-
-    .totals-summary {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 2rem;
-    }
-
-    .totals-table {
-      width: 320px;
-      font-size: 0.9rem;
-    }
-
-    .totals-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.35rem 0;
-      color: #4b5563;
-    }
-
-    .totals-grand {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.75rem 0 0.25rem;
-      border-top: 2px solid #111827;
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #c21d1d;
-    }
-
-    .invoice-footer-notes {
-      border-top: 1px dashed #d1d5db;
-      padding-top: 1.5rem;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #6b7280;
-      line-height: 1.5;
-    }
-
-    @media print {
-      body {
-        background: #ffffff;
+    @media (max-width: 640px) {
+      .invoice-toolbar {
+        padding: 0.75rem 1rem;
       }
-      .invoice-toolbar, .site-header, .site-footer {
-        display: none !important;
+      .toolbar-title {
+        font-size: 1rem;
       }
-      .invoice-page-wrapper {
-        margin: 0;
-        padding: 0;
-        max-width: 100%;
+      .toolbar-actions .btn {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
       }
-      .invoice-paper {
-        box-shadow: none;
-        padding: 1.5cm;
-        border-radius: 0;
+      .a4-inv-header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .a4-meta-col {
+        text-align: left;
+      }
+      .a4-details-grid {
+        grid-template-columns: 1fr;
+      }
+      .a4-summary-row {
+        flex-direction: column;
+      }
+      .a4-summary-right {
+        width: 100%;
       }
     }
   </style>
 </head>
-<body>
+<body class="print-mode-a4">
 
   <div class="invoice-page-wrapper">
-    <!-- Action Toolbar (Hidden during print/PDF capture) -->
+    <!-- Format Selector Bar (A4 / 80mm / 58mm) -->
+    <div class="invoice-format-bar no-print">
+      <span class="format-bar-label">Receipt Format:</span>
+      <div class="format-pills">
+        <button type="button" class="format-pill active" id="pillA4" onclick="setInvoiceFormat('a4')">
+          📄 A4 Full Invoice
+        </button>
+        <button type="button" class="format-pill" id="pill80mm" onclick="setInvoiceFormat('80mm')">
+          🧾 80mm POS Thermal
+        </button>
+        <button type="button" class="format-pill" id="pill58mm" onclick="setInvoiceFormat('58mm')">
+          🧾 58mm Handheld Thermal
+        </button>
+      </div>
+    </div>
+
+    <!-- Action Toolbar (Hidden during print) -->
     <div class="invoice-toolbar no-print" id="invoiceToolbar">
       <div class="toolbar-title">
-        <span>📄</span> Official Tax Invoice
+        <span id="toolbarIcon">📄</span>
+        <span id="toolbarFormatTitle">Official Tax Invoice</span>
       </div>
       <div class="toolbar-actions">
         <button type="button" class="btn btn-secondary btn-sm" onclick="window.history.back()">
@@ -245,100 +114,18 @@
         <button type="button" class="btn btn-secondary btn-sm" onclick="sendInvoiceWhatsApp()">
           📲 WhatsApp
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">
+        <button type="button" class="btn btn-primary btn-sm" onclick="printCurrentInvoice()">
           🖨️ Print
         </button>
-        <button type="button" class="btn btn-primary btn-sm" id="btnDownloadPDF" onclick="downloadCurrentInvoicePDF()">
+        <button type="button" class="btn btn-secondary btn-sm" id="btnDownloadPDF" onclick="downloadCurrentInvoicePDF()">
           📥 Download PDF
         </button>
       </div>
     </div>
 
-    <!-- Printable & PDF Capturable Invoice Document -->
-    <div class="invoice-paper" id="invoiceContentToPrint">
-      <div class="paid-stamp" id="invoicePaidStamp">PAID</div>
-
-      <div class="invoice-header-row">
-        <div class="shop-brand">
-          <div class="shop-name" id="invShopName">Dhanalakshmi Crackers</div>
-          <div class="shop-meta" id="invShopMeta">
-            Direct from Sivakasi - Safe, Superior & Certified Fireworks<br>
-            📍 142, By-pass Road, Sivakasi, Tamil Nadu - 626123<br>
-            📞 Helpline: +91 98765 43210<br>
-            GSTIN: 33AAAAA0000A1Z5 | HSN Code: 3604 (Fireworks)
-          </div>
-        </div>
-
-        <div class="invoice-meta-col">
-          <div class="inv-number-title" id="invNumber">Invoice #DC-20261012-001</div>
-          <div class="inv-date" id="invDate">Date: 12-Oct-2026</div>
-          <div class="inv-pay-mode-wrap">
-            Payment: <strong id="invPayMode">UPI Online</strong>
-          </div>
-        </div>
-      </div>
-
-      <div class="customer-info-box">
-        <div>
-          <div class="info-label">Billed To (Customer Details)</div>
-          <div class="cust-name-val" id="invCustName">Ramesh Kumar</div>
-          <div id="invCustPhone">📱 +91 98401 23456</div>
-          <div id="invCustAddress" class="cust-address-val">45, Anna Nagar 2nd Street, Chennai - 600040</div>
-        </div>
-        <div>
-          <div class="info-label">Invoice Summary</div>
-          <div>Status: <span class="status-paid-text" id="invStatus">PAID (CONFIRMED)</span></div>
-          <div>Supply Type: <strong>Factory Direct Sivakasi</strong></div>
-          <div>Place of Supply: <strong id="invPlaceOfSupply">Tamil Nadu (33)</strong></div>
-        </div>
-      </div>
-
-      <table class="invoice-table">
-        <thead>
-          <tr>
-            <th class="text-center th-col-num">#</th>
-            <th>Description of Fireworks Item</th>
-            <th class="text-center th-col-sku">SKU</th>
-            <th class="text-center th-col-qty">Qty</th>
-            <th class="text-right th-col-rate">Rate (₹)</th>
-            <th class="text-right th-col-amount">Amount (₹)</th>
-          </tr>
-        </thead>
-        <tbody id="invItemsTbody">
-          <!-- Rendered dynamically -->
-        </tbody>
-      </table>
-
-      <div class="totals-summary">
-        <div class="totals-table">
-          <div class="totals-row">
-            <span>Items Subtotal:</span>
-            <span id="invSubtotal">₹0.00</span>
-          </div>
-          <div class="totals-row discount-row-hidden" id="invDiscountRow">
-            <span>Festival Discount:</span>
-            <span id="invDiscount" class="discount-val-green">-₹0.00</span>
-          </div>
-          <div class="totals-row" id="invTaxRow">
-            <span>GST (18% Included):</span>
-            <span id="invTax">₹0.00</span>
-          </div>
-          <div class="totals-grand">
-            <span>TOTAL AMOUNT PAID:</span>
-            <span id="invGrandTotal">₹0.00</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="invoice-footer-notes">
-        <p class="inv-footer-greeting-p" id="invFooterGreeting">
-          Thank you for choosing Dhanalakshmi Crackers! Have a sparkling and joyous celebration. 🪔
-        </p>
-        <p>
-          PESO Certified Standard Firecrackers. Keep away from flammable areas and always light with adult supervision.<br>
-          This is a computer-generated invoice and requires no physical signature.
-        </p>
-      </div>
+    <!-- Printable Invoice Container -->
+    <div id="invoiceContentToPrint">
+      <!-- Dynamically generated according to selected format -->
     </div>
   </div>
 
@@ -349,30 +136,49 @@
   <script src="assets/js/whatsapp.js"></script>
   <script>
     let loadedInvoice = null;
+    let currentFormat = "a4"; // "a4", "80mm", "58mm"
+
+    function numberToIndianWords(amount) {
+      const words = [
+        '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+        'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'
+      ];
+      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+      function numToWords(n) {
+        if (n === 0) return '';
+        if (n < 20) return words[n] + ' ';
+        if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + words[n % 10] : '') + ' ';
+        if (n < 1000) return words[Math.floor(n / 100)] + ' Hundred ' + (n % 100 !== 0 ? numToWords(n % 100) : '');
+        if (n < 100000) return numToWords(Math.floor(n / 1000)) + 'Thousand ' + (n % 1000 !== 0 ? numToWords(n % 1000) : '');
+        if (n < 10000000) return numToWords(Math.floor(n / 100000)) + 'Lakh ' + (n % 100000 !== 0 ? numToWords(n % 100000) : '');
+        return numToWords(Math.floor(n / 10000000)) + 'Crore ' + (n % 10000000 !== 0 ? numToWords(n % 10000000) : '');
+      }
+
+      const rounded = Math.round(Number(amount) || 0);
+      if (rounded === 0) return 'INR Zero Only';
+      return 'INR ' + numToWords(rounded).trim() + ' Only';
+    }
 
     async function loadInvoiceData() {
       const urlParams = new URLSearchParams(window.location.search);
       const invoiceNum = urlParams.get("invoice") || urlParams.get("id") || urlParams.get("order");
 
-      const settings = JSON.parse(localStorage.getItem("dc_business_settings") || "{}");
-      if (settings.shop_name) document.getElementById("invShopName").textContent = settings.shop_name;
-      if (settings.address || settings.phone) {
-        document.getElementById("invShopMeta").innerHTML = `
-          Direct from Sivakasi - Safe, Superior & Certified Fireworks<br>
-          📍 ${settings.address || '142, By-pass Road, Sivakasi - 626123'}<br>
-          📞 Helpline: ${settings.phone || '+91 98765 43210'}<br>
-          GSTIN: ${settings.gst_number || '33AAAAA0000A1Z5'} | HSN Code: 3604 (Fireworks)
-        `;
+      // Default format check from URL or settings
+      const urlFormat = urlParams.get("format");
+      if (urlFormat === "80mm" || urlFormat === "58mm" || urlFormat === "a4") {
+        currentFormat = urlFormat;
+      } else {
+        const savedFormat = localStorage.getItem("dc_default_print_format");
+        if (savedFormat) currentFormat = savedFormat;
       }
 
-      // Try finding invoice in local history first
       const invoicesHistory = JSON.parse(localStorage.getItem("dc_invoices_history") || "[]");
       const ordersList = JSON.parse(localStorage.getItem("dc_orders_list") || "[]");
 
       let found = invoicesHistory.find(i => i.invoice_number === invoiceNum);
 
       if (!found && invoiceNum) {
-        // Check orders list
         const ord = ordersList.find(o => o.order_number === invoiceNum);
         if (ord) {
           found = {
@@ -393,7 +199,6 @@
         }
       }
 
-      // Fallback: take latest or sample
       if (!found) {
         if (invoicesHistory.length > 0) {
           found = invoicesHistory[0];
@@ -418,9 +223,9 @@
           // Demo invoice
           found = {
             invoice_number: "DC-20261012-001",
-            customer_name: "Ramesh Kumar",
-            customer_phone: "9840123456",
-            customer_address: "45, Anna Nagar 2nd Street, Chennai - 600040",
+            customer_name: "SRI JAYA",
+            customer_phone: "9003490490",
+            customer_address: "No: 4, LIC Colony 1st Cross Street, Medical Road, Sivakasi",
             subtotal: 1899.00,
             discount_amount: 100.00,
             tax_rate: 18,
@@ -440,76 +245,314 @@
       }
 
       loadedInvoice = found;
-      renderInvoiceDOM(found);
+      setInvoiceFormat(currentFormat);
 
-      // Auto-trigger PDF download if requested in URL (e.g. ?download=true)
-      if (urlParams.get("download") === "true") {
+      if (urlParams.get("autoprint") === "true") {
+        setTimeout(printCurrentInvoice, 600);
+      } else if (urlParams.get("download") === "true") {
         setTimeout(downloadCurrentInvoicePDF, 800);
       }
     }
 
-    function renderInvoiceDOM(inv) {
-      document.getElementById("invNumber").textContent = `Invoice #${inv.invoice_number}`;
-      document.getElementById("invDate").textContent = `Date: ${new Date(inv.created_at || Date.now()).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' })}`;
-      document.getElementById("invPayMode").textContent = `${inv.payment_method || 'UPI Online'} (${(inv.payment_status || 'PAID').toUpperCase()})`;
-      document.getElementById("invCustName").textContent = inv.customer_name || "Valued Customer";
-      document.getElementById("invCustPhone").textContent = inv.customer_phone ? `📱 +91 ${inv.customer_phone.replace(/[^0-9]/g,'').slice(-10)}` : "-";
-      document.getElementById("invCustAddress").textContent = inv.customer_address || "Direct Counter Pickup";
-      
-      const stamp = document.getElementById("invoicePaidStamp");
-      if (inv.payment_status && inv.payment_status.toLowerCase() === "paid") {
-        stamp.textContent = "PAID";
-        stamp.style.color = "#16a34a";
-        stamp.style.borderColor = "#16a34a";
-        document.getElementById("invStatus").textContent = "PAID (CONFIRMED)";
-        document.getElementById("invStatus").style.color = "#16a34a";
+    function setInvoiceFormat(fmt) {
+      currentFormat = fmt;
+      document.body.className = `print-mode-${fmt}`;
+
+      document.getElementById("pillA4").classList.toggle("active", fmt === "a4");
+      document.getElementById("pill80mm").classList.toggle("active", fmt === "80mm");
+      document.getElementById("pill58mm").classList.toggle("active", fmt === "58mm");
+
+      const iconEl = document.getElementById("toolbarIcon");
+      const titleEl = document.getElementById("toolbarFormatTitle");
+      if (fmt === "a4") {
+        iconEl.textContent = "📄";
+        titleEl.textContent = "Official Tax Invoice (A4)";
+      } else if (fmt === "80mm") {
+        iconEl.textContent = "🧾";
+        titleEl.textContent = "POS Counter Receipt (80mm)";
       } else {
-        stamp.textContent = "UNPAID";
-        stamp.style.color = "#ea580c";
-        stamp.style.borderColor = "#ea580c";
-        document.getElementById("invStatus").textContent = "PENDING PAYMENT";
-        document.getElementById("invStatus").style.color = "#ea580c";
+        iconEl.textContent = "🧾";
+        titleEl.textContent = "Mobile Thermal Receipt (58mm)";
       }
 
-      const tbody = document.getElementById("invItemsTbody");
-      tbody.innerHTML = "";
-      const items = inv.items && inv.items.length > 0 ? inv.items : [
-        { product_name: "Assorted Sivakasi Fireworks Package", sku: "SIV-PKG", quantity: 1, unit_price: inv.total_amount, subtotal: inv.total_amount }
-      ];
-
-      items.forEach((item, idx) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td class="text-center" style="color: #9ca3af;">${idx + 1}</td>
-          <td><strong>${item.product_name}</strong></td>
-          <td class="text-center" style="font-size: 0.8rem; color: #6b7280;">${item.sku || '-'}</td>
-          <td class="text-center font-bold">${item.quantity}</td>
-          <td class="text-right">₹${Number(item.unit_price).toFixed(2)}</td>
-          <td class="text-right font-bold">₹${Number(item.subtotal).toFixed(2)}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-
-      document.getElementById("invSubtotal").textContent = `₹${Number(inv.subtotal || inv.total_amount).toFixed(2)}`;
-      
-      if (inv.discount_amount > 0) {
-        document.getElementById("invDiscountRow").style.display = "flex";
-        document.getElementById("invDiscount").textContent = `-₹${Number(inv.discount_amount).toFixed(2)}`;
-      }
-
-      const taxAmt = Number(inv.tax_amount || 0);
-      if (taxAmt > 0) {
-        document.getElementById("invTax").textContent = `₹${taxAmt.toFixed(2)}`;
-      } else {
-        document.getElementById("invTax").textContent = "₹0.00 (Inclusive)";
-      }
-
-      document.getElementById("invGrandTotal").textContent = `₹${Number(inv.total_amount).toFixed(2)}`;
+      renderInvoiceContent();
     }
 
-    /**
-     * Generate & Download PDF using html2pdf with fallback to browser print
-     */
+    function renderInvoiceContent() {
+      if (!loadedInvoice) return;
+      const inv = loadedInvoice;
+      const settings = JSON.parse(localStorage.getItem("dc_business_settings") || "{}");
+      const shopName = settings.shop_name || "Dhanalakshmi Crackers";
+      const shopAddress = settings.address || "142, By-pass Road, Sivakasi - 626123, Tamil Nadu";
+      const shopPhone = settings.phone || "+91 98765 43210";
+      const gstNo = settings.gst_number || "33AAAAA0000A1Z5";
+      const isTaxApplicable = settings.tax_applicable !== false;
+      const footerNote = settings.invoice_footer || "Thank you for shopping with Dhanalakshmi Crackers! Have a safe and sparkling celebration. 🪔";
+      const dateStr = inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString("en-IN");
+      const timeStr = inv.created_at ? new Date(inv.created_at).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) : "";
+
+      const totalAmount = Number(inv.total_amount || 0);
+      const subtotal = Number(inv.subtotal || totalAmount);
+      const discountAmount = Number(inv.discount_amount || 0);
+      const taxAmount = Number(inv.tax_amount || (isTaxApplicable ? (totalAmount * 0.18 / 1.18) : 0));
+      const cgst = Number((taxAmount / 2).toFixed(2));
+      const sgst = Number((taxAmount / 2).toFixed(2));
+
+      const container = document.getElementById("invoiceContentToPrint");
+
+      if (currentFormat === "a4") {
+        container.className = "invoice-paper format-a4";
+        container.innerHTML = `
+          <!-- A4 Official Header -->
+          <div class="a4-inv-header">
+            <div class="a4-brand-col">
+              <div class="a4-brand-title-wrap">
+                <span class="a4-brand-logo">🪔</span>
+                <div>
+                  <div class="a4-brand-name">${shopName}</div>
+                  <div class="a4-brand-tagline">Direct from Sivakasi - Certified Factory Fireworks</div>
+                </div>
+              </div>
+              <div class="a4-brand-meta">
+                📍 ${shopAddress}<br>
+                📞 Helpline: ${shopPhone} | ✉️ contact@dhanalakshmicrackers.com<br>
+                <strong>GSTIN:</strong> ${gstNo} | <strong>State:</strong> Tamil Nadu (Code: 33) | <strong>HSN:</strong> 3604
+              </div>
+            </div>
+
+            <div class="a4-meta-col">
+              <span class="a4-doc-type-badge">${isTaxApplicable ? 'TAX INVOICE' : 'RETAIL INVOICE'}</span>
+              <div class="a4-inv-num">#${inv.invoice_number}</div>
+              <div class="a4-inv-date">Date: <strong>${dateStr}</strong> ${timeStr ? `&bull; ${timeStr}` : ''}</div>
+              <div class="a4-status-badge ${inv.payment_status === 'paid' ? 'a4-status-paid' : 'a4-status-unpaid'}">
+                ● ${(inv.payment_status || 'PAID').toUpperCase()}
+              </div>
+            </div>
+          </div>
+
+          <!-- Customer & Dispatch Details Grid -->
+          <div class="a4-details-grid">
+            <div class="a4-info-card">
+              <div class="a4-card-heading">BILLED TO (CUSTOMER DETAILS)</div>
+              <div class="a4-cust-name">${inv.customer_name || 'Walk-in Customer'}</div>
+              <div class="a4-cust-line">📱 <strong>Phone:</strong> ${inv.customer_phone ? '+91 ' + String(inv.customer_phone).replace(/[^0-9]/g,'').slice(-10) : 'Direct Counter Pickup'}</div>
+              <div class="a4-cust-line">📍 <strong>Address:</strong> ${inv.customer_address || 'Sivakasi Store Counter Pickup'}</div>
+            </div>
+
+            <div class="a4-info-card">
+              <div class="a4-card-heading">INVOICE & PAYMENT SUMMARY</div>
+              <div class="a4-cust-line">💳 <strong>Payment Method:</strong> ${inv.payment_method || 'UPI / Cash'}</div>
+              <div class="a4-cust-line">🏷️ <strong>Supply Type:</strong> Sivakasi Direct Factory Supply</div>
+              <div class="a4-cust-line">🌐 <strong>Place of Supply:</strong> Tamil Nadu (State Code: 33)</div>
+              <div class="a4-cust-line">⚖️ <strong>Reverse Charge:</strong> No</div>
+            </div>
+          </div>
+
+          <!-- Itemized Table -->
+          <div class="a4-table-wrap">
+            <table class="a4-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px; text-align: center;">#</th>
+                  <th>Description of Goods (Fireworks)</th>
+                  <th style="width: 65px; text-align: center;">HSN</th>
+                  <th style="width: 55px; text-align: center;">Qty</th>
+                  <th style="width: 85px; text-align: right;">Rate (₹)</th>
+                  <th style="width: 95px; text-align: right;">Taxable (₹)</th>
+                  <th style="width: 80px; text-align: right;">GST (18%)</th>
+                  <th style="width: 100px; text-align: right;">Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(inv.items || []).map((item, idx) => {
+                  const itemTotal = Number(item.subtotal || (Number(item.unit_price || 0) * Number(item.quantity || 1)));
+                  const itemTaxable = Number((itemTotal / 1.18).toFixed(2));
+                  const itemGst = Number((itemTotal - itemTaxable).toFixed(2));
+                  return `
+                    <tr>
+                      <td style="text-align: center; color: #64748b;">${idx + 1}</td>
+                      <td>
+                        <div class="a4-item-name">${item.product_name}</div>
+                        <div class="a4-item-sku">SKU: ${item.sku || 'SIV-' + (idx + 101)}</div>
+                      </td>
+                      <td style="text-align: center; color: #475569;">3604</td>
+                      <td style="text-align: center; font-weight: 700;">${item.quantity}</td>
+                      <td style="text-align: right;">${Number(item.unit_price).toFixed(2)}</td>
+                      <td style="text-align: right;">${itemTaxable.toFixed(2)}</td>
+                      <td style="text-align: right; color: #475569;">${itemGst.toFixed(2)}</td>
+                      <td style="text-align: right; font-weight: 700;">${itemTotal.toFixed(2)}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Calculation and Words Row -->
+          <div class="a4-summary-row">
+            <div class="a4-summary-left">
+              <div class="a4-words-card">
+                <div class="a4-words-label">AMOUNT CHARGEABLE (IN WORDS)</div>
+                <div class="a4-words-val">${numberToIndianWords(totalAmount)}</div>
+              </div>
+              <div class="a4-payment-meta">
+                <strong>UPI ID:</strong> ${settings.upi_id || 'dhanalakshmi@upi'}<br>
+                <strong>Payment Reference:</strong> Verified Digital Transaction (${inv.payment_method})
+              </div>
+            </div>
+
+            <div class="a4-summary-right">
+              <div class="a4-calc-line">
+                <span>Items Subtotal:</span>
+                <span>₹${subtotal.toFixed(2)}</span>
+              </div>
+              ${discountAmount > 0 ? `
+                <div class="a4-calc-line a4-calc-discount">
+                  <span>Festival Discount:</span>
+                  <span>-₹${discountAmount.toFixed(2)}</span>
+                </div>
+              ` : ''}
+              ${isTaxApplicable ? `
+                <div class="a4-calc-line">
+                  <span>CGST (9.0%):</span>
+                  <span>₹${cgst.toFixed(2)}</span>
+                </div>
+                <div class="a4-calc-line">
+                  <span>SGST (9.0%):</span>
+                  <span>₹${sgst.toFixed(2)}</span>
+                </div>
+              ` : ''}
+              <div class="a4-calc-grand">
+                <span>TOTAL AMOUNT:</span>
+                <span>₹${totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer & Statutory Disclaimer -->
+          <div class="a4-inv-footer">
+            <div class="a4-terms-col">
+              <strong>Terms & Safety Information:</strong><br>
+              1. 100% PESO Certified fireworks manufactured strictly under Indian safety regulations.<br>
+              2. Store in a cool, dry place. Light outdoors only under adult supervision.<br>
+              3. This is a computer-generated tax invoice and requires no physical signature.<br>
+              <em>${footerNote}</em>
+            </div>
+            <div class="a4-sign-col">
+              <div class="a4-sign-space"></div>
+              <div class="a4-sign-label">For ${shopName}</div>
+              <div class="a4-sign-sub">Authorized Signatory</div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Thermal Receipt Format (80mm or 58mm)
+        const is80 = currentFormat === "80mm";
+        container.className = `invoice-print-container format-${currentFormat}`;
+
+        const upiId = settings.upi_id || "dhanalakshmi@upi";
+        const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(shopName)}&am=${totalAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Bill ' + inv.invoice_number)}`;
+        const qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${is80 ? '110x110' : '90x90'}&margin=4&data=${encodeURIComponent(upiUri)}`;
+
+        container.innerHTML = `
+          <div class="thermal-center">
+            <div class="thermal-shop-name">${shopName}</div>
+            <div class="thermal-meta">${shopAddress}</div>
+            <div class="thermal-meta">Helpline: ${shopPhone}</div>
+            ${gstNo ? `<div class="thermal-meta">GSTIN: ${gstNo} | State: 33</div>` : ''}
+          </div>
+
+          <div class="thermal-divider"></div>
+
+          <div class="thermal-row">
+            <span>Bill: ${inv.invoice_number}</span>
+            <span>${dateStr}</span>
+          </div>
+          <div class="thermal-row">
+            <span>Cust: ${inv.customer_name || 'Walk-in'}</span>
+            <span>${timeStr}</span>
+          </div>
+          ${inv.customer_phone ? `<div class="thermal-row"><span>Mobile:</span><span>${inv.customer_phone}</span></div>` : ''}
+
+          <div class="thermal-double-divider"></div>
+
+          <table class="thermal-table">
+            <thead>
+              <tr>
+                <th style="text-align: left;">Item Description</th>
+                <th style="text-align: center; width: 35px;">Qty</th>
+                <th class="text-right" style="width: ${is80 ? '70px' : '55px'};">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(inv.items || []).map(item => `
+                <tr>
+                  <td>
+                    <div class="thermal-item-title">${item.product_name}</div>
+                    <div class="thermal-item-sub">${item.quantity} x ₹${Number(item.unit_price).toFixed(2)}</div>
+                  </td>
+                  <td style="text-align: center; font-weight: 700; padding-top: 3px;">${item.quantity}</td>
+                  <td class="text-right" style="font-weight: 700; padding-top: 3px;">₹${Number(item.subtotal).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="thermal-divider"></div>
+
+          <div class="thermal-row">
+            <span>Subtotal:</span>
+            <span>₹${subtotal.toFixed(2)}</span>
+          </div>
+
+          ${discountAmount > 0 ? `
+            <div class="thermal-row">
+              <span>Festival Discount:</span>
+              <span>-₹${discountAmount.toFixed(2)}</span>
+            </div>
+          ` : ''}
+
+          ${isTaxApplicable ? `
+            <div class="thermal-row" style="font-size:${is80 ? '10px' : '8.5px'};">
+              <span>CGST (9%) + SGST (9%):</span>
+              <span>₹${taxAmount.toFixed(2)}</span>
+            </div>
+          ` : ''}
+
+          <div class="thermal-double-divider"></div>
+
+          <div class="thermal-row thermal-bold" style="font-size: ${is80 ? '14px' : '12px'};">
+            <span>NET PAYABLE:</span>
+            <span>₹${totalAmount.toFixed(2)}</span>
+          </div>
+
+          <div class="thermal-row" style="margin-top: 3px;">
+            <span>Payment Mode:</span>
+            <span><strong>${inv.payment_method || 'CASH'} (${(inv.payment_status || 'PAID').toUpperCase()})</strong></span>
+          </div>
+
+          <div class="thermal-divider"></div>
+
+          <!-- Thermal UPI QR for Verification -->
+          <div class="thermal-qr-box">
+            <img src="${qrImgUrl}" alt="Scan UPI" class="thermal-qr-img">
+            <div style="font-size: ${is80 ? '9px' : '7.5px'}; margin-top: 3px; font-weight: 700;">SCAN TO VERIFY / PAY VIA UPI</div>
+          </div>
+
+          <div class="thermal-footer">
+            ${footerNote}<br>
+            PESO Certified Fireworks.<br>
+            *** THANK YOU - VISIT AGAIN ***
+          </div>
+        `;
+      }
+    }
+
+    function printCurrentInvoice() {
+      document.body.className = `print-mode-${currentFormat}`;
+      window.print();
+    }
+
     function downloadCurrentInvoicePDF() {
       if (!loadedInvoice) return;
       const element = document.getElementById("invoiceContentToPrint");
@@ -517,18 +560,25 @@
 
       if (btn) {
         btn.disabled = true;
-        btn.textContent = "⏳ Generating PDF...";
+        btn.textContent = "⏳ Generating...";
       }
 
-      const fileName = `Invoice-${loadedInvoice.invoice_number}.pdf`;
+      const fileName = `Receipt-${loadedInvoice.invoice_number}-${currentFormat}.pdf`;
+
+      let pdfFormat = 'a4';
+      if (currentFormat === '80mm') {
+        pdfFormat = [80, 240];
+      } else if (currentFormat === '58mm') {
+        pdfFormat = [58, 200];
+      }
 
       if (typeof html2pdf !== "undefined") {
         const opt = {
-          margin: [10, 10, 10, 10],
+          margin: currentFormat === 'a4' ? [8, 8, 8, 8] : [2, 2, 2, 2],
           filename: fileName,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, logging: false },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          jsPDF: { unit: 'mm', format: pdfFormat, orientation: 'portrait' }
         };
 
         html2pdf().set(opt).from(element).save().then(() => {
@@ -538,14 +588,14 @@
           }
         }).catch(err => {
           console.warn("html2pdf error, triggering window.print():", err);
-          window.print();
+          printCurrentInvoice();
           if (btn) {
             btn.disabled = false;
             btn.textContent = "📥 Download PDF";
           }
         });
       } else {
-        window.print();
+        printCurrentInvoice();
         if (btn) {
           btn.disabled = false;
           btn.textContent = "📥 Download PDF";
@@ -553,16 +603,13 @@
       }
     }
 
-    /**
-     * Send Invoice Link & Details to Customer WhatsApp
-     */
     function sendInvoiceWhatsApp() {
       if (!loadedInvoice) return;
-      const phone = loadedInvoice.customer_phone || prompt("Enter customer WhatsApp number:");
+      const phone = loadedInvoice.customer_phone || prompt("Enter customer WhatsApp mobile number (10 digits):");
       if (!phone) return;
 
       const settings = JSON.parse(localStorage.getItem("dc_business_settings") || "{}");
-      const invoiceDownloadUrl = `${window.location.origin}/invoice.html?invoice=${loadedInvoice.invoice_number}&download=true`;
+      const invoiceDownloadUrl = `${window.location.origin}/invoice.html?invoice=${loadedInvoice.invoice_number}&format=${currentFormat}`;
 
       let message = 
 `🎆 *${settings.shop_name || 'Dhanalakshmi Crackers'}* 🎆
@@ -573,10 +620,10 @@ _Direct from Sivakasi - Safe & Certified Fireworks_
 💰 *Total Amount:* ₹${Number(loadedInvoice.total_amount).toFixed(2)}
 💳 *Payment:* ${loadedInvoice.payment_method} (PAID)
 ━━━━━━━━━━━━━━━━━━━━━
-📄 *Download Official PDF Invoice:*
+📄 *View / Download Receipt (${currentFormat.toUpperCase()}):*
 ${invoiceDownloadUrl}
 ━━━━━━━━━━━━━━━━━━━━━
-✨ Thank you for choosing Dhanalakshmi Crackers! Wishing you a sparkling and safe Diwali! 🪔`;
+✨ Thank you for celebrating with us! Wishing you a sparkling and safe Diwali! 🪔`;
 
       const cleanPhone = String(phone).replace(/[^0-9]/g, "");
       const waPhone = cleanPhone.length === 10 ? "91" + cleanPhone : cleanPhone;

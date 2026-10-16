@@ -46,165 +46,386 @@
   <!-- Main Content -->
   <div class="admin-main">
     <header class="admin-topbar">
-      <h1 class="admin-page-title">Store & Payment Configuration</h1>
+      <h1 class="admin-page-title">Store & Payment Settings</h1>
+      <div class="topbar-actions">
+        <button type="button" class="btn btn-primary btn-sm topbar-save-btn" onclick="document.getElementById('settingsForm').requestSubmit()">
+          💾 Save
+        </button>
+      </div>
     </header>
 
     <main class="admin-content">
-      <div class="admin-table-card settings-card">
+      <!-- Status Strip / Quick Summary -->
+      <section class="settings-status-strip" aria-label="Settings Quick Overview">
+        <div class="status-strip-card" onclick="switchSettingsTab('profile')">
+          <div class="status-strip-icon">🏪</div>
+          <div class="status-strip-info">
+            <span class="status-strip-label">Storefront</span>
+            <strong class="status-strip-val" id="statusShopName">Loading...</strong>
+          </div>
+        </div>
+        <div class="status-strip-card" onclick="switchSettingsTab('payments')">
+          <div class="status-strip-icon">💳</div>
+          <div class="status-strip-info">
+            <span class="status-strip-label">Merchant UPI</span>
+            <strong class="status-strip-val" id="statusUpiId">Loading...</strong>
+          </div>
+        </div>
+        <div class="status-strip-card" onclick="switchSettingsTab('cloud')">
+          <div class="status-strip-icon">☁️</div>
+          <div class="status-strip-info">
+            <span class="status-strip-label">Database Sync</span>
+            <strong class="status-strip-val" id="statusCloudSync">Checking...</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section Navigation Pills (Mobile touch scroller) -->
+      <div class="settings-nav-pills-bar">
+        <div class="settings-nav-pills" role="navigation" aria-label="Settings categories">
+          <button type="button" class="settings-pill-btn active" data-tab="all" onclick="switchSettingsTab('all')">
+            <span>✨</span> All Sections
+          </button>
+          <button type="button" class="settings-pill-btn" data-tab="profile" onclick="switchSettingsTab('profile')">
+            <span>🏢</span> Store Profile
+          </button>
+          <button type="button" class="settings-pill-btn" data-tab="payments" onclick="switchSettingsTab('payments')">
+            <span>💳</span> UPI & Payments
+          </button>
+          <button type="button" class="settings-pill-btn" data-tab="tax" onclick="switchSettingsTab('tax')">
+            <span>🧾</span> Tax & Invoicing
+          </button>
+          <button type="button" class="settings-pill-btn" data-tab="cloud" onclick="switchSettingsTab('cloud')">
+            <span>☁️</span> Cloud Database
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings Form Container -->
+      <div class="settings-container">
         <form id="settingsForm">
-          <h2 class="settings-section-title">
-            1. Business Identity & Invoicing
-          </h2>
-
-          <div class="form-row-2">
-            <div class="form-group">
-              <label class="form-label" for="setShopName">Business / Shop Name *</label>
-              <input type="text" id="setShopName" class="form-input" required>
+          
+          <!-- SECTION 1: Store & Contact Profile -->
+          <section id="section-profile" class="settings-card-section">
+            <div class="settings-card-header">
+              <div class="settings-header-icon bg-primary-soft">🏢</div>
+              <div>
+                <h2 class="settings-card-title">Business Identity & Store Profile</h2>
+                <p class="settings-card-sub">Your shop branding, contact channels, and Google Business address</p>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="setBusinessCategory">Business Category *</label>
-              <input type="text" id="setBusinessCategory" class="form-input" placeholder="e.g. Fireworks Supplier / Retail Store">
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="setShopName">Business / Shop Name *</label>
+                <input type="text" id="setShopName" class="form-input" required placeholder="e.g. Dhanalakshmi Crackers">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setBusinessCategory">Business Category *</label>
+                <input type="text" id="setBusinessCategory" class="form-input" placeholder="e.g. Fireworks Supplier / Retail Store" required>
+              </div>
             </div>
-          </div>
 
-          <div class="form-row-2">
-            <div class="form-group">
-              <label class="form-label" for="setTagline">Business Tagline</label>
-              <input type="text" id="setTagline" class="form-input">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="setTagline">Business Tagline</label>
+                <input type="text" id="setTagline" class="form-input" placeholder="e.g. Premium Sivakasi Crackers at Factory Prices">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setLogoUrl">Logo Image URL</label>
+                <div class="input-with-preview">
+                  <input type="url" id="setLogoUrl" class="form-input" placeholder="https://example.com/logo.png" oninput="updateLogoPreview()">
+                  <div class="logo-preview-box" id="logoPreviewContainer">
+                    <img id="logoPreviewImg" src="" alt="Logo Preview" class="img-hidden-default" onerror="this.classList.add('img-hidden-default'); document.getElementById('logoPreviewFallback').classList.remove('img-hidden-default');">
+                    <span id="logoPreviewFallback">🪔</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="setLogoUrl">Logo Image URL</label>
-              <input type="url" id="setLogoUrl" class="form-input" placeholder="https://...">
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <div class="form-label-row">
+                  <label class="form-label" for="setPhone">Contact Phone Number *</label>
+                  <a href="#" id="testPhoneCallBtn" class="field-action-link" target="_blank" rel="noopener">
+                    <span>📞</span> Call Test
+                  </a>
+                </div>
+                <input type="tel" inputmode="tel" id="setPhone" class="form-input" placeholder="+91 98765 43210" required oninput="updatePhoneTestLinks()">
+              </div>
+              <div class="form-group">
+                <div class="form-label-row">
+                  <label class="form-label" for="setWhatsappPhone">WhatsApp Helpline Number *</label>
+                  <a href="#" id="testWaLinkBtn" class="field-action-link field-action-wa" target="_blank" rel="noopener">
+                    <span>💬</span> WhatsApp Test
+                  </a>
+                </div>
+                <input type="tel" inputmode="tel" id="setWhatsappPhone" class="form-input" placeholder="+91 98765 43210" required oninput="updatePhoneTestLinks()">
+              </div>
             </div>
-          </div>
 
-          <div class="form-row-2">
-            <div class="form-group">
-              <label class="form-label" for="setPhone">Contact Phone Number *</label>
-              <input type="text" id="setPhone" class="form-input" placeholder="+91 98765 43210" required>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="setEmail">Official Business Email</label>
+                <input type="email" inputmode="email" id="setEmail" class="form-input" placeholder="contact@dhanalakshmicrackers.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setOperatingHours">Operating Hours (Google Profile)</label>
+                <input type="text" id="setOperatingHours" class="form-input" placeholder="e.g. Mon - Sun: 09:00 AM - 10:00 PM">
+              </div>
             </div>
+
             <div class="form-group">
-              <label class="form-label" for="setWhatsappPhone">WhatsApp Helpline Number (Configured Separately) *</label>
-              <input type="text" id="setWhatsappPhone" class="form-input" placeholder="+91 98765 43210" required>
+              <label class="form-label" for="setAddress">Verified Business Address (Google Profile) *</label>
+              <textarea id="setAddress" class="form-textarea" rows="2" required placeholder="Shop number, Street, Landmark, Sivakasi, Tamil Nadu, PIN..."></textarea>
             </div>
-          </div>
 
-          <div class="form-row-2">
             <div class="form-group">
-              <label class="form-label" for="setEmail">Official Business Email</label>
-              <input type="email" id="setEmail" class="form-input">
+              <label class="form-label" for="setBusinessDesc">Business Description</label>
+              <textarea id="setBusinessDesc" class="form-textarea" rows="2" placeholder="Wholesale and retail distributor of certified Sivakasi fireworks..."></textarea>
             </div>
+
             <div class="form-group">
-              <label class="form-label" for="setOperatingHours">Operating Hours (from Google Profile)</label>
-              <input type="text" id="setOperatingHours" class="form-input" placeholder="e.g. Mon - Sun: 09:00 AM - 10:00 PM">
+              <div class="form-label-row">
+                <label class="form-label" for="setGoogleReviewUrl">Official Google Review Link</label>
+                <button type="button" class="field-action-link" onclick="window.open(document.getElementById('setGoogleReviewUrl').value, '_blank')">
+                  <span>⭐</span> Open Link
+                </button>
+              </div>
+              <input type="url" id="setGoogleReviewUrl" class="form-input" placeholder="https://share.google/..." value="https://share.google/AwTsdLuk9OtRHQhbR">
+              <span class="form-help-text">Direct URL opened when customers tap "Write a Google Review" on the storefront.</span>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label" for="setAddress">Verified Business Address (from Google Profile) *</label>
-            <textarea id="setAddress" class="form-textarea" rows="2" required></textarea>
-          </div>
+            <div class="form-group form-group-top-space">
+              <div class="field-label-row">
+                <label class="form-label" for="setGuideVideoUrl">Store Tutorial / Institution Video Guide Link (YouTube URL)</label>
+                <button type="button" class="field-action-link" onclick="window.open(document.getElementById('setGuideVideoUrl').value, '_blank')">
+                  <span>▶️</span> Preview Video
+                </button>
+              </div>
+              <input type="url" id="setGuideVideoUrl" class="form-input" placeholder="https://www.youtube.com/watch?v=kY7XlB8mS78" value="https://www.youtube.com/watch?v=kY7XlB8mS78">
+              <span class="form-help-text">Video guide URL displayed in the admin training modal and storefront demo section.</span>
+            </div>
+          </section>
 
-          <div class="form-group">
-            <label class="form-label" for="setBusinessDesc">Business Description</label>
-            <textarea id="setBusinessDesc" class="form-textarea" rows="2" placeholder="Wholesale and retail distributor of certified Sivakasi fireworks..."></textarea>
-          </div>
+          <!-- SECTION 2: Merchant UPI & Payments -->
+          <section id="section-payments" class="settings-card-section">
+            <div class="settings-card-header">
+              <div class="settings-header-icon bg-success-soft">💳</div>
+              <div>
+                <h2 class="settings-card-title">Merchant UPI Payment Gateway</h2>
+                <p class="settings-card-sub">NPCI compliant UPI QR codes generated dynamically for POS billing & online checkout</p>
+              </div>
+            </div>
 
-          <div class="form-row-3">
+            <div class="form-row-2">
+              <div class="form-group">
+                <label class="form-label" for="setUpiId">Merchant UPI ID (VPA) *</label>
+                <input type="text" id="setUpiId" class="form-input upi-input" placeholder="dhanalakshmi@upi" required autocomplete="off" oninput="updateUpiQrPreview()">
+                <span class="form-help-text">e.g. <code>storename@okaxis</code>, <code>phone@upi</code>, or GPay/PhonePe merchant VPA</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setUpiName">Payee Name (as registered in Bank) *</label>
+                <input type="text" id="setUpiName" class="form-input" placeholder="Dhanalakshmi Crackers Sivakasi" required oninput="updateUpiQrPreview()">
+                <span class="form-help-text">Must match the legal account name displayed on customer's UPI app</span>
+              </div>
+            </div>
+
+            <!-- Interactive Live UPI QR Code Showcase Card -->
+            <div class="upi-preview-card">
+              <div class="upi-preview-header">
+                <div class="upi-brand-tag">
+                  <span class="upi-badge-logo">⚡ UPI</span>
+                  <span class="upi-badge-live">Live Preview</span>
+                </div>
+                <span class="upi-verified-badge">✓ NPCI Compatible</span>
+              </div>
+              <div class="upi-preview-body">
+                <div class="upi-qr-wrapper">
+                  <img id="liveUpiQrImg" src="" alt="Live Merchant UPI QR Preview" class="upi-qr-image">
+                  <span class="upi-qr-scan-hint">Scan with any UPI App</span>
+                </div>
+                <div class="upi-preview-details">
+                  <div class="upi-detail-row">
+                    <span class="upi-detail-label">Merchant Name</span>
+                    <strong class="upi-detail-val" id="liveUpiPayeeDisplay">Dhanalakshmi Crackers</strong>
+                  </div>
+                  <div class="upi-detail-row">
+                    <span class="upi-detail-label">UPI VPA</span>
+                    <code class="upi-vpa-chip" id="liveUpiVpaDisplay">dhanalakshmi@upi</code>
+                  </div>
+                  <div class="upi-preview-actions">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyUpiIdToClipboard()">
+                      📋 Copy UPI ID
+                    </button>
+                    <a id="testUpiIntentBtn" href="#" class="btn btn-primary btn-sm upi-test-btn" target="_blank" rel="noopener">
+                      📲 Test UPI App (₹1)
+                    </a>
+                  </div>
+                  <div class="upi-supported-apps">
+                    <span>Supports: Google Pay • PhonePe • Paytm • BHIM • Cred • Amazon Pay</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 3: Tax & Invoicing -->
+          <section id="section-tax" class="settings-card-section">
+            <div class="settings-card-header">
+              <div class="settings-header-icon bg-warning-soft">🧾</div>
+              <div>
+                <h2 class="settings-card-title">Invoicing, GST & Regional Settings</h2>
+                <p class="settings-card-sub">GST tax breakdown, invoice greetings, and regional compliance</p>
+              </div>
+            </div>
+
+            <div class="form-row-3">
+              <div class="form-group">
+                <label class="form-label" for="setCurrency">Currency</label>
+                <input type="text" id="setCurrency" class="form-input form-input-readonly" value="INR (₹)" readonly>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setTimeZone">Time Zone</label>
+                <input type="text" id="setTimeZone" class="form-input form-input-readonly" value="Asia/Kolkata" readonly>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setGst">GSTIN (Tax Number)</label>
+                <input type="text" id="setGst" class="form-input gst-input" placeholder="33AAAAA0000A1Z5" maxlength="15">
+              </div>
+            </div>
+
+            <!-- Tax Toggle Card -->
+            <div class="tax-toggle-card">
+              <div class="tax-toggle-left">
+                <label class="admin-switch">
+                  <input type="checkbox" id="setTaxApplicable" checked onchange="toggleTaxRateInput(this.checked)" aria-label="Calculate & Print GST on Invoices" title="Calculate & Print GST on Invoices">
+                  <span class="admin-slider"></span>
+                </label>
+                <div>
+                  <strong class="tax-switch-title">Calculate & Print GST on Invoices</strong>
+                  <span class="tax-switch-sub">When enabled, CGST and SGST are split evenly on bills and PDF downloads</span>
+                </div>
+              </div>
+              <div class="tax-toggle-right" id="taxRateContainer">
+                <div class="form-group form-group-zero-margin">
+                  <label class="form-label" for="setTaxRate">GST Rate (%)</label>
+                  <input type="number" id="setTaxRate" step="0.5" class="form-input tax-rate-input" value="18">
+                </div>
+                <div class="tax-presets">
+                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(5)">5%</button>
+                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(12)">12%</button>
+                  <button type="button" class="tax-preset-chip active" onclick="setTaxPreset(18)">18%</button>
+                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(28)">28%</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group form-group-top-space">
+              <label class="form-label" for="setInvoiceFooter">Invoice Footer Note / Greetings</label>
+              <input type="text" id="setInvoiceFooter" class="form-input" placeholder="Thank you for shopping with Dhanalakshmi Crackers! Have a sparkling Diwali.">
+              <span class="form-help-text">Printed at the bottom of all generated customer thermal and standard PDF receipts.</span>
+            </div>
+
+            <div class="form-row-2 form-row-top-space">
+              <div class="form-group">
+                <label class="form-label" for="setDefaultPrintFormat">Default Counter Receipt Format</label>
+                <select id="setDefaultPrintFormat" class="form-input">
+                  <option value="80mm">🧾 80mm POS Thermal Receipt (Standard 3-inch roll)</option>
+                  <option value="58mm">🧾 58mm Handheld Thermal Receipt (Compact 2-inch roll)</option>
+                  <option value="a4">📄 A4 Standard Full-Page Invoice</option>
+                </select>
+                <span class="form-help-text">Pre-selected automatically on POS Terminal and order receipts.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Receipt Printer Preview Test</label>
+                <div class="test-btns-row">
+                  <a href="/invoice.html?format=80mm" target="_blank" class="btn btn-secondary btn-sm btn-test-action">
+                    🧾 Test 80mm
+                  </a>
+                  <a href="/invoice.html?format=58mm" target="_blank" class="btn btn-secondary btn-sm btn-test-action">
+                    🧾 Test 58mm
+                  </a>
+                </div>
+                <span class="form-help-text">Preview and verify styling on connected thermal roll printers.</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- SECTION 4: Supabase Cloud Integration -->
+          <section id="section-cloud" class="settings-card-section">
+            <div class="settings-card-header">
+              <div class="settings-header-icon bg-info-soft">☁️</div>
+              <div>
+                <h2 class="settings-card-title">Supabase Live Cloud Database</h2>
+                <p class="settings-card-sub">Direct PostgreSQL database credentials for instant multi-device synchronization</p>
+              </div>
+            </div>
+
+            <div class="cloud-status-banner" id="cloudStatusBanner">
+              <div class="cloud-banner-icon">⚡</div>
+              <div class="cloud-banner-content">
+                <strong>Real-Time Cloud Synchronization</strong>
+                <span>All product changes, store configurations, and online orders are synchronized automatically with your PostgreSQL database.</span>
+              </div>
+            </div>
+
             <div class="form-group">
-              <label class="form-label" for="setCurrency">Currency</label>
-              <input type="text" id="setCurrency" class="form-input" value="INR (₹)" readonly>
+              <label class="form-label" for="setSupabaseUrl">Supabase Project URL</label>
+              <input type="url" id="setSupabaseUrl" class="form-input" placeholder="https://pbjcqamswwwoklcgdfjd.supabase.co" autocomplete="off">
             </div>
+
             <div class="form-group">
-              <label class="form-label" for="setTimeZone">Time Zone</label>
-              <input type="text" id="setTimeZone" class="form-input" value="Asia/Kolkata" readonly>
+              <label class="form-label" for="setSupabaseAnonKey">Supabase Public Anon Key</label>
+              <input type="text" id="setSupabaseAnonKey" class="form-input" placeholder="sb_publishable_..." autocomplete="off">
             </div>
-            <div class="form-group">
-              <label class="form-label" for="setGst">GSTIN (Tax Number)</label>
-              <input type="text" id="setGst" class="form-input" placeholder="33AAAAA0000A1Z5">
+
+            <div class="form-group service-key-card">
+              <div class="service-key-label">
+                <label class="form-label label-no-margin" for="setSupabaseServiceKey">
+                  🔑 Supabase Service Role Key (Online Direct Writes)
+                </label>
+                <span class="badge badge-warning badge-service-tag">Admin Secret</span>
+              </div>
+              <div class="input-with-action">
+                <input type="password" id="setSupabaseServiceKey" class="form-input service-key-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off">
+                <button type="button" id="toggleServiceKeyBtn" class="btn-input-action" onclick="toggleServiceKeyVisibility()" title="Show/Hide key">
+                  👁️
+                </button>
+              </div>
+              <span class="form-help-text service-key-help">
+                Stored securely in your admin browser session. Bypasses Row-Level Security so product updates, inventory, and settings immediately commit to your remote cloud database.
+              </span>
             </div>
-          </div>
 
-          <div class="tax-toggle-box">
-            <label class="tax-toggle-label">
-              <input type="checkbox" id="setTaxApplicable" checked>
-              <span>Show Tax / GST on Invoices</span>
-            </label>
-            <div class="form-group">
-              <label class="form-label" for="setTaxRate">Applicable GST Rate (%)</label>
-              <input type="number" id="setTaxRate" step="0.5" class="form-input" value="18">
+            <div class="sync-test-actions">
+              <button type="button" class="btn btn-secondary" onclick="testSupabaseOnlineSync()" id="btnTestCloud">
+                ⚡ Test Cloud Connection & Online Write Access
+              </button>
+              <div id="supabaseSyncStatus"></div>
             </div>
-          </div>
+          </section>
 
-          <div class="form-group">
-            <label class="form-label" for="setInvoiceFooter">Invoice Footer Note / Greetings</label>
-            <input type="text" id="setInvoiceFooter" class="form-input" placeholder="Thank you for shopping with Dhanalakshmi Crackers! Have a sparkling Diwali.">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="setGoogleReviewUrl">Official Google Business Profile Review URL</label>
-            <input type="url" id="setGoogleReviewUrl" class="form-input" placeholder="https://share.google/AwTsdLuk9OtRHQhbR" value="https://share.google/AwTsdLuk9OtRHQhbR">
-            <span class="form-help-text">Direct link used when customers click "Write a Google Review" on the home page.</span>
-          </div>
-
-          <h2 class="settings-section-title settings-section-title-spaced">
-            2. Merchant UPI Payment Settings
-          </h2>
-
-          <div class="form-row-2">
-            <div class="form-group">
-              <label class="form-label" for="setUpiId">Merchant UPI ID (VPA) *</label>
-              <input type="text" id="setUpiId" class="form-input" placeholder="dhanalakshmi@upi" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="setUpiName">Payee Name (as registered in Bank) *</label>
-              <input type="text" id="setUpiName" class="form-input" placeholder="Dhanalakshmi Crackers Sivakasi" required>
-            </div>
-          </div>
-
-          <h2 class="settings-section-title settings-section-title-spaced">
-            3. Supabase Live Cloud Integration
-          </h2>
-          <p class="settings-desc">
-            Configure your live Supabase cloud database credentials. Your settings and product changes are saved directly to PostgreSQL.
-          </p>
-
-          <div class="form-group">
-            <label class="form-label" for="setSupabaseUrl">Supabase Project URL</label>
-            <input type="url" id="setSupabaseUrl" class="form-input" placeholder="https://pbjcqamswwwoklcgdfjd.supabase.co">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="setSupabaseAnonKey">Supabase Public Anon Key</label>
-            <input type="text" id="setSupabaseAnonKey" class="form-input" placeholder="sb_publishable_...">
-          </div>
-
-          <div class="form-group service-key-card">
-            <label class="form-label service-key-label" for="setSupabaseServiceKey">
-              <span>🔑 Supabase Admin Service Role Key (For 100% Online Writes)</span>
-              <span class="badge badge-warning badge-service-tag">Direct Cloud Writes</span>
-            </label>
-            <input type="password" id="setSupabaseServiceKey" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off">
-            <span class="form-help-text service-key-help">
-              Stored securely in your admin browser session only. Found in <strong>Supabase Dashboard → Project Settings → API → service_role (secret)</strong>. Bypasses Row-Level Security so product edits instantly write to your cloud PostgreSQL database.
-            </span>
-          </div>
-
-          <div class="sync-test-actions">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="testSupabaseOnlineSync()">
-              ⚡ Test Cloud Connection & Online Write Access
-            </button>
-            <div id="supabaseSyncStatus"></div>
-          </div>
-
+          <!-- Desktop Save Bar (Form Footer) -->
           <div class="settings-save-bar">
             <button type="submit" class="btn btn-primary btn-block settings-save-btn">
-              💾 Save All Settings
+              💾 Save All Settings & Synchronize Storefront
             </button>
           </div>
         </form>
       </div>
     </main>
+
+    <!-- Mobile Sticky Floating Save Bar -->
+    <div class="settings-mobile-save-bar" id="settingsMobileSaveBar">
+      <div class="mobile-save-bar-info">
+        <span class="mobile-save-dot">●</span>
+        <span class="mobile-save-text">Store Settings</span>
+      </div>
+      <button type="button" class="btn btn-primary btn-sm mobile-save-btn" onclick="document.getElementById('settingsForm').requestSubmit()">
+        💾 Save Settings
+      </button>
+    </div>
   </div>
 
   <!-- Scripts -->
@@ -214,7 +435,171 @@
   <script src="../assets/js/admin-nav.js"></script>
   <script src="../assets/js/admin.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", initAdminSettings);
+    // Initialize Admin Settings & Dynamic Preview Enhancements
+    document.addEventListener("DOMContentLoaded", async function() {
+      await initAdminSettings();
+      setupSettingsEnhancements();
+    });
+
+    function setupSettingsEnhancements() {
+      updateUpiQrPreview();
+      updateLogoPreview();
+      updatePhoneTestLinks();
+      
+      // Populate Status Strip
+      const sName = document.getElementById("setShopName") ? document.getElementById("setShopName").value : "";
+      const sUpi = document.getElementById("setUpiId") ? document.getElementById("setUpiId").value : "";
+      if (document.getElementById("statusShopName")) {
+        document.getElementById("statusShopName").textContent = sName || "Dhanalakshmi Crackers";
+      }
+      if (document.getElementById("statusUpiId")) {
+        document.getElementById("statusUpiId").textContent = sUpi || "Not Configured";
+      }
+      if (document.getElementById("statusCloudSync")) {
+        const isCloud = isSupabaseConfigured();
+        document.getElementById("statusCloudSync").innerHTML = isCloud 
+          ? '<span style="color:#16a34a;">● Cloud Connected</span>' 
+          : '<span style="color:#d97706;">● Local Mode</span>';
+      }
+
+      // Track input changes to reflect in mobile save bar
+      const form = document.getElementById("settingsForm");
+      if (form) {
+        form.addEventListener("input", function() {
+          const barText = document.querySelector(".mobile-save-text");
+          const barDot = document.querySelector(".mobile-save-dot");
+          if (barText) barText.textContent = "Unsaved Changes";
+          if (barDot) barDot.style.color = "#f59e0b";
+        });
+      }
+    }
+
+    function switchSettingsTab(tabName) {
+      const pills = document.querySelectorAll('.settings-pill-btn');
+      pills.forEach(p => p.classList.toggle('active', p.getAttribute('data-tab') === tabName));
+
+      const sections = {
+        profile: document.getElementById('section-profile'),
+        payments: document.getElementById('section-payments'),
+        tax: document.getElementById('section-tax'),
+        cloud: document.getElementById('section-cloud')
+      };
+
+      if (tabName === 'all') {
+        Object.values(sections).forEach(s => { if (s) s.style.display = 'block'; });
+      } else {
+        Object.entries(sections).forEach(([key, s]) => {
+          if (!s) return;
+          s.style.display = (key === tabName) ? 'block' : 'none';
+        });
+        if (window.innerWidth <= 768) {
+          window.scrollTo({ top: 90, behavior: 'smooth' });
+        }
+      }
+    }
+
+    function updateUpiQrPreview() {
+      const upiIdEl = document.getElementById("setUpiId");
+      const upiNameEl = document.getElementById("setUpiName");
+      const qrImgEl = document.getElementById("liveUpiQrImg");
+      const vpaDisplayEl = document.getElementById("liveUpiVpaDisplay");
+      const payeeDisplayEl = document.getElementById("liveUpiPayeeDisplay");
+      const testUpiBtn = document.getElementById("testUpiIntentBtn");
+
+      if (!upiIdEl || !qrImgEl) return;
+
+      const upiId = upiIdEl.value.trim() || "dhanalakshmi@upi";
+      const upiName = (upiNameEl ? upiNameEl.value.trim() : "") || "Dhanalakshmi Crackers";
+
+      const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=1.00&cu=INR&tn=${encodeURIComponent('Dhanalakshmi Crackers Test')}`;
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=${encodeURIComponent(upiUri)}`;
+
+      qrImgEl.src = qrUrl;
+      if (vpaDisplayEl) vpaDisplayEl.textContent = upiId;
+      if (payeeDisplayEl) payeeDisplayEl.textContent = upiName;
+      if (testUpiBtn) testUpiBtn.href = upiUri;
+    }
+
+    function copyUpiIdToClipboard() {
+      const upiIdEl = document.getElementById("setUpiId");
+      if (!upiIdEl || !upiIdEl.value.trim()) {
+        showToast("Please enter a UPI ID first", "error");
+        return;
+      }
+      navigator.clipboard.writeText(upiIdEl.value.trim()).then(() => {
+        showToast("UPI ID copied to clipboard! 📋", "success");
+      }).catch(() => {
+        showToast("Could not copy UPI ID", "info");
+      });
+    }
+
+    function updateLogoPreview() {
+      const logoInput = document.getElementById("setLogoUrl");
+      const logoImg = document.getElementById("logoPreviewImg");
+      const fallback = document.getElementById("logoPreviewFallback");
+      if (!logoInput || !logoImg) return;
+      const url = logoInput.value.trim();
+      if (url && (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:"))) {
+        logoImg.src = url;
+        logoImg.classList.remove("img-hidden-default");
+        if (fallback) fallback.classList.add("img-hidden-default");
+      } else {
+        logoImg.classList.add("img-hidden-default");
+        if (fallback) fallback.classList.remove("img-hidden-default");
+      }
+    }
+
+    function updatePhoneTestLinks() {
+      const phoneEl = document.getElementById("setPhone");
+      const waEl = document.getElementById("setWhatsappPhone");
+      const callBtn = document.getElementById("testPhoneCallBtn");
+      const waBtn = document.getElementById("testWaLinkBtn");
+
+      if (phoneEl && callBtn) {
+        const rawPhone = phoneEl.value.replace(/[^0-9+]/g, '');
+        callBtn.href = rawPhone ? `tel:${rawPhone}` : '#';
+        callBtn.style.opacity = rawPhone ? '1' : '0.4';
+        callBtn.style.pointerEvents = rawPhone ? 'auto' : 'none';
+      }
+
+      if (waEl && waBtn) {
+        let rawWa = waEl.value.replace(/[^0-9]/g, '');
+        if (rawWa.length === 10) rawWa = '91' + rawWa;
+        waBtn.href = rawWa ? `https://wa.me/${rawWa}?text=${encodeURIComponent('Hello! Testing WhatsApp contact from Dhanalakshmi Crackers.')}` : '#';
+        waBtn.style.opacity = rawWa ? '1' : '0.4';
+        waBtn.style.pointerEvents = rawWa ? 'auto' : 'none';
+      }
+    }
+
+    function toggleTaxRateInput(checked) {
+      const rateInput = document.getElementById("setTaxRate");
+      const presets = document.querySelectorAll(".tax-preset-chip");
+      if (rateInput) rateInput.disabled = !checked;
+      presets.forEach(p => p.disabled = !checked);
+    }
+
+    function setTaxPreset(rate) {
+      const rateInput = document.getElementById("setTaxRate");
+      if (rateInput) {
+        rateInput.value = rate;
+      }
+      document.querySelectorAll(".tax-preset-chip").forEach(chip => {
+        chip.classList.toggle("active", chip.textContent.trim() === `${rate}%`);
+      });
+    }
+
+    function toggleServiceKeyVisibility() {
+      const keyInput = document.getElementById("setSupabaseServiceKey");
+      const toggleBtn = document.getElementById("toggleServiceKeyBtn");
+      if (!keyInput) return;
+      if (keyInput.type === "password") {
+        keyInput.type = "text";
+        if (toggleBtn) toggleBtn.textContent = "🔒";
+      } else {
+        keyInput.type = "password";
+        if (toggleBtn) toggleBtn.textContent = "👁️";
+      }
+    }
   </script>
 </body>
 </html>

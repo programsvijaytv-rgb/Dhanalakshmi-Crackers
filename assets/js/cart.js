@@ -25,42 +25,54 @@ function saveCart(cart) {
 }
 
 /**
- * Add a product to the cart
+ * Add a product to the cart (supports variants)
  */
-function addToCart(product, quantity = 1) {
+function addToCart(product, quantity = 1, variant = null) {
   const cart = getCart();
-  const existing = cart.find(item => item.id === product.id);
+  const vId = variant?.id || product.selectedVariant?.id || null;
+  const cartItemId = vId ? `${product.id}_${vId}` : product.id;
+  const displayName = variant ? `${product.name} - ${variant.name}` : product.name;
+  const price = Number(variant ? variant.price : product.price);
+  const origPrice = Number(variant ? (variant.original_price || variant.price) : (product.original_price || product.price));
+  const sku = variant ? (variant.sku || product.sku) : (product.sku || "");
+  const unit = variant ? (variant.unit || product.unit) : (product.unit || "Box");
+
+  const existing = cart.find(item => (item.cartItemId && item.cartItemId === cartItemId) || (!item.cartItemId && item.id === cartItemId));
 
   if (existing) {
     existing.quantity += Number(quantity);
   } else {
     cart.push({
       id: product.id,
-      name: product.name,
-      sku: product.sku || "",
-      price: Number(product.price),
-      original_price: Number(product.original_price || product.price),
+      cartItemId: cartItemId,
+      variant_id: vId,
+      variant_name: variant ? variant.name : null,
+      name: displayName,
+      base_name: product.name,
+      sku: sku,
+      price: price,
+      original_price: origPrice,
       image_url: product.image_url || "",
-      unit: product.unit || "Box",
+      unit: unit,
       quantity: Number(quantity)
     });
   }
 
   saveCart(cart);
-  showToast(`Added ${product.name} to cart!`);
+  showToast(`Added ${displayName} to cart!`);
 }
 
 /**
  * Update the quantity of a cart item
  */
-function updateCartQuantity(productId, newQty) {
+function updateCartQuantity(cartItemId, newQty) {
   const cart = getCart();
-  const item = cart.find(i => i.id === productId);
+  const item = cart.find(i => (i.cartItemId && i.cartItemId === cartItemId) || i.id === cartItemId);
 
   if (item) {
     const qty = parseInt(newQty, 10);
     if (qty <= 0) {
-      removeFromCart(productId);
+      removeFromCart(cartItemId);
     } else {
       item.quantity = qty;
       saveCart(cart);
@@ -72,9 +84,9 @@ function updateCartQuantity(productId, newQty) {
 /**
  * Remove an item from the cart
  */
-function removeFromCart(productId) {
+function removeFromCart(cartItemId) {
   let cart = getCart();
-  cart = cart.filter(i => i.id !== productId);
+  cart = cart.filter(i => (i.cartItemId && i.cartItemId !== cartItemId) || (!i.cartItemId && i.id !== cartItemId));
   saveCart(cart);
   renderCartPage();
   showToast("Item removed from cart");
@@ -142,6 +154,7 @@ function renderCartPage() {
   container.innerHTML = "";
   cart.forEach(item => {
     const tr = document.createElement("tr");
+    const itemKey = item.cartItemId || item.id;
 
     tr.innerHTML = `
       <td>
@@ -161,16 +174,16 @@ function renderCartPage() {
       </td>
       <td>
         <div class="qty-control">
-          <button class="qty-btn" title="Decrease" onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})">-</button>
+          <button class="qty-btn" title="Decrease" onclick="updateCartQuantity('${itemKey}', ${item.quantity - 1})">-</button>
           <span class="qty-val">${item.quantity}</span>
-          <button class="qty-btn" title="Increase" onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">+</button>
+          <button class="qty-btn" title="Increase" onclick="updateCartQuantity('${itemKey}', ${item.quantity + 1})">+</button>
         </div>
       </td>
       <td style="font-weight: 800; font-size: 1.05rem; color: var(--primary);">
         ${formatCurrency(item.price * item.quantity)}
       </td>
       <td>
-        <button class="btn-remove-item" title="Remove Item" onclick="removeFromCart('${item.id}')">
+        <button class="btn-remove-item" title="Remove Item" onclick="removeFromCart('${itemKey}')">
           &times;
         </button>
       </td>

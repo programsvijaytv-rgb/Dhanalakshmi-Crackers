@@ -90,74 +90,102 @@ const DEFAULT_BUSINESS_SETTINGS = {
   default_tax_rate: 18,
   invoice_prefix: "DC-",
   invoice_footer: "Thank you for celebrating with Dhanalakshmi Crackers! Have a sparkling and safe Diwali.",
-  google_review_url: "https://share.google/AwTsdLuk9OtRHQhbR"
+  google_review_url: "https://share.google/AwTsdLuk9OtRHQhbR",
+  guide_video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78"
 };
 
 const DEFAULT_CATEGORIES = [
-  { id: "b1000000-0000-0000-0000-000000000001", name: "Sparklers & Flares", slug: "sparklers", display_order: 1 },
-  { id: "b1000000-0000-0000-0000-000000000002", name: "Ground Chakkars", slug: "ground-chakkars", display_order: 2 },
-  { id: "b1000000-0000-0000-0000-000000000003", name: "Flower Pots", slug: "flower-pots", display_order: 3 },
-  { id: "b1000000-0000-0000-0000-000000000004", name: "Rockets & Missiles", slug: "rockets", display_order: 4 },
-  { id: "b1000000-0000-0000-0000-000000000005", name: "Aerial Repeaters (Sky Shots)", slug: "sky-shots", display_order: 5 },
-  { id: "b1000000-0000-0000-0000-000000000006", name: "Sound Crackers & Garlands", slug: "sound-crackers", display_order: 6 },
-  { id: "b1000000-0000-0000-0000-000000000007", name: "Festival Gift Boxes", slug: "gift-boxes", display_order: 7 }
+  { id: "b1000000-0000-0000-0000-000000000001", name: "Gift Box", slug: "gift-box", display_order: 1 },
+  { id: "b1000000-0000-0000-0000-000000000002", name: "Sparklers - ஸ்பார்க்லர்", slug: "sparklers", display_order: 2 },
+  { id: "b1000000-0000-0000-0000-000000000003", name: "Chakkar - சக்கரம்", slug: "chakkar", display_order: 3 },
+  { id: "b1000000-0000-0000-0000-000000000004", name: "Flower Pots - பூச்சட்டி", slug: "flower-pots", display_order: 4 },
+  { id: "b1000000-0000-0000-0000-000000000005", name: "Pencil | Twinkling Star", slug: "pencil-twinkling-star", display_order: 5 },
+  { id: "b1000000-0000-0000-0000-000000000006", name: "Match Sticks - தீப்பெட்டி", slug: "match-sticks", display_order: 6 },
+  { id: "b1000000-0000-0000-0000-000000000007", name: "Bijili - பிஜிலி", slug: "bijili", display_order: 7 },
+  { id: "b1000000-0000-0000-0000-000000000008", name: "Wala - வாலா", slug: "wala", display_order: 8 },
+  { id: "b1000000-0000-0000-0000-000000000009", name: "Rocket - ராக்கெட்", slug: "rocket", display_order: 9 },
+  { id: "b1000000-0000-0000-0000-000000000010", name: "Fancy Crackers - பேன்சி கிராக்கர்", slug: "fancy-crackers", display_order: 10 },
+  { id: "b1000000-0000-0000-0000-000000000011", name: "Night Out - நைட் அவுட்", slug: "night-out", display_order: 11 },
+  { id: "b1000000-0000-0000-0000-000000000012", name: "Multi Colour Fancy out - மல்டி கலர் பேன்சி அவுட்", slug: "multi-colour-fancy-out", display_order: 12 },
+  { id: "b1000000-0000-0000-0000-000000000013", name: "Bombs - பாம்", slug: "bombs", display_order: 13 },
+  { id: "b1000000-0000-0000-0000-000000000014", name: "Gun - கன்", slug: "gun", display_order: 14 },
+  { id: "b1000000-0000-0000-0000-000000000015", name: "Others", slug: "others", display_order: 15 }
 ];
 
 const DEFAULT_PRODUCTS = [
+  // 1. Gift Box
   {
     id: "c1000000-0000-0000-0000-000000000001",
-    name: "10cm Electric Sparklers (10 Pcs)",
-    sku: "SPK-10EL",
+    name: "Dhanalakshmi Family Delight Gift Box (25 Items)",
+    sku: "BOX-DLT25",
     category_id: "b1000000-0000-0000-0000-000000000001",
-    category_name: "Sparklers & Flares",
-    price: 35,
-    original_price: 60,
-    stock_quantity: 250,
-    min_stock_alert: 20,
-    unit: "Box (10 Pcs)",
-    description: "Dazzling silver sparklers with smooth low-smoke burning, ideal for young children.",
-    image_url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
+    category_name: "Gift Box",
+    price: 799,
+    original_price: 1600,
+    stock_quantity: 70,
+    min_stock_alert: 8,
+    unit: "Gift Box",
+    description: "Complete family festive gift box with sparklers, ground chakkars, flower pots, twinkling pencils, and kids novelties.",
+    image_url: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   },
   {
     id: "c1000000-0000-0000-0000-000000000002",
-    name: "15cm Color Sparklers (5 in 1 Box)",
-    sku: "SPK-15COL",
+    name: "Royal Sivakasi Maha Diwali Hamper (50 Items)",
+    sku: "BOX-ROY50",
     category_id: "b1000000-0000-0000-0000-000000000001",
-    category_name: "Sparklers & Flares",
-    price: 85,
-    original_price: 150,
-    stock_quantity: 180,
-    min_stock_alert: 20,
-    unit: "Box (10 Pcs)",
-    description: "Assorted red, green, yellow, silver and gold sparklers with extended burning duration.",
-    image_url: "https://images.unsplash.com/photo-1543257580-7269da773bf5?w=600&auto=format&fit=crop&q=80",
+    category_name: "Gift Box",
+    price: 1799,
+    original_price: 3800,
+    stock_quantity: 45,
+    min_stock_alert: 5,
+    unit: "Gift Box",
+    description: "Grand deluxe festival assortment with multi-shot aerial cakes, whistling rockets, giant flower pots, and sound crackers.",
+    image_url: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   },
+
+  // 2. Sparklers - ஸ்பார்க்லர் (Variable Product example)
   {
     id: "c1000000-0000-0000-0000-000000000003",
-    name: "30cm Giant Gold Sparklers (5 Pcs)",
-    sku: "SPK-30GLD",
-    category_id: "b1000000-0000-0000-0000-000000000001",
-    category_name: "Sparklers & Flares",
-    price: 130,
-    original_price: 220,
-    stock_quantity: 140,
-    min_stock_alert: 15,
-    unit: "Box (5 Pcs)",
-    description: "Extra long jumbo gold glitter sparklers with majestic 3-minute sparkling performance.",
-    image_url: "https://images.unsplash.com/photo-1508717272800-9fff97da7e8f?w=600&auto=format&fit=crop&q=80",
-    is_featured: false,
+    name: "Classic Sivakasi Electric Sparklers - ஸ்பார்க்லர்",
+    sku: "SPK-VAR",
+    category_id: "b1000000-0000-0000-0000-000000000002",
+    category_name: "Sparklers - ஸ்பார்க்லர்",
+    price: 35,
+    original_price: 60,
+    stock_quantity: 650,
+    min_stock_alert: 25,
+    unit: "Box",
+    description: "Dazzling smokeless sparklers available in 10cm, 15cm, 30cm and 50cm jumbo sizes. Safe and certified green fireworks.",
+    image_url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: true,
+    variants: [
+      { id: "v-spk-10", name: "10cm Electric (10 Pcs)", sku: "SPK-10EL", price: 35, original_price: 60, stock_quantity: 250, unit: "Box (10 Pcs)" },
+      { id: "v-spk-15", name: "15cm Multi-Color (10 Pcs)", sku: "SPK-15COL", price: 85, original_price: 150, stock_quantity: 180, unit: "Box (10 Pcs)" },
+      { id: "v-spk-30", name: "30cm Giant Gold (5 Pcs)", sku: "SPK-30GLD", price: 130, original_price: 220, stock_quantity: 140, unit: "Box (5 Pcs)" },
+      { id: "v-spk-50", name: "50cm Jumbo Mega (5 Pcs)", sku: "SPK-50JMB", price: 210, original_price: 380, stock_quantity: 80, unit: "Box (5 Pcs)" }
+    ],
+    is_featured: true,
     is_active: true
   },
+
+  // 3. Chakkar - சக்கரம்
   {
     id: "c1000000-0000-0000-0000-000000000004",
-    name: "Ground Chakkars Deluxe (10 Pcs)",
+    name: "Ground Chakkars Deluxe - சக்கரம் (10 Pcs)",
     sku: "CHK-DLX10",
-    category_id: "b1000000-0000-0000-0000-000000000002",
-    category_name: "Ground Chakkars",
+    category_id: "b1000000-0000-0000-0000-000000000003",
+    category_name: "Chakkar - சக்கரம்",
     price: 95,
     original_price: 180,
     stock_quantity: 160,
@@ -165,6 +193,9 @@ const DEFAULT_PRODUCTS = [
     unit: "Box (10 Pcs)",
     description: "High-speed spinning wheels generating bright golden floral discs on the ground.",
     image_url: "https://images.unsplash.com/photo-1531844251246-9a1bfaae09fc?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   },
@@ -172,31 +203,39 @@ const DEFAULT_PRODUCTS = [
     id: "c1000000-0000-0000-0000-000000000005",
     name: "Special 4x4 Whistling Chakkar (5 Pcs)",
     sku: "CHK-WHT5",
-    category_id: "b1000000-0000-0000-0000-000000000002",
-    category_name: "Ground Chakkars",
+    category_id: "b1000000-0000-0000-0000-000000000003",
+    category_name: "Chakkar - சக்கரம்",
     price: 140,
     original_price: 260,
     stock_quantity: 90,
     min_stock_alert: 15,
     unit: "Box (5 Pcs)",
     description: "Spins with multi-stage whistling sound followed by showers of multi-color starry rings.",
-    image_url: "https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=600&auto=format&fit=crop&q=80",
-    is_featured: true,
+    image_url: "https://images.unsplash.com/photo-1531844251246-9a1bfaae09fc?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: false,
     is_active: true
   },
+
+  // 4. Flower Pots - பூச்சட்டி
   {
     id: "c1000000-0000-0000-0000-000000000006",
-    name: "Flower Pots Special (10 Pcs)",
+    name: "Flower Pots Special - பூச்சட்டி (10 Pcs)",
     sku: "FLP-SPC10",
-    category_id: "b1000000-0000-0000-0000-000000000003",
-    category_name: "Flower Pots",
+    category_id: "b1000000-0000-0000-0000-000000000004",
+    category_name: "Flower Pots - பூச்சட்டி",
     price: 120,
     original_price: 240,
     stock_quantity: 200,
     min_stock_alert: 20,
     unit: "Box (10 Pcs)",
-    description: "Classic Sivakasi flower pots throwing golden and silvery plumes up to 8 feet.",
+    description: "Classic Sivakasi flower pots throwing golden and silvery plumes up to 8 feet high.",
     image_url: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   },
@@ -204,8 +243,8 @@ const DEFAULT_PRODUCTS = [
     id: "c1000000-0000-0000-0000-000000000007",
     name: "Color Koti Giant Flower Pots (5 Pcs)",
     sku: "FLP-KOTI5",
-    category_id: "b1000000-0000-0000-0000-000000000003",
-    category_name: "Flower Pots",
+    category_id: "b1000000-0000-0000-0000-000000000004",
+    category_name: "Flower Pots - பூச்சட்டி",
     price: 210,
     original_price: 400,
     stock_quantity: 85,
@@ -213,31 +252,147 @@ const DEFAULT_PRODUCTS = [
     unit: "Box (5 Pcs)",
     description: "Grand conical pots that erupt into tri-color fountain sparks reaching 15 feet high.",
     image_url: "https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: true,
+    is_active: true
+  },
+
+  // 5. Pencil | Twinkling Star
+  {
+    id: "c1000000-0000-0000-0000-000000000008",
+    name: "Magical Twinkling Stars (10 Pcs)",
+    sku: "PCL-TWK10",
+    category_id: "b1000000-0000-0000-0000-000000000005",
+    category_name: "Pencil | Twinkling Star",
+    price: 65,
+    original_price: 120,
+    stock_quantity: 180,
+    min_stock_alert: 20,
+    unit: "Box (10 Pcs)",
+    description: "Gentle handheld glittering stars that twinkle in rhythmic golden and silver sequence.",
+    image_url: "https://images.unsplash.com/photo-1543257580-7269da773bf5?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   },
   {
-    id: "c1000000-0000-0000-0000-000000000008",
-    name: "Baby Rocket Sound & Flash (10 Pcs)",
+    id: "c1000000-0000-0000-0000-000000000009",
+    name: "Tri-Color Pencil Torches (5 Pcs)",
+    sku: "PCL-TRC5",
+    category_id: "b1000000-0000-0000-0000-000000000005",
+    category_name: "Pencil | Twinkling Star",
+    price: 90,
+    original_price: 170,
+    stock_quantity: 140,
+    min_stock_alert: 15,
+    unit: "Box (5 Pcs)",
+    description: "Extended burning handheld torch pencils shifting through vibrant green, red and gold colors.",
+    image_url: "https://images.unsplash.com/photo-1508717272800-9fff97da7e8f?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: false,
+    is_active: true
+  },
+
+  // 6. Match Sticks - தீப்பெட்டி
+  {
+    id: "c1000000-0000-0000-0000-000000000010",
+    name: "Mega Deluxe Matchbox - தீப்பெட்டி (10 in 1 Box)",
+    sku: "MTC-DLX10",
+    category_id: "b1000000-0000-0000-0000-000000000006",
+    category_name: "Match Sticks - தீப்பெட்டி",
+    price: 50,
+    original_price: 100,
+    stock_quantity: 220,
+    min_stock_alert: 30,
+    unit: "Box (10 Pcs)",
+    description: "Special fireworks safety strike matchsticks designed for instant, wind-resistant cracker lighting.",
+    image_url: "https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: true,
+    is_active: true
+  },
+
+  // 7. Bijili - பிஜிலி
+  {
+    id: "c1000000-0000-0000-0000-000000000011",
+    name: "Stripped Bijili Crackers - பிஜிலி (100 Pcs Pouch)",
+    sku: "BJL-100",
+    category_id: "b1000000-0000-0000-0000-000000000007",
+    category_name: "Bijili - பிஜிலி",
+    price: 38,
+    original_price: 75,
+    stock_quantity: 320,
+    min_stock_alert: 40,
+    unit: "Pouch (100 Pcs)",
+    description: "Authentic Sivakasi red-striped bijili sound crackers with crisp, sharp festive burst.",
+    image_url: "https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: true,
+    is_active: true
+  },
+
+  // 8. Wala - வாலா (Variable Product example)
+  {
+    id: "c1000000-0000-0000-0000-000000000012",
+    name: "Festive Red Garland Wala - வாலா",
+    sku: "WALA-VAR",
+    category_id: "b1000000-0000-0000-0000-000000000008",
+    category_name: "Wala - வாலா",
+    price: 45,
+    original_price: 90,
+    stock_quantity: 420,
+    min_stock_alert: 20,
+    unit: "Garland",
+    description: "Auspicious long festive garlands available from 100 Wala up to 10000 Wala royal celebrations.",
+    image_url: "https://images.unsplash.com/photo-1508717272800-9fff97da7e8f?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: true,
+    variants: [
+      { id: "v-wala-100", name: "100 Wala Garland", sku: "WALA-100", price: 45, original_price: 90, stock_quantity: 250, unit: "Piece" },
+      { id: "v-wala-1000", name: "1000 Wala Deluxe", sku: "WALA-1000", price: 320, original_price: 600, stock_quantity: 110, unit: "Piece" },
+      { id: "v-wala-5000", name: "5000 Wala Grand", sku: "WALA-5000", price: 1450, original_price: 2800, stock_quantity: 45, unit: "Piece" },
+      { id: "v-wala-10000", name: "10000 Wala Maha Raja", sku: "WALA-10000", price: 2800, original_price: 5200, stock_quantity: 15, unit: "Piece" }
+    ],
+    is_featured: true,
+    is_active: true
+  },
+
+  // 9. Rocket - ராக்கெட்
+  {
+    id: "c1000000-0000-0000-0000-000000000013",
+    name: "Baby Rocket Sound & Flash - ராக்கெட் (10 Pcs)",
     sku: "RCK-BBY10",
-    category_id: "b1000000-0000-0000-0000-000000000004",
-    category_name: "Rockets & Missiles",
+    category_id: "b1000000-0000-0000-0000-000000000009",
+    category_name: "Rocket - ராக்கெட்",
     price: 75,
     original_price: 150,
     stock_quantity: 150,
     min_stock_alert: 20,
     unit: "Box (10 Pcs)",
-    description: "High-altitude swift rockets finishing with a crisp bang and silver shower.",
+    description: "High-altitude swift rockets finishing with a crisp bang and bright silver flash.",
     image_url: "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: false,
     is_active: true
   },
   {
-    id: "c1000000-0000-0000-0000-000000000009",
-    name: "Whistling Lunik Rockets (10 Pcs)",
+    id: "c1000000-0000-0000-0000-000000000014",
+    name: "Whistling Lunik Rockets - ராக்கெட் (10 Pcs)",
     sku: "RCK-LNK10",
-    category_id: "b1000000-0000-0000-0000-000000000004",
-    category_name: "Rockets & Missiles",
+    category_id: "b1000000-0000-0000-0000-000000000009",
+    category_name: "Rocket - ராக்கெட்",
     price: 190,
     original_price: 360,
     stock_quantity: 110,
@@ -245,102 +400,197 @@ const DEFAULT_PRODUCTS = [
     unit: "Box (10 Pcs)",
     description: "Dramatic siren whistle ascent terminating into vibrant multi-color aerial stars.",
     image_url: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   },
+
+  // 10. Fancy Crackers - பேன்சி கிராக்கர்
   {
-    id: "c1000000-0000-0000-0000-000000000010",
-    name: "12 Shots Aerial Spectacular Cake",
-    sku: "SHT-12SKY",
-    category_id: "b1000000-0000-0000-0000-000000000005",
-    category_name: "Aerial Repeaters (Sky Shots)",
+    id: "c1000000-0000-0000-0000-000000000015",
+    name: "Peacock Dance Fancy Wheel - பேன்சி கிராக்கர்",
+    sku: "FNC-PCK5",
+    category_id: "b1000000-0000-0000-0000-000000000010",
+    category_name: "Fancy Crackers - பேன்சி கிராக்கர்",
+    price: 160,
+    original_price: 300,
+    stock_quantity: 120,
+    min_stock_alert: 15,
+    unit: "Box (5 Pcs)",
+    description: "Vibrant ground novelty spinning into an open peacock tail pattern with multi-color spark feathers.",
+    image_url: "https://images.unsplash.com/photo-1531844251246-9a1bfaae09fc?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: true,
+    is_active: true
+  },
+
+  // 11. Night Out - நைட் அவுட்
+  {
+    id: "c1000000-0000-0000-0000-000000000016",
+    name: "Night Out Golden Waterfall Fountain - நைட் அவுட்",
+    sku: "NIT-WTF2",
+    category_id: "b1000000-0000-0000-0000-000000000011",
+    category_name: "Night Out - நைட் அவுட்",
+    price: 240,
+    original_price: 450,
+    stock_quantity: 75,
+    min_stock_alert: 10,
+    unit: "Box (2 Pcs)",
+    description: "Special night novelty fountain producing a majestic 20-foot high cascade of golden shimmer.",
+    image_url: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: true,
+    is_active: true
+  },
+
+  // 12. Multi Colour Fancy out - மல்டி கலர் பேன்சி அவுட் (Variable Product example)
+  {
+    id: "c1000000-0000-0000-0000-000000000017",
+    name: "Multi Colour Sky Shots Repeating Cake - மல்டி கலர்",
+    sku: "SHT-VAR",
+    category_id: "b1000000-0000-0000-0000-000000000012",
+    category_name: "Multi Colour Fancy out - மல்டி கலர் பேன்சி அவுட்",
     price: 380,
     original_price: 750,
-    stock_quantity: 95,
-    min_stock_alert: 10,
-    unit: "Piece",
-    description: "12 consecutive multi-color peony shells with crackling gold tail bursting in sky.",
+    stock_quantity: 200,
+    min_stock_alert: 15,
+    unit: "Cake",
+    description: "Mesmerizing multi-color aerial repeating shells with crackling golden brocade burst. Choose from 12, 25, 50, or 120 Shots.",
     image_url: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: true,
+    variants: [
+      { id: "v-sht-12", name: "12 Shots Spectacular", sku: "SHT-12SKY", price: 380, original_price: 750, stock_quantity: 95, unit: "Piece" },
+      { id: "v-sht-25", name: "25 Shots Golden Palms", sku: "SHT-25SKY", price: 750, original_price: 1400, stock_quantity: 55, unit: "Piece" },
+      { id: "v-sht-50", name: "50 Shots Grand Peony", sku: "SHT-50SKY", price: 1450, original_price: 2700, stock_quantity: 35, unit: "Piece" },
+      { id: "v-sht-120", name: "120 Shots Royal Extravaganza", sku: "SHT-120SKY", price: 3200, original_price: 5900, stock_quantity: 15, unit: "Piece" }
+    ],
     is_featured: true,
     is_active: true
   },
+
+  // 13. Bombs - பாம்
   {
-    id: "c1000000-0000-0000-0000-000000000011",
-    name: "30 Shots Golden Brocade Night King",
-    sku: "SHT-30BRC",
-    category_id: "b1000000-0000-0000-0000-000000000005",
-    category_name: "Aerial Repeaters (Sky Shots)",
-    price: 890,
-    original_price: 1750,
-    stock_quantity: 60,
-    min_stock_alert: 5,
-    unit: "Piece",
-    description: "Spectacular continuous display of 30 golden palms with ruby red and sapphire blue stars.",
-    image_url: "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=600&auto=format&fit=crop&q=80",
-    is_featured: true,
-    is_active: true
-  },
-  {
-    id: "c1000000-0000-0000-0000-000000000012",
-    name: "Digital 28 Chorsa Crackers (Packet)",
-    sku: "SND-28CHR",
-    category_id: "b1000000-0000-0000-0000-000000000006",
-    category_name: "Sound Crackers & Garlands",
-    price: 28,
-    original_price: 55,
-    stock_quantity: 300,
-    min_stock_alert: 30,
-    unit: "Packet",
-    description: "Traditional Sivakasi red crackers with crisp rhythmic bursting sounds.",
-    image_url: "https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=600&auto=format&fit=crop&q=80",
-    is_featured: false,
-    is_active: true
-  },
-  {
-    id: "c1000000-0000-0000-0000-000000000013",
-    name: "Classic Hydro Green Atom Bomb (10 Pcs)",
-    sku: "SND-HYD10",
-    category_id: "b1000000-0000-0000-0000-000000000006",
-    category_name: "Sound Crackers & Garlands",
+    id: "c1000000-0000-0000-0000-000000000018",
+    name: "Classic Hydro Green Atom Bomb - பாம் (10 Pcs)",
+    sku: "BMB-HYD10",
+    category_id: "b1000000-0000-0000-0000-000000000013",
+    category_name: "Bombs - பாம்",
     price: 85,
     original_price: 160,
     stock_quantity: 175,
     min_stock_alert: 20,
     unit: "Box (10 Pcs)",
-    description: "High-decibel thunderous sounding green atom bomb in safe packaging.",
+    description: "High-decibel thunderous sounding green atom bomb packaged in certified safety moisture-proof casing.",
     image_url: "https://images.unsplash.com/photo-1508717272800-9fff97da7e8f?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   },
   {
-    id: "c1000000-0000-0000-0000-000000000014",
-    name: "Dhanalakshmi Family Delight (25 Items Box)",
-    sku: "BOX-DLT25",
-    category_id: "b1000000-0000-0000-0000-000000000007",
-    category_name: "Festival Gift Boxes",
-    price: 799,
-    original_price: 1600,
-    stock_quantity: 70,
-    min_stock_alert: 8,
-    unit: "Gift Box",
-    description: "Complete family hamper with sparklers, chakkars, pots, pencil torches and kids novelties.",
-    image_url: "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?w=600&auto=format&fit=crop&q=80",
+    id: "c1000000-0000-0000-0000-000000000019",
+    name: "Mega 2-Sound Thunder Bomb (5 Pcs)",
+    sku: "BMB-2SND5",
+    category_id: "b1000000-0000-0000-0000-000000000013",
+    category_name: "Bombs - பாம்",
+    price: 110,
+    original_price: 210,
+    stock_quantity: 130,
+    min_stock_alert: 15,
+    unit: "Box (5 Pcs)",
+    description: "Twin-stage thunderous cracker creating two consecutive sharp sonic blasts.",
+    image_url: "https://images.unsplash.com/photo-1508717272800-9fff97da7e8f?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: false,
+    is_active: true
+  },
+
+  // 14. Gun - கன்
+  {
+    id: "c1000000-0000-0000-0000-000000000020",
+    name: "Heavy Metal Die-Cast Cracker Gun - கன்",
+    sku: "GUN-MTL1",
+    category_id: "b1000000-0000-0000-0000-000000000014",
+    category_name: "Gun - கன்",
+    price: 120,
+    original_price: 220,
+    stock_quantity: 90,
+    min_stock_alert: 15,
+    unit: "Piece",
+    description: "Durable metal toy cracker pistol for safe Diwali ring-cap pop firing. Loved by children.",
+    image_url: "https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   },
   {
-    id: "c1000000-0000-0000-0000-000000000015",
-    name: "Royal Sivakasi Maha Diwali Box (50 Items)",
-    sku: "BOX-ROY50",
-    category_id: "b1000000-0000-0000-0000-000000000007",
-    category_name: "Festival Gift Boxes",
-    price: 1799,
-    original_price: 3800,
-    stock_quantity: 45,
-    min_stock_alert: 5,
-    unit: "Gift Box",
-    description: "Grand festive box with aerial repeaters, whistling rockets, deluxe flower pots, and sound bombs.",
+    id: "c1000000-0000-0000-0000-000000000021",
+    name: "Ring Caps Ammo for Toy Gun (10 Packs)",
+    sku: "GUN-CAP10",
+    category_id: "b1000000-0000-0000-0000-000000000014",
+    category_name: "Gun - கன்",
+    price: 45,
+    original_price: 85,
+    stock_quantity: 350,
+    min_stock_alert: 40,
+    unit: "Bundle (10 Packs)",
+    description: "8-shot round ring caps refills compatible with all standard toy cracker guns.",
+    image_url: "https://images.unsplash.com/photo-1577083552431-6e5fd01aa342?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: false,
+    is_active: true
+  },
+
+  // 15. Others
+  {
+    id: "c1000000-0000-0000-0000-000000000022",
+    name: "Black Magic Snake Tablets Novelty - Others",
+    sku: "OTH-SNK1",
+    category_id: "b1000000-0000-0000-0000-000000000015",
+    category_name: "Others",
+    price: 40,
+    original_price: 80,
+    stock_quantity: 260,
+    min_stock_alert: 30,
+    unit: "Box (10 Pcs)",
+    description: "Classic fun smoke snake tablets that expand into long black coils on ignition. Safe for kids.",
+    image_url: "https://images.unsplash.com/photo-1543257580-7269da773bf5?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: false,
+    is_active: true
+  },
+  {
+    id: "c1000000-0000-0000-0000-000000000023",
+    name: "Musical Whistling Siren Crackers (5 Pcs)",
+    sku: "OTH-SRN5",
+    category_id: "b1000000-0000-0000-0000-000000000015",
+    category_name: "Others",
+    price: 85,
+    original_price: 160,
+    stock_quantity: 140,
+    min_stock_alert: 20,
+    unit: "Box (5 Pcs)",
+    description: "Fun melodic siren sound followed by golden crackling spark bursts.",
     image_url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
     is_featured: true,
     is_active: true
   }
@@ -499,14 +749,40 @@ function listenSync(callback) {
 // ==============================================================================
 
 /**
+ * Retrieve custom categories list from localStorage, seeding from DEFAULT_CATEGORIES if empty or outdated
+ */
+function getStoredCategories() {
+  const raw = localStorage.getItem("dc_custom_categories");
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length >= DEFAULT_CATEGORIES.length) {
+        return parsed;
+      }
+    } catch (e) {}
+  }
+  localStorage.setItem("dc_custom_categories", JSON.stringify(DEFAULT_CATEGORIES));
+  return [...DEFAULT_CATEGORIES];
+}
+
+/**
  * Retrieve custom products list from localStorage, seeding from DEFAULT_PRODUCTS if empty
  */
 function getStoredCustomProducts() {
   const raw = localStorage.getItem("dc_custom_products");
   if (raw) {
     try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      let parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Check if catalog has new categories or variable products
+        const hasNewCategories = parsed.some(p => p.category_name && p.category_name.includes("ஸ்பார்க்லர்"));
+        if (!hasNewCategories) {
+          const customAdded = parsed.filter(p => !DEFAULT_PRODUCTS.some(dp => dp.id === p.id || dp.sku === p.sku));
+          parsed = [...DEFAULT_PRODUCTS, ...customAdded];
+          localStorage.setItem("dc_custom_products", JSON.stringify(parsed));
+        }
+        return parsed;
+      }
     } catch (e) {}
   }
   // Initialize with DEFAULT_PRODUCTS
