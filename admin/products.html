@@ -160,9 +160,9 @@
   <div id="productEditModal" class="modal-overlay">
     <div class="modal-content wizard-modal">
       <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="modal-title-wrap">
           <h3 class="modal-title" id="productModalTitle">Add New Firecracker</h3>
-          <span id="batchSaveCounter" class="batch-save-counter" style="display: none;">0 added</span>
+          <span id="batchSaveCounter" class="batch-save-counter d-none">0 added</span>
         </div>
         <button type="button" class="modal-close" onclick="closeProductModal()">&times;</button>
       </div>
@@ -226,7 +226,7 @@
             <div class="form-group">
               <label class="form-label" for="prodName">Firecracker Name *</label>
               <input type="text" id="prodName" class="form-input" placeholder="e.g. Classic Sivakasi Electric Sparklers" required oninput="updateLiveCardPreview()">
-              <div id="prodNameError" class="text-danger" style="font-size: 0.8rem; margin-top: 0.25rem; display: none;">⚠️ Please enter a firecracker name</div>
+              <div id="prodNameError" class="text-danger field-error-msg">⚠️ Please enter a firecracker name</div>
             </div>
 
             <div class="form-row-2">
@@ -235,7 +235,7 @@
                 <select id="prodCategory" class="form-input" required onchange="updateLiveCardPreview()">
                   <option value="">-- Select Category --</option>
                 </select>
-                <div id="prodCategoryError" class="text-danger" style="font-size: 0.8rem; margin-top: 0.25rem; display: none;">⚠️ Please select a category</div>
+                <div id="prodCategoryError" class="text-danger field-error-msg">⚠️ Please select a category</div>
               </div>
               <div class="form-group form-group-checkbox form-group-checkbox-align">
                 <label class="checkbox-label">
@@ -252,9 +252,9 @@
             <div id="simpleProductFields">
               <div class="form-row-2">
                 <div class="form-group">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <div class="label-row-between">
                     <label class="form-label" for="prodSku">SKU Code *</label>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="autoGenerateSku()" style="padding: 0.15rem 0.5rem; font-size: 0.75rem; border-radius: 12px;">⚡ Auto SKU</button>
+                    <button type="button" class="btn btn-sm btn-secondary btn-auto-sku" onclick="autoGenerateSku()">⚡ Auto SKU</button>
                   </div>
                   <input type="text" id="prodSku" class="form-input" placeholder="e.g. SPK-10EL" oninput="updateLiveCardPreview()">
                 </div>
@@ -268,7 +268,7 @@
                 <div class="form-group">
                   <label class="form-label" for="prodPrice">Selling Price (₹) *</label>
                   <input type="number" id="prodPrice" step="0.5" class="form-input" placeholder="35.00" oninput="updateLiveCardPreview()">
-                  <div id="prodPriceError" class="text-danger" style="font-size: 0.8rem; margin-top: 0.25rem; display: none;">⚠️ Please enter selling price</div>
+                  <div id="prodPriceError" class="text-danger field-error-msg">⚠️ Please enter selling price</div>
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="prodOriginalPrice">Original / MRP (₹)</label>
@@ -330,7 +330,7 @@
               <label class="form-label" for="prodImageUrl">Image URL (Supabase Storage / Web URL)</label>
               <input type="url" id="prodImageUrl" class="form-input" placeholder="https://images.unsplash.com/photo-..." oninput="updateLiveCardPreview()">
               
-              <div style="margin-top: 0.5rem; font-size: 0.82rem; color: #64748b; font-weight: 600;">
+              <div class="photo-preset-title">
                 📸 Or Tap 1-Click High-Quality Fireworks Photo:
               </div>
               <div class="quick-photo-presets">
@@ -346,9 +346,9 @@
 
               <div class="image-preview-thumb-box" id="imagePreviewThumbBox">
                 <img id="imagePreviewThumb" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600" alt="Preview" class="image-preview-thumb">
-                <div style="font-size: 0.85rem; color: #475569;">
+                <div class="preview-thumb-info">
                   <strong>Live Image Preview</strong><br>
-                  <small style="color: #64748b;">This photo will be displayed on the storefront card &amp; details page.</small>
+                  <small class="preview-thumb-sub">This photo will be displayed on the storefront card &amp; details page.</small>
                 </div>
               </div>
             </div>
@@ -356,7 +356,7 @@
             <div class="form-group">
               <label class="form-label" for="prodVideoUrl">Instruction / Video Guide Link (YouTube / Web)</label>
               <input type="url" id="prodVideoUrl" class="form-input" placeholder="https://www.youtube.com/watch?v=kY7XlB8mS78">
-              <small style="color: #64748b; display: block; margin-top: 0.25rem;">
+              <small class="form-hint-muted">
                 Optional video demonstration showing firecracker bursting &amp; safety instructions.
               </small>
             </div>
@@ -369,19 +369,19 @@
 
           <!-- STEP 4: Live Storefront Card Preview & Confirmation -->
           <div id="wizardStep4" class="wizard-step-pane">
-            <div style="text-align: center; margin-bottom: 1rem;">
-              <h4 style="margin: 0 0 0.35rem 0; color: #111827; font-size: 1.15rem;">🎯 Storefront Preview</h4>
-              <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Here is how this firecracker will appear to customers:</p>
+            <div class="preview-heading-wrap">
+              <h4 class="preview-heading-title">🎯 Storefront Preview</h4>
+              <p class="preview-heading-sub">Here is how this firecracker will appear to customers:</p>
             </div>
 
             <div class="step-card-preview-container">
-              <div id="liveProductCardPreview" class="product-card" style="box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+              <div id="liveProductCardPreview" class="product-card card-preview-elevated">
                 <!-- Live rendered -->
               </div>
             </div>
 
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 0.85rem 1rem; margin-top: 1rem; display: flex; align-items: center; gap: 0.65rem; color: #166534; font-size: 0.88rem;">
-              <span style="font-size: 1.25rem;">✓</span>
+            <div class="publish-ready-callout">
+              <span class="callout-icon-check">✓</span>
               <div>
                 <strong>Ready to publish!</strong> Click <strong>Save &amp; Add Another</strong> to quickly enter your next firecracker one by one, or click <strong>Save Firecracker</strong> to finish.
               </div>
@@ -392,7 +392,7 @@
         <!-- Sticky Wizard Footer with NEXT, BACK, SAVE and SAVE ONE BY ONE OPTION -->
         <div class="wizard-footer">
           <div class="wizard-footer-left">
-            <button type="button" class="btn btn-secondary btn-sm" id="wizardBackBtn" onclick="wizardGoBack()" style="display: none;">
+            <button type="button" class="btn btn-secondary btn-sm d-none" id="wizardBackBtn" onclick="wizardGoBack()">
               ⬅ Back
             </button>
             <button type="button" class="btn btn-secondary btn-sm" id="wizardCancelBtn" onclick="closeProductModal()">

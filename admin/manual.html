@@ -284,7 +284,6 @@
     .cat-table-wrapper {
       width: 100%;
       overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
       margin-top: 1rem;
       border: 1px solid #e2e8f0;
       border-radius: 12px;
@@ -297,6 +296,19 @@
       color: #64748b;
       margin: 0.75rem 0 0.4rem 0;
       font-weight: 600;
+    }
+    .section-intro {
+      color: #4b5563;
+      margin-bottom: 1.25rem;
+    }
+    .section-intro-compact {
+      color: #4b5563;
+    }
+    .th-col-num {
+      width: 50px;
+    }
+    .preset-list {
+      margin: 0.5rem 0 0 1.25rem;
     }
     .btn-short-text {
       display: none;
@@ -464,7 +476,6 @@
         width: 100% !important;
         max-width: 100% !important;
         overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
         box-sizing: border-box !important;
         margin-top: 0.5rem !important;
       }
@@ -499,8 +510,6 @@
         align-items: center !important;
         gap: 0.35rem !important;
         overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        scrollbar-width: none !important;
         flex-wrap: nowrap !important;
       }
       .topbar-actions::-webkit-scrollbar {
@@ -619,7 +628,7 @@
                 <h2 class="section-title"><span>⚡</span> 1. POS Billing Counter &amp; Terminal</h2>
                 <span class="section-badge">SPEED BILLING</span>
               </div>
-              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+              <p class="section-intro">
                 The POS Billing Counter is engineered for rapid high-volume customer checkout during peak Diwali rush hours without any lagging or cloud delays.
               </p>
               <div class="manual-step-list">
@@ -674,7 +683,7 @@
                 <h2 class="section-title"><span>🎆</span> 2. The 15 Official Firecracker Categories</h2>
                 <span class="section-badge">BILINGUAL</span>
               </div>
-              <p style="color:#4b5563;">
+              <p class="section-intro-compact">
                 Both storefront customer filters and admin catalog filters follow the exact 15 standardized categories with authentic Tamil terminology:
               </p>
               <div class="table-scroll-hint">👉 Swipe table horizontally to view all category details</div>
@@ -682,7 +691,7 @@
                 <table class="cat-table">
                   <thead>
                     <tr>
-                      <th style="width: 50px;">#</th>
+                      <th class="th-col-num">#</th>
                       <th>Official Category Name</th>
                       <th>Tamil Translation</th>
                       <th>Items Included</th>
@@ -796,7 +805,7 @@
                 <h2 class="section-title"><span>✨</span> 3. Variable Products &amp; Option Presets</h2>
                 <span class="section-badge">MULTI-VARIANT</span>
               </div>
-              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+              <p class="section-intro">
                 Variable products allow multiple variants (e.g. sparkler lengths, wala lengths, or aerial shots) under a single parent listing with independent prices and inventory counts.
               </p>
               <div class="manual-step-list">
@@ -815,7 +824,7 @@
                     <div class="step-title">Apply Built-in 1-Click Presets</div>
                     <div class="step-desc">
                       Click any preset button:
-                      <ul style="margin: 0.5rem 0 0 1.25rem;">
+                      <ul class="preset-list">
                         <li><strong>Sparklers Preset:</strong> 10cm, 15cm, 30cm, 50cm Jumbo</li>
                         <li><strong>Aerial Sky Shots Preset:</strong> 12, 25, 50, 120 Shots</li>
                         <li><strong>Garlands (Wala) Preset:</strong> 100, 1000, 5000, 10000 Wala</li>
@@ -842,7 +851,7 @@
                 <h2 class="section-title"><span>🛠️</span> 4. Bulk Catalog Tools &amp; Actions</h2>
                 <span class="section-badge">INVENTORY</span>
               </div>
-              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+              <p class="section-intro">
                 Manage hundreds of firecrackers at once without repetitive manual edits:
               </p>
               <div class="manual-step-list">
@@ -891,7 +900,7 @@
                 <h2 class="section-title"><span>🧾</span> 5. Thermal Invoices (80mm &amp; 58mm) with Logo</h2>
                 <span class="section-badge">RECEIPTS</span>
               </div>
-              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+              <p class="section-intro">
                 Thermal bills are optimized for Bluetooth and USB thermal POS printers with crisp, smudge-free typography and embedded brand logos:
               </p>
               <div class="manual-step-list">
@@ -931,7 +940,7 @@
                 <h2 class="section-title"><span>📲</span> 6. WhatsApp Dispatch &amp; Sharing</h2>
                 <span class="section-badge">INSTANT NOTIFY</span>
               </div>
-              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+              <p class="section-intro">
                 No manual copying required! Send itemized festival bills directly to your customer's WhatsApp:
               </p>
               <div class="manual-step-list">
@@ -971,7 +980,7 @@
                 <h2 class="section-title"><span>☁️</span> 7. Offline Resilience &amp; Cloud Sync</h2>
                 <span class="section-badge">ZERO DOWNTIME</span>
               </div>
-              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+              <p class="section-intro">
                 During festive sales peaks, internet connections can drop. The system includes dual offline-first architecture:
               </p>
               <div class="manual-step-list">

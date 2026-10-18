@@ -95,12 +95,12 @@
   <!-- Product Details Content -->
   <main class="section">
     <div class="container" id="productDetailsContainer">
-      <div class="breadcrumb-bar" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
-        <a href="products.html" class="breadcrumb-back-link" style="text-decoration:none;">
+      <div class="breadcrumb-bar">
+        <a href="products.html" class="breadcrumb-back-link">
           &larr; Back to Fireworks Catalog
         </a>
-        <span style="color: #9ca3af;">/</span>
-        <span id="breadcrumbCategory" style="font-weight: 600; color: #dc2626; font-size: 0.9rem;"></span>
+        <span class="breadcrumb-separator">/</span>
+        <span id="breadcrumbCategory" class="breadcrumb-current-cat"></span>
       </div>
 
       <div class="product-details-card">
@@ -117,8 +117,8 @@
 
         <!-- Product Information & Actions -->
         <div class="product-details-content">
-          <div class="detail-brand-tag" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
-            <span id="detailCategoryBadge" class="product-category-label" style="font-size: 0.85rem; font-weight: 700;">Crackers</span>
+          <div class="detail-brand-tag">
+            <span id="detailCategoryBadge" class="product-category-label detail-category-badge">Crackers</span>
             <span class="detail-batch-tag">✨ Sivakasi Certified</span>
           </div>
           <h1 id="detailTitle" class="detail-title">
