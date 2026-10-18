@@ -29,6 +29,7 @@
       <a href="/admin/customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
       <a href="/admin/reports.html" class="admin-nav-item"><span class="icon">📈</span> Sales Reports</a>
       <a href="/admin/settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+      <a href="/admin/manual.html" class="admin-nav-item"><span class="icon">📖</span> User Manual</a>
     </nav>
 
     <div class="admin-sidebar-footer">
@@ -55,27 +56,65 @@
     </header>
 
     <main class="admin-content">
+      <!-- Invoices Quick KPI Summary Strip -->
+      <div class="order-summary-strip" id="invoiceSummaryStrip">
+        <div class="oss-item">
+          <span class="oss-label">Total Revenue</span>
+          <span class="oss-val" id="invTotalRevenue">₹0.00</span>
+        </div>
+        <div class="oss-item">
+          <span class="oss-label">Total Invoices</span>
+          <span class="oss-val" id="invTotalCount">0</span>
+        </div>
+        <div class="oss-item oss-pos">
+          <span class="oss-label">⚡ POS Bills</span>
+          <span class="oss-val" id="invPosCount">0</span>
+        </div>
+        <div class="oss-item oss-online">
+          <span class="oss-label">📦 Online Orders</span>
+          <span class="oss-val" id="invOnlineCount">0</span>
+        </div>
+      </div>
+
       <div class="admin-table-card">
-        <div class="table-header-bar table-header-spread">
-          <div class="invoice-filters-row">
-            <input type="text" id="invoiceSearchInput" class="form-input invoice-search-input" placeholder="Search by Invoice #, Customer, or Phone...">
-            <select id="invoiceChannelFilter" class="form-select channel-filter-select" title="Filter by sales channel" aria-label="Filter by sales channel">
-              <option value="all">All Channels</option>
-              <option value="pos">⚡ POS Bills</option>
-              <option value="online">📦 Online Orders</option>
-            </select>
-            <select id="invoicePaymentStatusFilter" class="form-select payment-status-filter-select" title="Filter by payment status" aria-label="Filter by payment status">
-              <option value="all">All Payments</option>
+        <!-- Interactive Horizontal Channel Filter Pills -->
+        <div class="order-pills-bar invoice-channel-pills" id="invoiceChannelPills">
+          <button type="button" class="order-pill-btn active" data-channel="all" onclick="setInvoiceChannelPill('all')">
+            All Invoices <span class="pill-badge" id="invPillCountAll">0</span>
+          </button>
+          <button type="button" class="order-pill-btn" data-channel="pos" onclick="setInvoiceChannelPill('pos')">
+            ⚡ POS Bills <span class="pill-badge" id="invPillCountPos">0</span>
+          </button>
+          <button type="button" class="order-pill-btn" data-channel="online" onclick="setInvoiceChannelPill('online')">
+            📦 Online Orders <span class="pill-badge" id="invPillCountOnline">0</span>
+          </button>
+        </div>
+
+        <!-- Hidden proxy for backward compatibility with channel filter listeners -->
+        <select id="invoiceChannelFilter" class="modal-hidden" title="Filter by sales channel" aria-label="Filter by sales channel">
+          <option value="all">All Channels</option>
+          <option value="pos">⚡ POS Bills</option>
+          <option value="online">📦 Online Orders</option>
+        </select>
+
+        <div class="table-header-bar table-header-spread invoice-toolbar-bar">
+          <div class="invoice-search-wrap">
+            <input type="text" id="invoiceSearchInput" class="form-input invoice-search-input" placeholder="🔍 Search Invoice #, Customer, Phone...">
+            <button type="button" id="invoiceSearchClear" class="search-clear-btn" onclick="clearInvoiceSearch()" aria-label="Clear search">&times;</button>
+          </div>
+          <div class="invoice-payment-filter-wrap">
+            <select id="invoicePaymentStatusFilter" class="form-select filter-select invoice-payment-filter-select" title="Filter by payment status" aria-label="Filter by payment status">
+              <option value="all">💳 All Payments</option>
               <option value="paid">✅ Paid</option>
               <option value="unpaid">❌ Unpaid</option>
               <option value="pending">⏳ Pending</option>
               <option value="cancelled">❌ Cancelled</option>
             </select>
           </div>
-          <span class="table-header-sub">Auto-synced with Online Orders & POS Bills</span>
         </div>
 
-        <div class="admin-table-container">
+        <!-- Desktop Invoices Table View (>= 769px) -->
+        <div class="admin-table-container admin-invoices-desktop-table">
           <table class="admin-table">
             <thead>
               <tr>
@@ -94,6 +133,11 @@
               <!-- Rendered dynamically by admin.js -->
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile Invoices Cards List (< 769px) -->
+        <div class="admin-invoices-mobile-list" id="adminInvoicesMobileList">
+          <!-- Rendered dynamically by admin.js -->
         </div>
       </div>
     </main>

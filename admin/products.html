@@ -29,6 +29,7 @@
       <a href="/admin/customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
       <a href="/admin/reports.html" class="admin-nav-item"><span class="icon">📈</span> Sales Reports</a>
       <a href="/admin/settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+      <a href="/admin/manual.html" class="admin-nav-item"><span class="icon">📖</span> User Manual</a>
     </nav>
 
     <div class="admin-sidebar-footer">
@@ -54,7 +55,7 @@
         <button type="button" class="btn btn-secondary btn-sm btn-action-export" onclick="exportProductsToCSV()" title="Export all products to CSV spreadsheet">
           📤 Export CSV
         </button>
-        <button type="button" class="btn btn-secondary btn-sm btn-action-manual" onclick="openVariableProductManualModal()" title="View manual on how to create and manage variable products">
+        <button type="button" class="btn btn-secondary btn-sm btn-action-manual" onclick="openDashboardManualModal()" title="View comprehensive manual on how to use the Dhanalakshmi Crackers Dashboard">
           📖 Manual
         </button>
         <button type="button" class="btn btn-secondary btn-sm btn-action-video" onclick="openInstructionVideoModal()" title="Watch guide & demonstration video">
@@ -78,7 +79,7 @@
         <button type="button" class="btn btn-secondary btn-sm" onclick="exportProductsToCSV()">
           📤 Export CSV
         </button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="openVariableProductManualModal()">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openDashboardManualModal()">
           📖 Manual
         </button>
         <button type="button" class="btn btn-secondary btn-sm" onclick="openInstructionVideoModal()">
@@ -88,8 +89,11 @@
 
       <div class="admin-table-card">
         <div class="table-header-bar">
-          <div class="search-input-wrapper">
-            <input type="text" id="adminProductSearch" class="form-input" placeholder="Search by cracker name or SKU...">
+          <div class="search-input-wrapper catalog-search-row">
+            <input type="text" id="adminProductSearch" class="form-input catalog-search-input" placeholder="Search by cracker name or SKU...">
+            <select id="adminCategoryFilter" class="form-input catalog-category-filter" title="Filter products by category" aria-label="Filter products by category" onchange="filterAdminProductsByCategory()">
+              <option value="all">🎆 All Categories</option>
+            </select>
           </div>
           <div class="cloud-sync-header-group">
             <span id="cloudSyncStatusBadge" class="table-header-sub badge badge-info cloud-sync-badge" onclick="checkCloudSyncStatus(true)" title="Click to test live cloud database connection">☁️ Checking Online Cloud Sync...</span>
@@ -97,10 +101,43 @@
           </div>
         </div>
 
+        <!-- Bulk Action Toolbar -->
+        <div id="productBulkActionsBar" class="bulk-actions-toolbar">
+          <div class="bulk-selected-info">
+            <span class="bulk-badge-pill" id="bulkSelectedCount">0 selected</span>
+          </div>
+          <div class="bulk-actions-btn-group">
+            <button type="button" class="btn btn-danger btn-sm" onclick="bulkDeleteSelectedProducts()" title="Delete Selected Products">
+              🗑️ Delete
+            </button>
+            <select id="bulkCategorySelect" class="form-input form-input-sm bulk-category-select" onchange="bulkUpdateCategory(this.value); this.value='';" title="Move Selected to Category" aria-label="Move Selected to Category">
+              <option value="">🏷️ Move Category...</option>
+            </select>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="bulkToggleFeatured(true)" title="Feature on Homepage">
+              ⭐ Feature
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="bulkToggleFeatured(false)" title="Remove from Homepage">
+              ☆ Unfeature
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="bulkSetStockStatus('in_stock')" title="Mark In Stock (100)">
+              📦 In Stock
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="bulkSetStockStatus('out_of_stock')" title="Mark Out of Stock (0)">
+              🚫 Out of Stock
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="clearProductSelection()" title="Clear Selection">
+              ✕ Clear
+            </button>
+          </div>
+        </div>
+
         <div class="admin-table-container">
           <table class="admin-table" id="adminProductsTable">
             <thead>
               <tr>
+                <th class="th-chk">
+                  <input type="checkbox" id="selectAllProductsChk" onchange="toggleSelectAllProducts(this)" title="Select All Products">
+                </th>
                 <th class="th-img">Image</th>
                 <th>Product Name</th>
                 <th>SKU</th>
@@ -119,155 +156,260 @@
     </main>
   </div>
 
-  <!-- Add / Edit Product Modal -->
+  <!-- Add / Edit Product Modal with Mobile-Optimized Step-by-Step Wizard ("Next, Next" & Add One by One) -->
   <div id="productEditModal" class="modal-overlay">
-    <div class="modal-content modal-product-dialog">
+    <div class="modal-content wizard-modal">
       <div class="modal-header">
-        <h3 class="modal-title" id="productModalTitle">Add New Firecracker</h3>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <h3 class="modal-title" id="productModalTitle">Add New Firecracker</h3>
+          <span id="batchSaveCounter" class="batch-save-counter" style="display: none;">0 added</span>
+        </div>
         <button type="button" class="modal-close" onclick="closeProductModal()">&times;</button>
       </div>
-      <form id="productForm" onsubmit="saveProductForm(event)">
-        <div class="modal-body">
-          <input type="hidden" id="prodId">
 
-          <!-- Product Type Selector (Single vs Variable) -->
-          <div class="product-type-selector-box">
-            <label class="form-label form-label-tight">Choose Product Structure:</label>
-            <div class="product-type-pills">
-              <label class="type-pill-label">
-                <input type="radio" name="prodType" id="typeSimple" value="simple" checked onchange="toggleProductType('simple')">
-                <span class="type-pill-card">
-                  <span class="type-pill-icon">🎆</span>
-                  <span>
-                    <strong>Single Product</strong>
-                    <small>Standard item (1 SKU, 1 Price & Stock)</small>
+      <!-- Step Navigation Stepper -->
+      <div class="wizard-stepper-bar">
+        <button type="button" class="wizard-step-pill active" id="wizardPill1" onclick="goToWizardStep(1)">
+          <span class="step-circle">1</span>
+          <span>Basics</span>
+        </button>
+        <div class="wizard-step-line"></div>
+        <button type="button" class="wizard-step-pill" id="wizardPill2" onclick="goToWizardStep(2)">
+          <span class="step-circle">2</span>
+          <span>Price &amp; Stock</span>
+        </button>
+        <div class="wizard-step-line"></div>
+        <button type="button" class="wizard-step-pill" id="wizardPill3" onclick="goToWizardStep(3)">
+          <span class="step-circle">3</span>
+          <span>Media &amp; Guide</span>
+        </button>
+        <div class="wizard-step-line"></div>
+        <button type="button" class="wizard-step-pill" id="wizardPill4" onclick="goToWizardStep(4)">
+          <span class="step-circle">4</span>
+          <span>Preview &amp; Save</span>
+        </button>
+      </div>
+
+      <form id="productForm" onsubmit="event.preventDefault(); saveProductForm(event, false);">
+        <input type="hidden" id="prodId">
+
+        <div class="wizard-body">
+          <!-- STEP 1: Basic Information & Structure -->
+          <div id="wizardStep1" class="wizard-step-pane active">
+            <!-- Product Type Selector (Single vs Variable) -->
+            <div class="product-type-selector-box">
+              <label class="form-label form-label-tight">Choose Product Structure:</label>
+              <div class="product-type-pills">
+                <label class="type-pill-label" onclick="toggleProductType('simple')">
+                  <input type="radio" name="prodType" id="typeSimple" value="simple" checked onchange="toggleProductType('simple')">
+                  <span class="type-pill-card">
+                    <span class="type-pill-icon">🎆</span>
+                    <span>
+                      <strong>Single Product</strong>
+                      <small>Standard item (1 SKU, 1 Price &amp; Stock)</small>
+                    </span>
                   </span>
-                </span>
-              </label>
-              <label class="type-pill-label">
-                <input type="radio" name="prodType" id="typeVariable" value="variable" onchange="toggleProductType('variable')">
-                <span class="type-pill-card">
-                  <span class="type-pill-icon">⚡</span>
-                  <span>
-                    <strong>Variable Product</strong>
-                    <small>Multiple Sizes, Shots, Wala Counts or Packs</small>
+                </label>
+                <label class="type-pill-label" onclick="toggleProductType('variable')">
+                  <input type="radio" name="prodType" id="typeVariable" value="variable" onchange="toggleProductType('variable')">
+                  <span class="type-pill-card">
+                    <span class="type-pill-icon">⚡</span>
+                    <span>
+                      <strong>Variable Product</strong>
+                      <small>Multiple Sizes, Shots, Wala Counts or Packs</small>
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
+              </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="form-label" for="prodName">Firecracker Name *</label>
-            <input type="text" id="prodName" class="form-input" placeholder="e.g. Classic Sivakasi Electric Sparklers" required>
-          </div>
-
-          <div class="form-row-2">
             <div class="form-group">
-              <label class="form-label" for="prodCategory">Category *</label>
-              <select id="prodCategory" class="form-input" required>
-                <option value="">-- Select Category --</option>
-              </select>
+              <label class="form-label" for="prodName">Firecracker Name *</label>
+              <input type="text" id="prodName" class="form-input" placeholder="e.g. Classic Sivakasi Electric Sparklers" required oninput="updateLiveCardPreview()">
+              <div id="prodNameError" class="text-danger" style="font-size: 0.8rem; margin-top: 0.25rem; display: none;">⚠️ Please enter a firecracker name</div>
             </div>
-            <div class="form-group form-group-checkbox form-group-checkbox-align">
-              <label class="checkbox-label">
-                <input type="checkbox" id="prodFeatured" class="checkbox-input">
-                <span>Featured on Home Page</span>
-              </label>
-            </div>
-          </div>
 
-          <!-- SIMPLE PRODUCT FIELDS -->
-          <div id="simpleProductFields">
             <div class="form-row-2">
               <div class="form-group">
-                <label class="form-label" for="prodSku">SKU Code *</label>
-                <input type="text" id="prodSku" class="form-input" placeholder="e.g. SPK-10EL">
+                <label class="form-label" for="prodCategory">Category *</label>
+                <select id="prodCategory" class="form-input" required onchange="updateLiveCardPreview()">
+                  <option value="">-- Select Category --</option>
+                </select>
+                <div id="prodCategoryError" class="text-danger" style="font-size: 0.8rem; margin-top: 0.25rem; display: none;">⚠️ Please select a category</div>
               </div>
-              <div class="form-group">
-                <label class="form-label" for="prodUnit">Packaging Unit</label>
-                <input type="text" id="prodUnit" class="form-input" placeholder="e.g. Box (10 Pcs), Piece, Packet" value="Box">
-              </div>
-            </div>
-
-            <div class="form-row-3">
-              <div class="form-group">
-                <label class="form-label" for="prodPrice">Selling Price (₹) *</label>
-                <input type="number" id="prodPrice" step="0.5" class="form-input" placeholder="35.00">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="prodOriginalPrice">Original / MRP (₹)</label>
-                <input type="number" id="prodOriginalPrice" step="0.5" class="form-input" placeholder="60.00">
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="prodStock">Initial Stock Qty *</label>
-                <input type="number" id="prodStock" class="form-input" placeholder="100">
+              <div class="form-group form-group-checkbox form-group-checkbox-align">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="prodFeatured" class="checkbox-input" onchange="updateLiveCardPreview()">
+                  <span>Featured on Home Page</span>
+                </label>
               </div>
             </div>
           </div>
 
-          <!-- VARIABLE PRODUCT FIELDS (Variant Builder) -->
-          <div id="variableProductFields" class="variant-builder-card modal-hidden">
-            <div class="variant-builder-header">
-              <h4><span>⚡</span> Configure Variants Manually</h4>
-              <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantRow()">+ Add Variant Row</button>
-            </div>
+          <!-- STEP 2: Pricing, Stock & Variants -->
+          <div id="wizardStep2" class="wizard-step-pane">
+            <!-- SIMPLE PRODUCT FIELDS -->
+            <div id="simpleProductFields">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label class="form-label" for="prodSku">SKU Code *</label>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="autoGenerateSku()" style="padding: 0.15rem 0.5rem; font-size: 0.75rem; border-radius: 12px;">⚡ Auto SKU</button>
+                  </div>
+                  <input type="text" id="prodSku" class="form-input" placeholder="e.g. SPK-10EL" oninput="updateLiveCardPreview()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="prodUnit">Packaging Unit</label>
+                  <input type="text" id="prodUnit" class="form-input" placeholder="e.g. Box (10 Pcs), Piece, Packet" value="Box" oninput="updateLiveCardPreview()">
+                </div>
+              </div>
 
-            <!-- Quick Presets -->
-            <div class="variant-presets-bar">
-              <div class="variant-presets-title">⚡ Quick 1-Click Fireworks Presets:</div>
-              <div class="variant-presets-btns">
-                <button type="button" class="btn-variant-preset" onclick="applyVariantPreset('sparklers')">+ Sparkler Lengths (10cm, 15cm, 30cm, 50cm)</button>
-                <button type="button" class="btn-variant-preset" onclick="applyVariantPreset('wala')">+ Wala Garlands (100, 1000, 5000, 10000)</button>
-                <button type="button" class="btn-variant-preset" onclick="applyVariantPreset('shots')">+ Sky Shots (12, 25, 50, 120 Shots)</button>
-                <button type="button" class="btn-variant-preset" onclick="applyVariantPreset('packs')">+ Pack Sizes (Single Box, 5-Pack, Carton)</button>
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label class="form-label" for="prodPrice">Selling Price (₹) *</label>
+                  <input type="number" id="prodPrice" step="0.5" class="form-input" placeholder="35.00" oninput="updateLiveCardPreview()">
+                  <div id="prodPriceError" class="text-danger" style="font-size: 0.8rem; margin-top: 0.25rem; display: none;">⚠️ Please enter selling price</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="prodOriginalPrice">Original / MRP (₹)</label>
+                  <input type="number" id="prodOriginalPrice" step="0.5" class="form-input" placeholder="60.00" oninput="updateLiveCardPreview()">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="prodStock">Initial Stock Qty *</label>
+                  <input type="number" id="prodStock" class="form-input" placeholder="100" oninput="updateLiveCardPreview()">
+                </div>
               </div>
             </div>
 
-            <div class="variant-table-wrapper">
-              <div class="variant-mobile-scroll-hint">👉 Swipe horizontally to view/edit all variant columns</div>
-              <table class="variant-table">
-                <thead>
-                  <tr>
-                    <th class="th-var-name">Variant Option / Name *</th>
-                    <th class="th-var-sku">SKU</th>
-                    <th class="th-var-price">Price (₹) *</th>
-                    <th class="th-var-mrp">MRP (₹)</th>
-                    <th class="th-var-stock">Stock *</th>
-                    <th class="th-var-unit">Unit</th>
-                    <th class="th-var-action"></th>
-                  </tr>
-                </thead>
-                <tbody id="variantTableBody">
-                  <!-- Injected dynamically -->
-                </tbody>
-              </table>
+            <!-- VARIABLE PRODUCT FIELDS (Variant Builder) -->
+            <div id="variableProductFields" class="variant-builder-card">
+              <div class="variant-builder-header">
+                <h4><span>⚡</span> Configure Variants</h4>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="addVariantRow()">+ Add Variant Row</button>
+              </div>
+
+              <!-- Quick Presets -->
+              <div class="variant-presets-bar">
+                <div class="variant-presets-title">⚡ Quick 1-Click Fireworks Presets:</div>
+                <div class="variant-presets-btns">
+                  <button type="button" class="btn-variant-preset" onclick="applyVariantPreset('sparklers')">+ Sparklers (10cm, 15cm, 30cm, 50cm)</button>
+                  <button type="button" class="btn-variant-preset" onclick="applyVariantPreset('wala')">+ Wala (100, 1000, 5000, 10000)</button>
+                  <button type="button" class="btn-variant-preset" onclick="applyVariantPreset('shots')">+ Sky Shots (12, 25, 50, 120)</button>
+                  <button type="button" class="btn-variant-preset" onclick="applyVariantPreset('packs')">+ Pack Sizes (Box, 5-Pack, Carton)</button>
+                </div>
+              </div>
+
+              <div class="variant-table-wrapper">
+                <div class="variant-mobile-scroll-hint">👉 Swipe horizontally to view/edit all variant columns</div>
+                <table class="variant-table">
+                  <thead>
+                    <tr>
+                      <th class="th-var-name">Variant Option / Name *</th>
+                      <th class="th-var-sku">SKU</th>
+                      <th class="th-var-price">Price (₹) *</th>
+                      <th class="th-var-mrp">MRP (₹)</th>
+                      <th class="th-var-stock">Stock *</th>
+                      <th class="th-var-unit">Unit</th>
+                      <th class="th-var-action"></th>
+                    </tr>
+                  </thead>
+                  <tbody id="variantTableBody">
+                    <!-- Injected dynamically -->
+                  </tbody>
+                </table>
+              </div>
+              <p class="variant-note-text">
+                💡 <em>Base price and total inventory stock will be automatically synchronized from all defined variants.</em>
+              </p>
             </div>
-            <p class="variant-note-text">
-              💡 <em>Base price and total inventory stock will be automatically synchronized from all defined variants.</em>
-            </p>
           </div>
 
-          <div class="form-row-2">
+          <!-- STEP 3: Media, Video & Description -->
+          <div id="wizardStep3" class="wizard-step-pane">
             <div class="form-group">
               <label class="form-label" for="prodImageUrl">Image URL (Supabase Storage / Web URL)</label>
-              <input type="url" id="prodImageUrl" class="form-input" placeholder="https://images.unsplash.com/photo-...">
+              <input type="url" id="prodImageUrl" class="form-input" placeholder="https://images.unsplash.com/photo-..." oninput="updateLiveCardPreview()">
+              
+              <div style="margin-top: 0.5rem; font-size: 0.82rem; color: #64748b; font-weight: 600;">
+                📸 Or Tap 1-Click High-Quality Fireworks Photo:
+              </div>
+              <div class="quick-photo-presets">
+                <button type="button" class="photo-preset-chip" onclick="setProductPhotoPreset('sparkler')">🎇 Sparklers</button>
+                <button type="button" class="photo-preset-chip" onclick="setProductPhotoPreset('chakkar')">🔄 Chakkars</button>
+                <button type="button" class="photo-preset-chip" onclick="setProductPhotoPreset('flowerpot')">🌋 Flower Pots</button>
+                <button type="button" class="photo-preset-chip" onclick="setProductPhotoPreset('pencil')">✏️ Pencils</button>
+                <button type="button" class="photo-preset-chip" onclick="setProductPhotoPreset('rocket')">🚀 Rockets</button>
+                <button type="button" class="photo-preset-chip" onclick="setProductPhotoPreset('shots')">🎆 Sky Shots</button>
+                <button type="button" class="photo-preset-chip" onclick="setProductPhotoPreset('bomb')">💣 Atom Bomb</button>
+                <button type="button" class="photo-preset-chip" onclick="setProductPhotoPreset('giftbox')">🎁 Gift Box</button>
+              </div>
+
+              <div class="image-preview-thumb-box" id="imagePreviewThumbBox">
+                <img id="imagePreviewThumb" src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600" alt="Preview" class="image-preview-thumb">
+                <div style="font-size: 0.85rem; color: #475569;">
+                  <strong>Live Image Preview</strong><br>
+                  <small style="color: #64748b;">This photo will be displayed on the storefront card &amp; details page.</small>
+                </div>
+              </div>
             </div>
+
             <div class="form-group">
               <label class="form-label" for="prodVideoUrl">Instruction / Video Guide Link (YouTube / Web)</label>
               <input type="url" id="prodVideoUrl" class="form-input" placeholder="https://www.youtube.com/watch?v=kY7XlB8mS78">
+              <small style="color: #64748b; display: block; margin-top: 0.25rem;">
+                Optional video demonstration showing firecracker bursting &amp; safety instructions.
+              </small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="prodDesc">Product Description &amp; Safety Details</label>
+              <textarea id="prodDesc" class="form-textarea" rows="2" placeholder="Bright golden sparks, smooth low-smoke formula safe for family celebrations." oninput="updateLiveCardPreview()"></textarea>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="prodDesc">Product Description & Safety Details</label>
-            <textarea id="prodDesc" class="form-textarea" rows="2" placeholder="Bright golden sparks, smooth low-smoke formula safe for family celebrations."></textarea>
+          <!-- STEP 4: Live Storefront Card Preview & Confirmation -->
+          <div id="wizardStep4" class="wizard-step-pane">
+            <div style="text-align: center; margin-bottom: 1rem;">
+              <h4 style="margin: 0 0 0.35rem 0; color: #111827; font-size: 1.15rem;">🎯 Storefront Preview</h4>
+              <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Here is how this firecracker will appear to customers:</p>
+            </div>
+
+            <div class="step-card-preview-container">
+              <div id="liveProductCardPreview" class="product-card" style="box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+                <!-- Live rendered -->
+              </div>
+            </div>
+
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 0.85rem 1rem; margin-top: 1rem; display: flex; align-items: center; gap: 0.65rem; color: #166534; font-size: 0.88rem;">
+              <span style="font-size: 1.25rem;">✓</span>
+              <div>
+                <strong>Ready to publish!</strong> Click <strong>Save &amp; Add Another</strong> to quickly enter your next firecracker one by one, or click <strong>Save Firecracker</strong> to finish.
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Product</button>
+        <!-- Sticky Wizard Footer with NEXT, BACK, SAVE and SAVE ONE BY ONE OPTION -->
+        <div class="wizard-footer">
+          <div class="wizard-footer-left">
+            <button type="button" class="btn btn-secondary btn-sm" id="wizardBackBtn" onclick="wizardGoBack()" style="display: none;">
+              ⬅ Back
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="wizardCancelBtn" onclick="closeProductModal()">
+              Cancel
+            </button>
+          </div>
+          <div class="wizard-footer-right">
+            <button type="button" class="btn btn-primary btn-sm" id="wizardNextBtn" onclick="wizardGoNext()">
+              Next: Price &amp; Stock ➔
+            </button>
+            <button type="button" class="btn btn-amber btn-sm" id="wizardSaveAnotherBtn" onclick="saveProductForm(event, true)" title="Save this firecracker and immediately add the next one">
+              ➕ Save &amp; Add Another
+            </button>
+            <button type="submit" class="btn btn-success btn-sm" id="wizardSaveCloseBtn" onclick="saveProductForm(event, false)">
+              💾 Save Firecracker
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -294,7 +436,7 @@
         </div>
 
         <div class="import-dropzone" id="importDropzone" onclick="document.getElementById('productCsvFileInput').click()">
-          <input type="file" id="productCsvFileInput" accept=".csv,text/csv" class="modal-hidden" onchange="handleProductCsvSelected(event)">
+          <input type="file" id="productCsvFileInput" accept=".csv,text/csv" class="modal-hidden" title="Choose Firecracker CSV file" aria-label="Choose Firecracker CSV file" onchange="handleProductCsvSelected(event)">
           <div class="dropzone-icon">📁</div>
           <div class="dropzone-text" id="dropzoneText">
             <strong>Click to select CSV file</strong> or drag & drop here

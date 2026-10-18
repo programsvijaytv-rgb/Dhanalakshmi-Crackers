@@ -106,10 +106,9 @@ const DEFAULT_CATEGORIES = [
   { id: "b1000000-0000-0000-0000-000000000009", name: "Rocket - ராக்கெட்", slug: "rocket", display_order: 9 },
   { id: "b1000000-0000-0000-0000-000000000010", name: "Fancy Crackers - பேன்சி கிராக்கர்", slug: "fancy-crackers", display_order: 10 },
   { id: "b1000000-0000-0000-0000-000000000011", name: "Night Out - நைட் அவுட்", slug: "night-out", display_order: 11 },
-  { id: "b1000000-0000-0000-0000-000000000012", name: "Multi Colour Fancy out - மல்டி கலர் பேன்சி அவுட்", slug: "multi-colour-fancy-out", display_order: 12 },
+  { id: "b1000000-0000-0000-0000-000000000012", name: "Multi Colour Fancy out - மல்டி கலர் பேன்சிஅவுட்", slug: "multi-colour-fancy-out", display_order: 12 },
   { id: "b1000000-0000-0000-0000-000000000013", name: "Bombs - பாம்", slug: "bombs", display_order: 13 },
-  { id: "b1000000-0000-0000-0000-000000000014", name: "Gun - கன்", slug: "gun", display_order: 14 },
-  { id: "b1000000-0000-0000-0000-000000000015", name: "Others", slug: "others", display_order: 15 }
+  { id: "b1000000-0000-0000-0000-000000000014", name: "Gun - கன், others", slug: "gun-others", display_order: 14 }
 ];
 
 const DEFAULT_PRODUCTS = [
@@ -515,13 +514,13 @@ const DEFAULT_PRODUCTS = [
     is_active: true
   },
 
-  // 14. Gun - கன்
+  // 14. Gun - கன், others
   {
     id: "c1000000-0000-0000-0000-000000000020",
     name: "Heavy Metal Die-Cast Cracker Gun - கன்",
     sku: "GUN-MTL1",
     category_id: "b1000000-0000-0000-0000-000000000014",
-    category_name: "Gun - கன்",
+    category_name: "Gun - கன், others",
     price: 120,
     original_price: 220,
     stock_quantity: 90,
@@ -540,7 +539,7 @@ const DEFAULT_PRODUCTS = [
     name: "Ring Caps Ammo for Toy Gun (10 Packs)",
     sku: "GUN-CAP10",
     category_id: "b1000000-0000-0000-0000-000000000014",
-    category_name: "Gun - கன்",
+    category_name: "Gun - கன், others",
     price: 45,
     original_price: 85,
     stock_quantity: 350,
@@ -554,14 +553,12 @@ const DEFAULT_PRODUCTS = [
     is_featured: false,
     is_active: true
   },
-
-  // 15. Others
   {
     id: "c1000000-0000-0000-0000-000000000022",
     name: "Black Magic Snake Tablets Novelty - Others",
     sku: "OTH-SNK1",
-    category_id: "b1000000-0000-0000-0000-000000000015",
-    category_name: "Others",
+    category_id: "b1000000-0000-0000-0000-000000000014",
+    category_name: "Gun - கன், others",
     price: 40,
     original_price: 80,
     stock_quantity: 260,
@@ -749,15 +746,92 @@ function listenSync(callback) {
 // ==============================================================================
 
 /**
+ * Normalizes any category string, product name, or SKU to one of the 14 official Diwali categories
+ */
+function normalizeCategory(rawNameOrSlug, productName = "", sku = "") {
+  const str = `${rawNameOrSlug || ""} ${productName || ""} ${sku || ""}`.toLowerCase();
+
+  // 1. Gift Box
+  if (str.includes("gift") || str.includes("box-") || str.includes("hamper") || str.includes("dlt25") || str.includes("roy50")) {
+    return DEFAULT_CATEGORIES[0];
+  }
+  // 2. Sparklers
+  if (str.includes("sparkler") || str.includes("ஸ்பார்க்லர்") || str.includes("spk") || str.includes("flare")) {
+    return DEFAULT_CATEGORIES[1];
+  }
+  // 3. Chakkar
+  if (str.includes("chakkar") || str.includes("சக்கரம்") || str.includes("chk") || str.includes("wheel") || str.includes("ground")) {
+    return DEFAULT_CATEGORIES[2];
+  }
+  // 4. Flower Pots
+  if (str.includes("flower") || str.includes("pot") || str.includes("பூச்சட்டி") || str.includes("flp") || str.includes("koti")) {
+    return DEFAULT_CATEGORIES[3];
+  }
+  // 5. Pencil | Twinkling Star
+  if (str.includes("pencil") || str.includes("twinkling") || str.includes("star") || str.includes("pcl") || str.includes("torch")) {
+    return DEFAULT_CATEGORIES[4];
+  }
+  // 6. Match Sticks
+  if (str.includes("match") || str.includes("தீப்பெட்டி") || str.includes("mtc")) {
+    return DEFAULT_CATEGORIES[5];
+  }
+  // 7. Bijili
+  if (str.includes("bijili") || str.includes("பிஜிலி") || str.includes("bjl")) {
+    return DEFAULT_CATEGORIES[6];
+  }
+  // 8. Wala
+  if (str.includes("wala") || str.includes("வாலா") || str.includes("garland")) {
+    return DEFAULT_CATEGORIES[7];
+  }
+  // 9. Rocket
+  if (str.includes("rocket") || str.includes("ராக்கெட்") || str.includes("rck") || str.includes("missile") || str.includes("lunik")) {
+    return DEFAULT_CATEGORIES[8];
+  }
+  // 10. Fancy Crackers
+  if (str.includes("fancy cracker") || str.includes("பேன்சி கிராக்கர்") || str.includes("peacock") || str.includes("fnc")) {
+    return DEFAULT_CATEGORIES[9];
+  }
+  // 11. Night Out
+  if (str.includes("night") || str.includes("நைட்") || str.includes("nit") || str.includes("waterfall")) {
+    return DEFAULT_CATEGORIES[10];
+  }
+  // 12. Multi Colour Fancy out
+  if (str.includes("multi colour") || str.includes("multi color") || str.includes("மல்டி") || str.includes("sht") || str.includes("repeating cake") || str.includes("sky shot")) {
+    return DEFAULT_CATEGORIES[11];
+  }
+  // 13. Bombs
+  if (str.includes("bomb") || str.includes("பாம்") || str.includes("bmb") || str.includes("atom") || str.includes("sound") || str.includes("hydro") || str.includes("thunder")) {
+    return DEFAULT_CATEGORIES[12];
+  }
+  // 14. Gun & Others
+  if (str.includes("gun") || str.includes("கன்") || str.includes("cap") || str.includes("snake") || str.includes("novelty") || str.includes("other") || str.includes("oth")) {
+    return DEFAULT_CATEGORIES[13];
+  }
+
+  // Exact ID match check
+  const byId = DEFAULT_CATEGORIES.find(c => c.id === rawNameOrSlug);
+  if (byId) return byId;
+
+  // Fallback to Gun - கன், others
+  return DEFAULT_CATEGORIES[13];
+}
+
+/**
  * Retrieve custom categories list from localStorage, seeding from DEFAULT_CATEGORIES if empty or outdated
  */
 function getStoredCategories() {
   const raw = localStorage.getItem("dc_custom_categories");
   if (raw) {
     try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length >= DEFAULT_CATEGORIES.length) {
-        return parsed;
+      let parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        // Upgrade any legacy names (like 'Sparklers & Flares', 'Ground Chakkars', 'Others')
+        const updated = DEFAULT_CATEGORIES.map(dc => {
+          const match = parsed.find(c => c.id === dc.id || c.slug === dc.slug || (c.name && c.name.toLowerCase().includes(dc.slug)));
+          return match ? { ...dc, ...match, name: dc.name, slug: dc.slug } : dc;
+        });
+        localStorage.setItem("dc_custom_categories", JSON.stringify(updated));
+        return updated;
       }
     } catch (e) {}
   }
@@ -774,11 +848,18 @@ function getStoredCustomProducts() {
     try {
       let parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Check if catalog has new categories or variable products
-        const hasNewCategories = parsed.some(p => p.category_name && p.category_name.includes("ஸ்பார்க்லர்"));
-        if (!hasNewCategories) {
-          const customAdded = parsed.filter(p => !DEFAULT_PRODUCTS.some(dp => dp.id === p.id || dp.sku === p.sku));
-          parsed = [...DEFAULT_PRODUCTS, ...customAdded];
+        // Reconcile and normalize categories on all products
+        let hadChanges = false;
+        parsed = parsed.map(p => {
+          const norm = normalizeCategory(p.category_name, p.name, p.sku);
+          if (norm && (p.category_name !== norm.name || p.category_id !== norm.id)) {
+            hadChanges = true;
+            p.category_name = norm.name;
+            p.category_id = norm.id;
+          }
+          return p;
+        });
+        if (hadChanges) {
           localStorage.setItem("dc_custom_products", JSON.stringify(parsed));
         }
         return parsed;

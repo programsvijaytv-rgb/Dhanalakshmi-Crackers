@@ -52,16 +52,49 @@
     }
 
     @media (max-width: 640px) {
+      .invoice-page-wrapper {
+        padding: 0 0.5rem;
+        margin: 0.75rem auto;
+      }
+      .invoice-format-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.65rem 0.75rem;
+      }
+      .format-pills {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        width: 100%;
+      }
+      .format-pill {
+        justify-content: center;
+        font-size: 0.72rem;
+        padding: 0.4rem 0.2rem;
+        text-align: center;
+      }
       .invoice-toolbar {
-        padding: 0.75rem 1rem;
+        padding: 0.75rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.6rem;
       }
       .toolbar-title {
-        font-size: 1rem;
+        font-size: 0.95rem;
+        justify-content: center;
+      }
+      .toolbar-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+        gap: 0.4rem;
       }
       .toolbar-actions .btn {
-        flex: 1;
+        width: 100%;
         text-align: center;
         justify-content: center;
+        font-size: 0.8rem;
+        min-height: 38px;
       }
       .a4-inv-header {
         flex-direction: column;
@@ -286,6 +319,8 @@
       const shopAddress = settings.address || "142, By-pass Road, Sivakasi - 626123, Tamil Nadu";
       const shopPhone = settings.phone || "+91 98765 43210";
       const gstNo = settings.gst_number || "33AAAAA0000A1Z5";
+      const defaultLocalLogo = "assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png";
+      const logoUrl = settings.logo_url || defaultLocalLogo;
       const isTaxApplicable = settings.tax_applicable !== false;
       const footerNote = settings.invoice_footer || "Thank you for shopping with Dhanalakshmi Crackers! Have a safe and sparkling celebration. 🪔";
       const dateStr = inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString("en-IN");
@@ -307,7 +342,7 @@
           <div class="a4-inv-header">
             <div class="a4-brand-col">
               <div class="a4-brand-title-wrap">
-                <span class="a4-brand-logo">🪔</span>
+                ${logoUrl ? `<img src="${logoUrl}" alt="${shopName}" class="a4-brand-img" onerror="this.outerHTML='<span class=\\'a4-brand-logo\\'>🪔</span>'">` : `<span class="a4-brand-logo">🪔</span>`}
                 <div>
                   <div class="a4-brand-name">${shopName}</div>
                   <div class="a4-brand-tagline">Direct from Sivakasi - Certified Factory Fireworks</div>
@@ -456,6 +491,9 @@
 
         container.innerHTML = `
           <div class="thermal-center">
+            <div class="thermal-logo-wrap">
+              <img src="${logoUrl}" alt="${shopName}" class="thermal-brand-logo-img" onerror="this.style.display='none'">
+            </div>
             <div class="thermal-shop-name">${shopName}</div>
             <div class="thermal-meta">${shopAddress}</div>
             <div class="thermal-meta">Helpline: ${shopPhone}</div>
@@ -625,9 +663,25 @@ ${invoiceDownloadUrl}
 ━━━━━━━━━━━━━━━━━━━━━
 ✨ Thank you for celebrating with us! Wishing you a sparkling and safe Diwali! 🪔`;
 
+      const prefill = (phone && /\d/.test(phone)) ? String(phone).replace(/[^0-9]/g, "") : "";
       const cleanPhone = String(phone).replace(/[^0-9]/g, "");
       const waPhone = cleanPhone.length === 10 ? "91" + cleanPhone : cleanPhone;
-      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`, "_blank");
+      const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(message)}`;
+
+      const link = document.createElement("a");
+      link.href = waUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent) || window.innerWidth < 768;
+      if (isMobile) {
+        setTimeout(() => {
+          if (!document.hidden) window.location.href = waUrl;
+        }, 400);
+      }
     }
 
     document.addEventListener("DOMContentLoaded", loadInvoiceData);

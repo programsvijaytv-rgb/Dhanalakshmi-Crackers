@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard User Manual | Dhanalakshmi Crackers</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+  <style>
+    .manual-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+    .manual-hero {
+      background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+      color: #ffffff;
+      padding: 2.25rem 2rem;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .manual-hero::after {
+      content: "🪔";
+      position: absolute;
+      right: 1.5rem;
+      bottom: -1rem;
+      font-size: 8rem;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .manual-hero-title {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 800;
+      color: #f59e0b;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .manual-hero-desc {
+      font-size: 1.05rem;
+      color: #e5e7eb;
+      max-width: 750px;
+      line-height: 1.6;
+    }
+    .manual-quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1.25rem;
+    }
+    .quick-link-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.45rem 0.9rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .quick-link-btn:hover {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+    .manual-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    .manual-toc {
+      position: sticky;
+      top: 90px;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+    .manual-toc-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6b7280;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .manual-toc-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .manual-toc-link {
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      color: #374151;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.15s ease;
+    }
+    .manual-toc-link:hover {
+      background: #fef2f2;
+      color: #dc2626;
+      padding-left: 1rem;
+    }
+    .manual-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    .manual-section {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+      scroll-margin-top: 100px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .section-badge {
+      background: #fee2e2;
+      color: #dc2626;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 12px;
+    }
+    .manual-step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .manual-step-item {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .step-number {
+      background: #dc2626;
+      color: #ffffff;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+    .step-content {
+      flex: 1;
+    }
+    .step-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 0.35rem;
+    }
+    .step-desc {
+      color: #475569;
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+    .manual-callout {
+      margin-top: 1.25rem;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .callout-info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+    }
+    .callout-tip {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #166534;
+    }
+    .callout-warning {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+    .cat-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .cat-table th {
+      background: #f1f5f9;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 700;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .cat-table td {
+      padding: 0.75rem 1rem;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+    .cat-table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .badge-pill {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge-tamil {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .badge-cat {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .shortcut-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .shortcut-table th, .shortcut-table td {
+      padding: 0.65rem 0.9rem;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+    kbd {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 0.2rem 0.45rem;
+      font-family: monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .cat-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      background: #ffffff;
+    }
+    .table-scroll-hint {
+      display: none;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin: 0.75rem 0 0.4rem 0;
+      font-weight: 600;
+    }
+    .btn-short-text {
+      display: none;
+    }
+    @media (max-width: 991px) {
+      .admin-main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding-top: 56px !important;
+        padding-bottom: 80px !important;
+        box-sizing: border-box !important;
+      }
+      .admin-topbar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        height: 56px !important;
+        min-height: 56px !important;
+        max-height: 56px !important;
+        z-index: 1200 !important;
+        background: #ffffff !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 0 0.75rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.4rem !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      .admin-sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        z-index: 2000 !important;
+        transform: translateX(-100%) !important;
+      }
+      .admin-sidebar.open {
+        transform: translateX(0) !important;
+      }
+      .manual-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        gap: 1rem !important;
+      }
+      .manual-toc {
+        display: none !important;
+      }
+    }
+    @media (max-width: 768px) {
+      html, body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+      }
+      .btn-full-text {
+        display: none !important;
+      }
+      .btn-short-text {
+        display: inline !important;
+      }
+      .admin-content {
+        padding: 0.75rem 0.65rem !important;
+      }
+      .manual-container {
+        padding: 0 !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+      }
+      .manual-hero {
+        padding: 1.25rem 0.95rem !important;
+        border-radius: 14px !important;
+        margin-bottom: 1rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+      }
+      .manual-hero::after {
+        display: none !important;
+      }
+      .manual-hero-title {
+        font-size: 1.25rem !important;
+        word-break: break-word !important;
+      }
+      .manual-hero-desc {
+        font-size: 0.88rem !important;
+        line-height: 1.55 !important;
+      }
+      .manual-quick-links {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 0.35rem !important;
+        width: 100% !important;
+      }
+      .quick-link-btn {
+        font-size: 0.74rem !important;
+        padding: 0.3rem 0.55rem !important;
+      }
+      .manual-content {
+        min-width: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        gap: 1rem !important;
+      }
+      .manual-section {
+        padding: 1.25rem 0.85rem !important;
+        border-radius: 14px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+        margin-bottom: 0.5rem !important;
+      }
+      .section-title {
+        font-size: 1.15rem !important;
+        word-break: break-word !important;
+        flex-wrap: wrap !important;
+      }
+      .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0.4rem !important;
+        padding-bottom: 0.75rem !important;
+        margin-bottom: 1rem !important;
+      }
+      .manual-step-list {
+        gap: 0.85rem !important;
+      }
+      .manual-step-item {
+        padding: 0.9rem 0.75rem !important;
+        gap: 0.65rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+      }
+      .step-number {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.85rem !important;
+      }
+      .step-content {
+        min-width: 0 !important;
+        word-break: break-word !important;
+        overflow-wrap: break-word !important;
+      }
+      .step-title {
+        font-size: 0.95rem !important;
+      }
+      .step-desc {
+        font-size: 0.85rem !important;
+        line-height: 1.5 !important;
+      }
+      .cat-table-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        box-sizing: border-box !important;
+        margin-top: 0.5rem !important;
+      }
+      .table-scroll-hint {
+        display: block !important;
+      }
+      .cat-table {
+        min-width: 540px !important;
+        font-size: 0.82rem !important;
+        margin-top: 0 !important;
+      }
+      .cat-table th, .cat-table td {
+        padding: 0.55rem 0.65rem !important;
+      }
+      .shortcut-table {
+        min-width: 480px !important;
+        font-size: 0.82rem !important;
+      }
+      .shortcut-table th, .shortcut-table td {
+        padding: 0.55rem 0.65rem !important;
+      }
+      .admin-topbar .admin-page-title {
+        font-size: 1.05rem !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 130px !important;
+      }
+      .topbar-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.35rem !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important;
+        flex-wrap: nowrap !important;
+      }
+      .topbar-actions::-webkit-scrollbar {
+        display: none !important;
+      }
+      .topbar-actions .btn {
+        padding: 0.35rem 0.6rem !important;
+        font-size: 0.76rem !important;
+        white-space: nowrap !important;
+        border-radius: 20px !important;
+        flex-shrink: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body class="admin-body">
+
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-header">
+      <div class="logo-badge">🪔</div>
+      <div>
+        <div class="brand-title">Dhanalakshmi</div>
+        <div class="brand-sub">Admin & POS</div>
+      </div>
+    </div>
+
+    <nav class="admin-nav">
+      <a href="/admin/index.html" class="admin-nav-item"><span class="icon">📊</span> Dashboard</a>
+      <a href="/admin/billing.html" class="admin-nav-item pos-highlight-link"><span class="icon">⚡</span> POS Billing Terminal</a>
+      <a href="/admin/products.html" class="admin-nav-item"><span class="icon">🎆</span> Product Catalog</a>
+      <a href="/admin/orders.html" class="admin-nav-item"><span class="icon">📦</span> Online Orders</a>
+      <a href="/admin/invoices.html" class="admin-nav-item"><span class="icon">🧾</span> Invoices Archive</a>
+      <a href="/admin/customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
+      <a href="/admin/reports.html" class="admin-nav-item"><span class="icon">📈</span> Sales Reports</a>
+      <a href="/admin/settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+      <a href="/admin/manual.html" class="admin-nav-item active"><span class="icon">📖</span> User Manual</a>
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-user-info">
+        <div class="admin-avatar">AD</div>
+        <div>
+          <div id="adminUserName">Store Admin</div>
+          <div id="adminUserRole">ADMIN</div>
+        </div>
+      </div>
+      <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <h1 class="admin-page-title">User Manual</h1>
+      <div class="topbar-actions">
+        <a href="/admin/billing.html" class="btn btn-primary btn-sm" title="Launch POS Counter">
+          <span class="btn-full-text">⚡ POS Counter</span>
+          <span class="btn-short-text">⚡ POS</span>
+        </a>
+        <a href="/admin/products.html" class="btn btn-secondary btn-sm" title="Manage Catalog">
+          <span class="btn-full-text">🎆 Catalog</span>
+          <span class="btn-short-text">🎆 Items</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="manual-container">
+        
+        <!-- Hero Banner -->
+        <div class="manual-hero">
+          <div class="manual-hero-title">
+            <span>📖</span> Dhanalakshmi Crackers Dashboard Manual
+          </div>
+          <p class="manual-hero-desc">
+            Complete operational guide for cashiers, billing operators, and store owners. Learn how to perform fast festival POS billing, print 80mm &amp; 58mm receipts with brand logos, manage the 14 official Diwali firecracker categories, configure multi-option variable products, and dispatch instant WhatsApp invoices.
+          </p>
+          <div class="manual-quick-links">
+            <a href="#pos-guide" class="quick-link-btn">⚡ POS Billing</a>
+            <a href="#categories-guide" class="quick-link-btn">🎆 15 Categories</a>
+            <a href="#variable-guide" class="quick-link-btn">✨ Variable Products</a>
+            <a href="#bulk-guide" class="quick-link-btn">🛠️ Bulk Catalog Actions</a>
+            <a href="#invoices-guide" class="quick-link-btn">🧾 Thermal Receipts &amp; Logo</a>
+            <a href="#whatsapp-guide" class="quick-link-btn">📲 WhatsApp Billing</a>
+            <a href="#sync-guide" class="quick-link-btn">☁️ Cloud &amp; Offline Sync</a>
+          </div>
+        </div>
+
+        <div class="manual-grid">
+          
+          <!-- Sticky Table of Contents -->
+          <aside class="manual-toc">
+            <div class="manual-toc-title">Quick Navigation</div>
+            <nav class="manual-toc-nav">
+              <a href="#pos-guide" class="manual-toc-link"><span>⚡</span> POS Counter Billing</a>
+              <a href="#categories-guide" class="manual-toc-link"><span>🎆</span> 15 Diwali Categories</a>
+              <a href="#variable-guide" class="manual-toc-link"><span>✨</span> Variable Products Guide</a>
+              <a href="#bulk-guide" class="manual-toc-link"><span>🛠️</span> Bulk Catalog Tools</a>
+              <a href="#invoices-guide" class="manual-toc-link"><span>🧾</span> Thermal Receipts (80/58mm)</a>
+              <a href="#whatsapp-guide" class="manual-toc-link"><span>📲</span> WhatsApp Integration</a>
+              <a href="#orders-guide" class="manual-toc-link"><span>📦</span> Online Orders Workflow</a>
+              <a href="#customers-guide" class="manual-toc-link"><span>👥</span> Customer Directory</a>
+              <a href="#reports-guide" class="manual-toc-link"><span>📈</span> Reports &amp; Analytics</a>
+              <a href="#sync-guide" class="manual-toc-link"><span>☁️</span> Cloud &amp; Offline Mode</a>
+              <a href="#shortcuts-guide" class="manual-toc-link"><span>⌨️</span> Keyboard Shortcuts</a>
+            </nav>
+          </aside>
+
+          <!-- Content Columns -->
+          <div class="manual-content">
+
+            <!-- 1. POS Billing Terminal -->
+            <section id="pos-guide" class="manual-section">
+              <div class="section-header">
+                <h2 class="section-title"><span>⚡</span> 1. POS Billing Counter &amp; Terminal</h2>
+                <span class="section-badge">SPEED BILLING</span>
+              </div>
+              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+                The POS Billing Counter is engineered for rapid high-volume customer checkout during peak Diwali rush hours without any lagging or cloud delays.
+              </p>
+              <div class="manual-step-list">
+                <div class="manual-step-item">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    <div class="step-title">Product Quick Search &amp; Selection</div>
+                    <div class="step-desc">
+                      Type product name, SKU (e.g. <code>SPK-10</code>, <code>CHK-DLX</code>), or click any category pill to filter. Click on any product card or tap the <strong>Add</strong> button to add it to the active bill.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    <div class="step-title">Variable Products Selection (Packs &amp; Sizes)</div>
+                    <div class="step-desc">
+                      If a product has multiple options (e.g. 10cm, 15cm, 30cm or 12, 25, 50 shots), a popup will appear allowing you to select the exact variant and quantity in 1 tap.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    <div class="step-title">Customer Information &amp; WhatsApp Number</div>
+                    <div class="step-desc">
+                      Enter the customer's 10-digit mobile number and full name. The system automatically verifies previous festival purchase history and points balance.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">4</div>
+                  <div class="step-content">
+                    <div class="step-title">Payment &amp; 1-Click Thermal Print</div>
+                    <div class="step-desc">
+                      Select <strong>Cash</strong>, <strong>UPI (Instant Dynamic QR)</strong>, or <strong>Card</strong>. Click <strong>Complete Sale &amp; Print</strong> to produce an 80mm or 58mm thermal receipt with the store logo and immediately send the bill to the customer's WhatsApp!
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="manual-callout callout-tip">
+                <span>💡</span>
+                <div>
+                  <strong>Festival Pro-Tip:</strong> Press <kbd>F2</kbd> anytime to jump immediately to the product search bar, or press <kbd>Enter</kbd> to add the highlighted item.
+                </div>
+              </div>
+            </section>
+
+            <!-- 2. The 15 Categories -->
+            <section id="categories-guide" class="manual-section">
+              <div class="section-header">
+                <h2 class="section-title"><span>🎆</span> 2. The 15 Official Firecracker Categories</h2>
+                <span class="section-badge">BILINGUAL</span>
+              </div>
+              <p style="color:#4b5563;">
+                Both storefront customer filters and admin catalog filters follow the exact 15 standardized categories with authentic Tamil terminology:
+              </p>
+              <div class="table-scroll-hint">👉 Swipe table horizontally to view all category details</div>
+              <div class="cat-table-wrapper">
+                <table class="cat-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px;">#</th>
+                      <th>Official Category Name</th>
+                      <th>Tamil Translation</th>
+                      <th>Items Included</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>1</strong></td>
+                      <td><strong>✨ All</strong></td>
+                      <td><span class="badge-pill badge-tamil">அனைத்தும்</span></td>
+                      <td>Global view displaying all active catalog firecrackers</td>
+                    </tr>
+                    <tr>
+                      <td><strong>2</strong></td>
+                      <td><strong>Gift Box</strong></td>
+                      <td><span class="badge-pill badge-tamil">கிப்ட் பாக்ஸ்</span></td>
+                      <td>Family hampers, Deluxe boxes (25 to 50 items)</td>
+                    </tr>
+                    <tr>
+                      <td><strong>3</strong></td>
+                      <td><strong>Sparklers - ஸ்பார்க்லர்</strong></td>
+                      <td><span class="badge-pill badge-tamil">ஸ்பார்க்லர்</span></td>
+                      <td>10cm, 15cm, 30cm, 50cm Electric, Color, &amp; Golden sparklers</td>
+                    </tr>
+                    <tr>
+                      <td><strong>4</strong></td>
+                      <td><strong>Chakkar - சக்கரம்</strong></td>
+                      <td><span class="badge-pill badge-tamil">சக்கரம்</span></td>
+                      <td>Ground chakkars, spinning wheels, whistling discs</td>
+                    </tr>
+                    <tr>
+                      <td><strong>5</strong></td>
+                      <td><strong>Flower Pots - பூச்சட்டி</strong></td>
+                      <td><span class="badge-pill badge-tamil">பூச்சட்டி</span></td>
+                      <td>Special flower pots, Big, Color Koti, Tri-color fountain plumes</td>
+                    </tr>
+                    <tr>
+                      <td><strong>6</strong></td>
+                      <td><strong>Pencil | Twinkling Star</strong></td>
+                      <td><span class="badge-pill badge-tamil">பென்சில் / ஸ்டார்</span></td>
+                      <td>Twinkling stars, color handheld torch pencils</td>
+                    </tr>
+                    <tr>
+                      <td><strong>7</strong></td>
+                      <td><strong>Match Sticks - தீப்பெட்டி</strong></td>
+                      <td><span class="badge-pill badge-tamil">தீப்பெட்டி</span></td>
+                      <td>Mega safety strike matchboxes, wind-resistant lighting sticks</td>
+                    </tr>
+                    <tr>
+                      <td><strong>8</strong></td>
+                      <td><strong>Bijili - பிஜிலி</strong></td>
+                      <td><span class="badge-pill badge-tamil">பிஜிலி</span></td>
+                      <td>Red-striped bijili, sound burst pouches (100 Pcs)</td>
+                    </tr>
+                    <tr>
+                      <td><strong>9</strong></td>
+                      <td><strong>Wala - வாலா</strong></td>
+                      <td><span class="badge-pill badge-tamil">வாலா</span></td>
+                      <td>100 Wala, 1000 Wala, 5000 Wala, 10000 Wala festive garlands</td>
+                    </tr>
+                    <tr>
+                      <td><strong>10</strong></td>
+                      <td><strong>Rocket - ராக்கெட்</strong></td>
+                      <td><span class="badge-pill badge-tamil">ராக்கெட்</span></td>
+                      <td>Baby sound rockets, whistling Lunik rockets, bomb rockets</td>
+                    </tr>
+                    <tr>
+                      <td><strong>11</strong></td>
+                      <td><strong>Fancy Crackers - பேன்சி கிராக்கர்</strong></td>
+                      <td><span class="badge-pill badge-tamil">பேன்சி கிராக்கர்</span></td>
+                      <td>Peacock dance, butterflies, aerial novelty wheels</td>
+                    </tr>
+                    <tr>
+                      <td><strong>12</strong></td>
+                      <td><strong>Night Out - நைட் அவுட்</strong></td>
+                      <td><span class="badge-pill badge-tamil">நைட் அவுட்</span></td>
+                      <td>Golden waterfall fountains, night aerial sky showers</td>
+                    </tr>
+                    <tr>
+                      <td><strong>13</strong></td>
+                      <td><strong>Multi Colour Fancy out - மல்டி கலர் பேன்சிஅவுட்</strong></td>
+                      <td><span class="badge-pill badge-tamil">மல்டி கலர்</span></td>
+                      <td>12, 25, 50, 120 Shots repeating cakes &amp; sky fireworks</td>
+                    </tr>
+                    <tr>
+                      <td><strong>14</strong></td>
+                      <td><strong>Bombs - பாம்</strong></td>
+                      <td><span class="badge-pill badge-tamil">பாம்</span></td>
+                      <td>Classic Hydro Green Atom bombs, 2-Sound thunder bombs</td>
+                    </tr>
+                    <tr>
+                      <td><strong>15</strong></td>
+                      <td><strong>Gun - கன், others</strong></td>
+                      <td><span class="badge-pill badge-tamil">கன் &amp; இதர</span></td>
+                      <td>Metal toy cracker guns, ring caps ammo, snake smoke tablets</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="manual-callout callout-info">
+                <span>ℹ️</span>
+                <div>
+                  <strong>Automatic Normalizer:</strong> Any product imported via CSV or remote database is automatically mapped to one of these 14 categories based on its name or SKU.
+                </div>
+              </div>
+            </section>
+
+            <!-- 3. Variable Products Guide -->
+            <section id="variable-guide" class="manual-section">
+              <div class="section-header">
+                <h2 class="section-title"><span>✨</span> 3. Variable Products &amp; Option Presets</h2>
+                <span class="section-badge">MULTI-VARIANT</span>
+              </div>
+              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+                Variable products allow multiple variants (e.g. sparkler lengths, wala lengths, or aerial shots) under a single parent listing with independent prices and inventory counts.
+              </p>
+              <div class="manual-step-list">
+                <div class="manual-step-item">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    <div class="step-title">Select "Variable Product" Type</div>
+                    <div class="step-desc">
+                      In the Add/Edit Firecracker modal, select <strong>Variable Product (Multiple Sizes / Shots / Variants)</strong>.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    <div class="step-title">Apply Built-in 1-Click Presets</div>
+                    <div class="step-desc">
+                      Click any preset button:
+                      <ul style="margin: 0.5rem 0 0 1.25rem;">
+                        <li><strong>Sparklers Preset:</strong> 10cm, 15cm, 30cm, 50cm Jumbo</li>
+                        <li><strong>Aerial Sky Shots Preset:</strong> 12, 25, 50, 120 Shots</li>
+                        <li><strong>Garlands (Wala) Preset:</strong> 100, 1000, 5000, 10000 Wala</li>
+                        <li><strong>Chakkar Sizes:</strong> Special, Deluxe, Giant, 4x4 Whistling</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    <div class="step-title">Live Demonstration / YouTube Video Link</div>
+                    <div class="step-desc">
+                      Paste a YouTube or Web video link into the <strong>Instruction / Video Guide Link</strong> field. The storefront will embed this video directly on the product's details page for customers to preview the firecracker burst!
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 4. Bulk Catalog Actions -->
+            <section id="bulk-guide" class="manual-section">
+              <div class="section-header">
+                <h2 class="section-title"><span>🛠️</span> 4. Bulk Catalog Tools &amp; Actions</h2>
+                <span class="section-badge">INVENTORY</span>
+              </div>
+              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+                Manage hundreds of firecrackers at once without repetitive manual edits:
+              </p>
+              <div class="manual-step-list">
+                <div class="manual-step-item">
+                  <div class="step-number">✓</div>
+                  <div class="step-content">
+                    <div class="step-title">Select All or Check Specific Items</div>
+                    <div class="step-desc">
+                      Click the header checkbox to select all filtered firecrackers, or check individual rows. A floating bulk action bar will slide up from the bottom of your screen.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">🗑️</div>
+                  <div class="step-content">
+                    <div class="step-title">Bulk Delete</div>
+                    <div class="step-desc">
+                      Deletes selected items from both local and cloud storage with safety confirmation.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">🏷️</div>
+                  <div class="step-content">
+                    <div class="step-title">Bulk Move Category</div>
+                    <div class="step-desc">
+                      Re-assign all selected firecrackers to any of the 14 official Diwali categories in 1 click.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">📦</div>
+                  <div class="step-content">
+                    <div class="step-title">Bulk Stock Status (In-Stock / Out-of-Stock)</div>
+                    <div class="step-desc">
+                      Instantly mark items as in-stock or out-of-stock across the counter and online storefront.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 5. Invoices & Receipts (Thermal 80mm & 58mm) -->
+            <section id="invoices-guide" class="manual-section">
+              <div class="section-header">
+                <h2 class="section-title"><span>🧾</span> 5. Thermal Invoices (80mm &amp; 58mm) with Logo</h2>
+                <span class="section-badge">RECEIPTS</span>
+              </div>
+              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+                Thermal bills are optimized for Bluetooth and USB thermal POS printers with crisp, smudge-free typography and embedded brand logos:
+              </p>
+              <div class="manual-step-list">
+                <div class="manual-step-item">
+                  <div class="step-number">🖨️</div>
+                  <div class="step-content">
+                    <div class="step-title">80mm Standard POS Printer Format</div>
+                    <div class="step-desc">
+                      Full-width 3-inch format with store logo, tax breakdown, customer WhatsApp, itemized variant details, savings highlight, and bilingual festive greeting (<strong>Happy Diwali! / இனிய தீபாவளி நல்வாழ்த்துக்கள்!</strong>).
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">🏷️</div>
+                  <div class="step-content">
+                    <div class="step-title">58mm Compact Bluetooth Mini Printer Format</div>
+                    <div class="step-desc">
+                      Ultra-compact 2-inch format featuring high-contrast monocrome store logo, concise 2-column pricing, and quick QR code for instant UPI payment verification.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">📄</div>
+                  <div class="step-content">
+                    <div class="step-title">A4 GST Tax Invoice</div>
+                    <div class="step-desc">
+                      Standard full-page format for corporate, wholesale, or bulk orders with full GSTIN credentials, terms of delivery, and authorized signatory seals.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 6. WhatsApp Integration -->
+            <section id="whatsapp-guide" class="manual-section">
+              <div class="section-header">
+                <h2 class="section-title"><span>📲</span> 6. WhatsApp Dispatch &amp; Sharing</h2>
+                <span class="section-badge">INSTANT NOTIFY</span>
+              </div>
+              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+                No manual copying required! Send itemized festival bills directly to your customer's WhatsApp:
+              </p>
+              <div class="manual-step-list">
+                <div class="manual-step-item">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    <div class="step-title">Automatic Phone Formatting</div>
+                    <div class="step-desc">
+                      Entering <code>9876543210</code> automatically prepends the India country code <code>91</code>.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    <div class="step-title">Universal Deep Link Dispatch</div>
+                    <div class="step-desc">
+                      Clicking <strong>Send via WhatsApp</strong> opens the native WhatsApp application on mobile devices or WhatsApp Web on desktop computers without popup blocker warnings.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    <div class="step-title">Itemized Message with Digital Invoice Link</div>
+                    <div class="step-desc">
+                      The generated message includes order number, itemized firecracker summary, total savings, paid status, and a direct link to view and download their digital receipt.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 7. Cloud Sync & Offline Mode -->
+            <section id="sync-guide" class="manual-section">
+              <div class="section-header">
+                <h2 class="section-title"><span>☁️</span> 7. Offline Resilience &amp; Cloud Sync</h2>
+                <span class="section-badge">ZERO DOWNTIME</span>
+              </div>
+              <p style="color:#4b5563; margin-bottom: 1.25rem;">
+                During festive sales peaks, internet connections can drop. The system includes dual offline-first architecture:
+              </p>
+              <div class="manual-step-list">
+                <div class="manual-step-item">
+                  <div class="step-number">💾</div>
+                  <div class="step-content">
+                    <div class="step-title">Instant Local Counter Persistence</div>
+                    <div class="step-desc">
+                      Every bill, customer record, and inventory change is instantly committed to browser offline storage. Billing will never freeze even if the internet is completely disconnected.
+                    </div>
+                  </div>
+                </div>
+                <div class="manual-step-item">
+                  <div class="step-number">🔄</div>
+                  <div class="step-content">
+                    <div class="step-title">Automatic Supabase Cloud Synchronization</div>
+                    <div class="step-desc">
+                      As soon as the internet connection resumes, all pending offline bills and inventory changes automatically synchronize with the Supabase cloud database in real time.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 8. Keyboard Shortcuts -->
+            <section id="shortcuts-guide" class="manual-section">
+              <div class="section-header">
+                <h2 class="section-title"><span>⌨️</span> 8. Cashier Keyboard Shortcuts</h2>
+                <span class="section-badge">PRO TIPS</span>
+              </div>
+              <div class="table-scroll-hint">👉 Swipe table horizontally to view all shortcuts</div>
+              <div class="cat-table-wrapper">
+                <table class="shortcut-table">
+                  <thead>
+                    <tr>
+                      <th>Key Combination</th>
+                      <th>Action</th>
+                      <th>Applicable Screen</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><kbd>F2</kbd></td>
+                      <td>Focus Product Search Bar</td>
+                      <td>POS Billing Terminal</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>F4</kbd></td>
+                      <td>Focus Customer Phone Input</td>
+                      <td>POS Billing Terminal</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>F8</kbd></td>
+                      <td>Open Payment Modal / Complete Sale</td>
+                      <td>POS Billing Terminal</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>Ctrl</kbd> + <kbd>P</kbd></td>
+                      <td>Print Thermal Bill (80mm / 58mm)</td>
+                      <td>Invoice &amp; POS Screen</td>
+                    </tr>
+                    <tr>
+                      <td><kbd>Esc</kbd></td>
+                      <td>Close Active Modal / Reset Search</td>
+                      <td>All Admin Screens</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/js/supabase-config.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin-nav.js"></script>
+  <script src="../assets/js/admin.js"></script>
+</body>
+</html>

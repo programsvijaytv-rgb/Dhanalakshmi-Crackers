@@ -3,8 +3,11 @@
 -- Run this in Supabase Dashboard -> SQL Editor (Click 'New query', paste, and 'Run')
 -- ==============================================================================
 
--- 1. Ensure RLS is enabled but permissive for products management
+-- 1. Ensure RLS is enabled and modern columns exist
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS has_variants BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS variants JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS video_url TEXT;
 
 DROP POLICY IF EXISTS "Admin/Staff can manage products" ON public.products;
 DROP POLICY IF EXISTS "Public can view active products" ON public.products;

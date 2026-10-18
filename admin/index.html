@@ -29,6 +29,7 @@
       <a href="/admin/customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
       <a href="/admin/reports.html" class="admin-nav-item"><span class="icon">📈</span> Sales Reports</a>
       <a href="/admin/settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+      <a href="/admin/manual.html" class="admin-nav-item"><span class="icon">📖</span> User Manual</a>
     </nav>
 
     <div class="admin-sidebar-footer">
@@ -46,13 +47,16 @@
   <!-- Main Content -->
   <div class="admin-main">
     <header class="admin-topbar">
-      <h1 class="admin-page-title">Executive Dashboard</h1>
+      <h1 class="admin-page-title">Dashboard</h1>
       <div class="topbar-actions">
-        <a href="/admin/billing.html" class="btn btn-primary btn-sm">
-          ⚡ Open POS Counter
+        <button type="button" class="btn btn-secondary btn-sm" onclick="openDashboardManualModal()" title="Open User Manual">
+          📖 Manual
+        </button>
+        <a href="/admin/billing.html" class="btn btn-primary btn-sm" title="Launch POS Counter">
+          ⚡ POS
         </a>
-        <a href="/index.html" target="_blank" class="btn btn-secondary btn-sm">
-          🌐 View Storefront
+        <a href="/index.html" target="_blank" class="btn btn-secondary btn-sm" title="View Online Storefront">
+          🌐 Store
         </a>
       </div>
     </header>
@@ -140,10 +144,13 @@
   </div>
 
   <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../assets/js/supabase-config.js"></script>
   <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/admin-nav.js"></script>
+  <script src="../assets/js/whatsapp.js"></script>
+  <script src="../assets/js/invoices.js"></script>
   <script src="../assets/js/products.js"></script>
   <script src="../assets/js/admin.js"></script>
   <script>

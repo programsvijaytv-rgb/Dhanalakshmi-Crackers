@@ -46,18 +46,21 @@ function openInvoiceModal(invoice) {
   }
 
   modal.innerHTML = `
-    <div class="modal-content" style="max-width: 880px;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+    <div class="modal-content invoice-preview-modal-content" style="max-width: 880px;">
+      <div class="modal-header invoice-modal-header">
+        <div class="invoice-modal-title-row">
           <h3 class="modal-title" style="margin:0;">Invoice #${invoice.invoice_number}</h3>
           <!-- Format Selector Buttons -->
-          <div style="display: flex; gap: 0.25rem; background: #f1f5f9; padding: 3px; border-radius: 8px;">
+          <div class="invoice-format-pill-group">
             <button type="button" class="btn btn-sm ${currentPrintFormat === 'a4' ? 'btn-primary' : 'btn-secondary'}" onclick="setInvoiceFormat('a4')">📄 A4</button>
             <button type="button" class="btn btn-sm ${currentPrintFormat === '80mm' ? 'btn-primary' : 'btn-secondary'}" onclick="setInvoiceFormat('80mm')">🧾 80mm</button>
             <button type="button" class="btn btn-sm ${currentPrintFormat === '58mm' ? 'btn-primary' : 'btn-secondary'}" onclick="setInvoiceFormat('58mm')">🧾 58mm</button>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div class="invoice-modal-header-actions">
+          <button type="button" class="btn btn-accent btn-sm" onclick="shareCurrentInvoiceWhatsApp()" style="font-size: 0.78rem; padding: 4px 8px;" title="Send Invoice via WhatsApp">
+            📲 WhatsApp
+          </button>
           <a href="/invoice.html?invoice=${invoice.invoice_number}" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; text-decoration:none;" title="Open Standalone Invoice Page">
             🔗 Full Tab
           </a>
@@ -71,22 +74,22 @@ function openInvoiceModal(invoice) {
         </div>
       </div>
 
-      <div class="modal-footer" style="background: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <div class="modal-footer invoice-modal-footer">
+        <div class="invoice-modal-share-actions">
           <button type="button" class="btn btn-accent btn-sm" onclick="shareCurrentInvoiceWhatsApp()">
-            📲 WhatsApp Customer
+            📲 WhatsApp
           </button>
           <button type="button" class="btn btn-secondary btn-sm" onclick="emailCurrentInvoice()">
             ✉️ Email
           </button>
         </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <div class="invoice-modal-print-actions">
           <button type="button" class="btn btn-secondary btn-sm" onclick="closeInvoiceModal()">Close</button>
           <button type="button" class="btn btn-primary btn-sm" onclick="triggerBrowserPrint()">
             🖨️ Print
           </button>
           <button type="button" class="btn btn-primary btn-sm" style="background: #059669; border-color: #059669;" onclick="downloadInvoicePDF(currentViewingInvoice)">
-            📥 Download PDF
+            📥 PDF
           </button>
         </div>
       </div>
@@ -135,7 +138,9 @@ function renderFormattedInvoiceContent() {
   const shopAddress = settings.address || "142, By-pass Road, Sivakasi - 626123, Tamil Nadu";
   const shopPhone = settings.phone || "+91 98765 43210";
   const gstNo = settings.gst_number || "33AAAAA0000A1Z5";
-  const logoUrl = settings.logo_url || "";
+  const isInsideAdmin = typeof window !== "undefined" && window.location.pathname.includes("/admin");
+  const defaultLocalLogo = isInsideAdmin ? "../assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png" : "assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png";
+  const logoUrl = settings.logo_url || defaultLocalLogo;
   const isTaxApplicable = settings.tax_applicable !== false;
   const footerNote = settings.invoice_footer || "Thank you for shopping with Dhanalakshmi Crackers! Have a safe and sparkling Diwali celebration. 🪔";
   const dateStr = inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString("en-IN");
@@ -307,6 +312,9 @@ function renderFormattedInvoiceContent() {
 
     container.innerHTML = `
       <div class="thermal-center">
+        <div class="thermal-logo-wrap">
+          <img src="${logoUrl}" alt="${shopName}" class="thermal-brand-logo-img" onerror="this.style.display='none'">
+        </div>
         <div class="thermal-shop-name">${shopName}</div>
         <div class="thermal-meta">${shopAddress}</div>
         <div class="thermal-meta">Helpline: ${shopPhone}</div>

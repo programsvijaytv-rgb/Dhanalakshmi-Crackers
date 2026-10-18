@@ -76,17 +76,34 @@ function renderRecentDashboardActivity(invoices, orders) {
 
   combined.forEach(item => {
     const tr = document.createElement("tr");
+    tr.className = "dashboard-activity-row";
     const isPaid = (item.payment_status || "").toLowerCase() === "paid";
+    if (item.type === "POS Invoice") {
+      tr.style.cursor = "pointer";
+      tr.title = "Click to preview invoice & send WhatsApp";
+      tr.onclick = () => {
+        if (typeof openInvoiceModal === "function") {
+          openInvoiceModal(item.raw);
+        }
+      };
+    }
     tr.innerHTML = `
-      <td><strong>${item.ref}</strong></td>
-      <td><span class="badge ${item.type === 'POS Invoice' ? 'badge-info' : 'badge-warning'}">${item.type}</span></td>
-      <td>${item.customer || 'Customer'}</td>
-      <td><strong>${formatCurrency(item.amount)}</strong></td>
-      <td>
+      <td class="col-dash-ref" data-label="Reference #">
+        <div class="dash-ref-wrap">
+          <strong>${item.ref}</strong>
+          <span class="badge ${item.type === 'POS Invoice' ? 'badge-info' : 'badge-warning'} dash-channel-pill">${item.type}</span>
+        </div>
+      </td>
+      <td class="col-dash-channel" data-label="Channel">
+        <span class="badge ${item.type === 'POS Invoice' ? 'badge-info' : 'badge-warning'}">${item.type}</span>
+      </td>
+      <td class="col-dash-cust" data-label="Customer">${item.customer || 'Walk-in Customer'}</td>
+      <td class="col-dash-total" data-label="Total (₹)"><strong>${formatCurrency(item.amount)}</strong></td>
+      <td class="col-dash-status" data-label="Status">
         <span class="badge ${isPaid ? 'badge-success' : 'badge-danger'}" title="Payment Status">${(item.payment_status || 'unpaid').toUpperCase()}</span>
         ${item.type === 'Online Order' ? `<div style="font-size: 0.72rem; color: #6b7280; margin-top: 3px; font-weight: 600;">Order: ${item.status.toUpperCase()}</div>` : ''}
       </td>
-      <td>${new Date(item.date).toLocaleDateString("en-IN")}</td>
+      <td class="col-dash-date" data-label="Date">${new Date(item.date).toLocaleDateString("en-IN")}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -96,29 +113,26 @@ function renderRecentDashboardActivity(invoices, orders) {
 // PRODUCT MANAGEMENT (admin/products.html)
 // ==============================================================================
 let adminProductList = [];
+let selectedProductIds = new Set();
+let activeAdminCategoryFilter = "all";
 
 async function initAdminProducts() {
   await protectAdminRoute();
   adminProductList = await fetchProducts();
+  await initAdminCategoryFilters();
   renderAdminProductsTable(adminProductList);
   checkCloudSyncStatus(false);
 
   const searchInput = document.getElementById("adminProductSearch");
   if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      const q = e.target.value.toLowerCase().trim();
-      const filtered = adminProductList.filter(p => 
-        p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q))
-      );
-      renderAdminProductsTable(filtered);
-    });
+    searchInput.addEventListener("input", applyAdminFilters);
   }
 
   if (typeof listenSync === "function") {
     listenSync(async (event) => {
       if (event.type === "products_updated" && event.payload?.action !== "save" && event.payload?.action !== "delete") {
         adminProductList = await fetchProducts();
-        renderAdminProductsTable(adminProductList);
+        applyAdminFilters();
       }
     });
   }
@@ -128,25 +142,279 @@ async function initAdminProducts() {
   });
 }
 
+async function initAdminCategoryFilters() {
+  const catFilter = document.getElementById("adminCategoryFilter");
+  const bulkCatSelect = document.getElementById("bulkCategorySelect");
+  const categories = await fetchCategories();
+
+  if (catFilter) {
+    catFilter.innerHTML = '<option value="all">🎆 All Categories</option>';
+    categories.forEach(cat => {
+      const opt = document.createElement("option");
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      catFilter.appendChild(opt);
+    });
+  }
+
+  if (bulkCatSelect) {
+    bulkCatSelect.innerHTML = '<option value="">🏷️ Move Category...</option>';
+    categories.forEach(cat => {
+      const opt = document.createElement("option");
+      opt.value = cat.id;
+      opt.textContent = cat.name;
+      bulkCatSelect.appendChild(opt);
+    });
+  }
+}
+
+function filterAdminProductsByCategory() {
+  const catFilter = document.getElementById("adminCategoryFilter");
+  activeAdminCategoryFilter = catFilter ? catFilter.value : "all";
+  applyAdminFilters();
+}
+
+function applyAdminFilters() {
+  const q = document.getElementById("adminProductSearch")?.value.toLowerCase().trim() || "";
+  const filtered = adminProductList.filter(p => {
+    const matchesSearch = !q || p.name.toLowerCase().includes(q) || (p.sku && p.sku.toLowerCase().includes(q));
+    const matchesCat = activeAdminCategoryFilter === "all" || p.category_id === activeAdminCategoryFilter || (p.category_name && p.category_name.toLowerCase() === activeAdminCategoryFilter.toLowerCase());
+    return matchesSearch && matchesCat;
+  });
+  renderAdminProductsTable(filtered);
+}
+
+function toggleSelectAllProducts(masterChk) {
+  const isChecked = Boolean(masterChk?.checked);
+  const chks = document.querySelectorAll("#adminProductsTbody .product-select-chk");
+  chks.forEach(chk => {
+    chk.checked = isChecked;
+    const row = chk.closest("tr");
+    if (isChecked) {
+      selectedProductIds.add(chk.value);
+      if (row) row.classList.add("row-selected");
+    } else {
+      selectedProductIds.delete(chk.value);
+      if (row) row.classList.remove("row-selected");
+    }
+  });
+  updateBulkActionBar();
+}
+
+function toggleProductSelection(productId, isChecked) {
+  if (isChecked) {
+    selectedProductIds.add(productId);
+  } else {
+    selectedProductIds.delete(productId);
+  }
+  const chk = document.querySelector(`.product-select-chk[value="${productId}"]`);
+  const row = chk?.closest("tr");
+  if (row) row.classList.toggle("row-selected", isChecked);
+
+  const masterChk = document.getElementById("selectAllProductsChk");
+  const allChks = document.querySelectorAll("#adminProductsTbody .product-select-chk");
+  if (masterChk && allChks.length > 0) {
+    masterChk.checked = Array.from(allChks).every(c => c.checked);
+  }
+  updateBulkActionBar();
+}
+
+function updateBulkActionBar() {
+  const bar = document.getElementById("productBulkActionsBar");
+  const countEl = document.getElementById("bulkSelectedCount");
+  const count = selectedProductIds.size;
+  if (!bar) return;
+  if (count > 0) {
+    bar.style.display = "flex";
+    if (countEl) countEl.textContent = `${count} ${count === 1 ? 'product' : 'products'} selected`;
+  } else {
+    bar.style.display = "none";
+  }
+}
+
+function clearProductSelection() {
+  selectedProductIds.clear();
+  const masterChk = document.getElementById("selectAllProductsChk");
+  if (masterChk) masterChk.checked = false;
+  document.querySelectorAll("#adminProductsTbody .product-select-chk").forEach(c => {
+    c.checked = false;
+    c.closest("tr")?.classList.remove("row-selected");
+  });
+  updateBulkActionBar();
+}
+
+async function bulkDeleteSelectedProducts() {
+  const count = selectedProductIds.size;
+  if (count === 0) return;
+  if (!confirm(`Are you sure you want to delete ${count} selected firecrackers? They will be removed from your catalog and online store.`)) return;
+
+  const idsToDelete = Array.from(selectedProductIds);
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  if (isSupabaseConfigured() && sb) {
+    try {
+      await sb.from("products").delete().in("id", idsToDelete);
+    } catch (e) {
+      console.warn("Supabase bulk delete error:", e);
+    }
+  }
+
+  adminProductList = adminProductList.filter(p => !selectedProductIds.has(p.id));
+  localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
+  localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+  const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : JSON.parse(localStorage.getItem("dc_deleted_product_ids") || "[]");
+  idsToDelete.forEach(id => {
+    if (!deletedIds.includes(id)) deletedIds.push(id);
+  });
+  localStorage.setItem("dc_deleted_product_ids", JSON.stringify(deletedIds));
+
+  if (typeof broadcastSync === "function") {
+    broadcastSync("products_updated", { action: "bulk_delete", total: count });
+  }
+
+  clearProductSelection();
+  applyAdminFilters();
+  showToast(`Successfully deleted ${count} products. Store is live.`, "success");
+}
+
+async function bulkUpdateCategory(categoryId) {
+  if (!categoryId) return;
+  const count = selectedProductIds.size;
+  if (count === 0) {
+    showToast("Please select products first.", "info");
+    return;
+  }
+
+  const allCats = typeof getStoredCategories === "function" ? getStoredCategories() : DEFAULT_CATEGORIES;
+  const matchedCat = allCats.find(c => String(c.id) === String(categoryId));
+  const categoryName = matchedCat ? matchedCat.name : "Assorted";
+
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  const ids = Array.from(selectedProductIds);
+
+  if (isSupabaseConfigured() && sb) {
+    try {
+      await sb.from("products").update({ category_id: categoryId, updated_at: new Date().toISOString() }).in("id", ids);
+    } catch (e) {
+      console.warn("Supabase bulk category update error:", e);
+    }
+  }
+
+  adminProductList.forEach(p => {
+    if (selectedProductIds.has(p.id)) {
+      p.category_id = categoryId;
+      p.category_name = categoryName;
+    }
+  });
+
+  localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
+  localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+  if (typeof broadcastSync === "function") {
+    broadcastSync("products_updated", { action: "bulk_category", total: count });
+  }
+
+  clearProductSelection();
+  applyAdminFilters();
+  showToast(`Updated category to "${categoryName}" for ${count} products.`, "success");
+}
+
+async function bulkToggleFeatured(isFeatured) {
+  const count = selectedProductIds.size;
+  if (count === 0) {
+    showToast("Please select products first.", "info");
+    return;
+  }
+
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  const ids = Array.from(selectedProductIds);
+
+  if (isSupabaseConfigured() && sb) {
+    try {
+      await sb.from("products").update({ is_featured: isFeatured, updated_at: new Date().toISOString() }).in("id", ids);
+    } catch (e) {
+      console.warn("Supabase bulk featured update error:", e);
+    }
+  }
+
+  adminProductList.forEach(p => {
+    if (selectedProductIds.has(p.id)) {
+      p.is_featured = isFeatured;
+    }
+  });
+
+  localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
+  localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+  if (typeof broadcastSync === "function") {
+    broadcastSync("products_updated", { action: "bulk_featured", total: count });
+  }
+
+  clearProductSelection();
+  applyAdminFilters();
+  showToast(`${isFeatured ? "Featured" : "Unfeatured"} ${count} products.`, "success");
+}
+
+async function bulkSetStockStatus(status) {
+  const count = selectedProductIds.size;
+  if (count === 0) {
+    showToast("Please select products first.", "info");
+    return;
+  }
+  const newStock = status === "in_stock" ? 100 : 0;
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  const ids = Array.from(selectedProductIds);
+
+  if (isSupabaseConfigured() && sb) {
+    try {
+      await sb.from("products").update({ stock_quantity: newStock, updated_at: new Date().toISOString() }).in("id", ids);
+    } catch (e) {
+      console.warn("Supabase bulk stock update error:", e);
+    }
+  }
+
+  adminProductList.forEach(p => {
+    if (selectedProductIds.has(p.id)) {
+      p.stock_quantity = newStock;
+    }
+  });
+
+  localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
+  localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+  if (typeof broadcastSync === "function") {
+    broadcastSync("products_updated", { action: "bulk_stock", total: count });
+  }
+
+  clearProductSelection();
+  applyAdminFilters();
+  showToast(`Updated stock to ${newStock} for ${count} products.`, "success");
+}
+
 function renderAdminProductsTable(products) {
   const tbody = document.getElementById("adminProductsTbody");
   if (!tbody) return;
 
   tbody.innerHTML = "";
   if (!products || products.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 2.5rem 1rem;">
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #94a3b8; padding: 2.5rem 1rem;">
       <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎆</div>
       <strong style="color: #475569; font-size: 1rem;">No firecrackers found.</strong>
       <p style="font-size: 0.82rem; color: #94a3b8; margin-top: 4px;">Click "+ Add Firecracker" or "📥 Import CSV" to populate your catalog.</p>
     </td></tr>`;
+    updateBulkActionBar();
     return;
   }
 
   products.forEach(p => {
     const isVariable = Boolean(p.has_variants && Array.isArray(p.variants) && p.variants.length > 0);
+    const isSelected = selectedProductIds.has(p.id);
     const tr = document.createElement("tr");
-    tr.className = "admin-product-row";
+    tr.className = `admin-product-row ${isSelected ? 'row-selected' : ''}`;
     tr.innerHTML = `
+      <td class="col-chk" style="text-align: center;" data-label="Select">
+        <input type="checkbox" class="product-select-chk" value="${p.id}" ${isSelected ? 'checked' : ''} onchange="toggleProductSelection('${p.id}', this.checked)" title="Select ${p.name}">
+      </td>
       <td class="col-img" data-label="Image">
         <div class="admin-prod-thumb-wrap">
           <img src="${p.image_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=60'}" alt="${p.name}" class="admin-prod-thumb" loading="lazy">
@@ -191,6 +459,12 @@ function renderAdminProductsTable(products) {
     `;
     tbody.appendChild(tr);
   });
+
+  const masterChk = document.getElementById("selectAllProductsChk");
+  if (masterChk) {
+    masterChk.checked = (products.length > 0 && products.every(p => selectedProductIds.has(p.id)));
+  }
+  updateBulkActionBar();
 }
 
 async function populateCategoryDropdown(selectedCategoryId = "") {
@@ -222,8 +496,14 @@ function toggleProductType(type) {
 
   const simpleFields = document.getElementById("simpleProductFields");
   const varFields = document.getElementById("variableProductFields");
-  if (simpleFields) simpleFields.style.display = isVar ? "none" : "block";
-  if (varFields) varFields.style.display = isVar ? "block" : "none";
+  if (simpleFields) {
+    simpleFields.style.display = isVar ? "none" : "block";
+    simpleFields.classList.toggle("modal-hidden", isVar);
+  }
+  if (varFields) {
+    varFields.style.display = isVar ? "block" : "none";
+    varFields.classList.toggle("modal-hidden", !isVar);
+  }
 
   // Toggle required attribute on simple inputs
   const priceInput = document.getElementById("prodPrice");
@@ -323,6 +603,304 @@ function applyVariantPreset(type) {
   selected.forEach(v => addVariantRow(v));
 }
 
+let currentWizardStep = 1;
+let wizardBatchAddedCount = 0;
+
+/**
+ * 1-Click Fireworks Photo Presets
+ */
+const PHOTO_PRESETS = {
+  sparkler: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600",
+  chakkar: "https://images.unsplash.com/photo-1531685250784-7569952593d2?w=600",
+  flowerpot: "https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?w=600",
+  pencil: "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600",
+  rocket: "https://images.unsplash.com/photo-1533230620023-44161741e17e?w=600",
+  shots: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=600",
+  bomb: "https://images.unsplash.com/photo-1569317002804-ab77bcf1bce4?w=600",
+  giftbox: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600"
+};
+
+function setProductPhotoPreset(key) {
+  const url = PHOTO_PRESETS[key] || PHOTO_PRESETS.sparkler;
+  const input = document.getElementById("prodImageUrl");
+  const thumb = document.getElementById("imagePreviewThumb");
+  if (input) input.value = url;
+  if (thumb) thumb.src = url;
+  updateLiveCardPreview();
+  showToast("Applied photo preset!", "info");
+}
+
+/**
+ * Generate smart SKU based on category or product name
+ */
+function autoGenerateSku() {
+  const catSelect = document.getElementById("prodCategory");
+  const catText = (catSelect && catSelect.selectedOptions && catSelect.selectedOptions[0]) ? catSelect.selectedOptions[0].text.toLowerCase() : "";
+  const nameVal = document.getElementById("prodName")?.value.trim().toUpperCase() || "";
+
+  let prefix = "CRK";
+  if (catText.includes("sparkler") || catText.includes("ஸ்பார்க்லர்")) prefix = "SPK";
+  else if (catText.includes("chakkar") || catText.includes("சக்கரம்")) prefix = "CHK";
+  else if (catText.includes("flower") || catText.includes("பூச்சட்டி")) prefix = "FLP";
+  else if (catText.includes("pencil")) prefix = "PNC";
+  else if (catText.includes("match") || catText.includes("தீப்பெட்டி")) prefix = "MCH";
+  else if (catText.includes("bijili") || catText.includes("பிஜிலி")) prefix = "BJL";
+  else if (catText.includes("wala") || catText.includes("வாலா")) prefix = "WLA";
+  else if (catText.includes("rocket") || catText.includes("ராக்கெட்")) prefix = "RKT";
+  else if (catText.includes("multi") || catText.includes("மல்டி")) prefix = "MCF";
+  else if (catText.includes("night") || catText.includes("நைட்")) prefix = "NIT";
+  else if (catText.includes("fancy") || catText.includes("பேன்சி")) prefix = "FCY";
+  else if (catText.includes("bomb") || catText.includes("பாம்")) prefix = "BMB";
+  else if (catText.includes("gun") || catText.includes("கன்")) prefix = "GUN";
+  else if (catText.includes("gift") || catText.includes("பாக்ஸ்")) prefix = "GFT";
+  else if (nameVal.length >= 3) prefix = nameVal.substring(0, 3).replace(/[^A-Z]/g, "") || "CRK";
+
+  const randNum = Math.floor(100 + Math.random() * 900);
+  const sku = `${prefix}-${randNum}`;
+  const skuInput = document.getElementById("prodSku");
+  if (skuInput) skuInput.value = sku;
+  updateLiveCardPreview();
+}
+
+/**
+ * Navigate to a specific step in the Add/Edit Firecracker Wizard
+ */
+function goToWizardStep(stepNumber) {
+  const targetStep = Math.max(1, Math.min(4, parseInt(stepNumber, 10) || 1));
+
+  // If navigating forwards, validate current step before proceeding
+  if (targetStep > currentWizardStep) {
+    // Validate Step 1
+    if (currentWizardStep === 1) {
+      const nameInput = document.getElementById("prodName");
+      const catSelect = document.getElementById("prodCategory");
+      const nameVal = nameInput ? nameInput.value.trim() : "";
+      const catVal = catSelect ? catSelect.value.trim() : "";
+      const nameErr = document.getElementById("prodNameError");
+      const catErr = document.getElementById("prodCategoryError");
+
+      let valid = true;
+      if (!nameVal) {
+        if (nameErr) nameErr.style.display = "block";
+        if (nameInput) nameInput.focus();
+        valid = false;
+      } else if (nameErr) {
+        nameErr.style.display = "none";
+      }
+
+      if (!catVal) {
+        if (catErr) catErr.style.display = "block";
+        if (valid && catSelect) catSelect.focus();
+        valid = false;
+      } else if (catErr) {
+        catErr.style.display = "none";
+      }
+
+      if (!valid) return;
+    }
+
+    // Validate Step 2
+    if (currentWizardStep === 2) {
+      const prodType = document.querySelector('input[name="prodType"]:checked')?.value || "simple";
+      if (prodType === "simple") {
+        const priceInput = document.getElementById("prodPrice");
+        const priceVal = parseFloat(priceInput?.value);
+        const priceErr = document.getElementById("prodPriceError");
+        if (isNaN(priceVal) || priceVal <= 0) {
+          if (priceErr) priceErr.style.display = "block";
+          if (priceInput) priceInput.focus();
+          return;
+        } else if (priceErr) {
+          priceErr.style.display = "none";
+        }
+      } else {
+        const rows = document.querySelectorAll("#variantTableBody tr.variant-row");
+        let hasValidVariant = false;
+        rows.forEach(row => {
+          const vName = row.querySelector(".var-name")?.value.trim();
+          const vPrice = parseFloat(row.querySelector(".var-price")?.value);
+          if (vName && !isNaN(vPrice) && vPrice > 0) hasValidVariant = true;
+        });
+        if (!hasValidVariant) {
+          showToast("Please enter at least 1 valid variant with option name & price.", "warning");
+          return;
+        }
+      }
+    }
+  }
+
+  currentWizardStep = targetStep;
+
+  // Toggle step panes
+  for (let s = 1; s <= 4; s++) {
+    const pane = document.getElementById(`wizardStep${s}`);
+    const pill = document.getElementById(`wizardPill${s}`);
+    if (pane) {
+      if (s === currentWizardStep) {
+        pane.classList.add("active");
+        pane.style.display = "block";
+      } else {
+        pane.classList.remove("active");
+        pane.style.display = "none";
+      }
+    }
+    if (pill) {
+      if (s === currentWizardStep) {
+        pill.classList.add("active");
+        pill.classList.remove("completed");
+      } else if (s < currentWizardStep) {
+        pill.classList.remove("active");
+        pill.classList.add("completed");
+      } else {
+        pill.classList.remove("active");
+        pill.classList.remove("completed");
+      }
+    }
+  }
+
+  // Update navigation buttons
+  const backBtn = document.getElementById("wizardBackBtn");
+  const cancelBtn = document.getElementById("wizardCancelBtn");
+  const nextBtn = document.getElementById("wizardNextBtn");
+  const saveAnotherBtn = document.getElementById("wizardSaveAnotherBtn");
+  const saveCloseBtn = document.getElementById("wizardSaveCloseBtn");
+
+  if (backBtn) backBtn.style.display = currentWizardStep > 1 ? "inline-flex" : "none";
+  if (cancelBtn) cancelBtn.style.display = currentWizardStep === 1 ? "inline-flex" : "none";
+
+  if (nextBtn) {
+    if (currentWizardStep < 4) {
+      nextBtn.style.display = "inline-flex";
+      if (currentWizardStep === 1) nextBtn.innerHTML = "Next: Price & Stock ➔";
+      else if (currentWizardStep === 2) nextBtn.innerHTML = "Next: Media & Photo ➔";
+      else if (currentWizardStep === 3) nextBtn.innerHTML = "Next: Preview & Save ➔";
+    } else {
+      nextBtn.style.display = "none";
+    }
+  }
+
+  if (saveAnotherBtn) {
+    saveAnotherBtn.style.display = currentWizardStep >= 2 ? "inline-flex" : "none";
+  }
+
+  if (saveCloseBtn) {
+    saveCloseBtn.style.display = currentWizardStep >= 2 ? "inline-flex" : "none";
+  }
+
+  if (currentWizardStep >= 3) {
+    updateLiveCardPreview();
+  }
+
+  const modalBody = document.querySelector(".wizard-body");
+  if (modalBody) modalBody.scrollTop = 0;
+}
+
+function wizardGoNext() {
+  goToWizardStep(currentWizardStep + 1);
+}
+
+function wizardGoBack() {
+  goToWizardStep(Math.max(1, currentWizardStep - 1));
+}
+
+/**
+ * Render real-time live preview of the product card inside Wizard Step 4
+ */
+function updateLiveCardPreview() {
+  const previewBox = document.getElementById("liveProductCardPreview");
+  if (!previewBox) return;
+
+  const name = document.getElementById("prodName")?.value.trim() || "Sample Firecracker Name";
+  const catSelect = document.getElementById("prodCategory");
+  const catName = (catSelect && catSelect.selectedOptions && catSelect.selectedOptions[0] && catSelect.value)
+    ? catSelect.selectedOptions[0].text
+    : "Sivakasi Cracker";
+  const unit = document.getElementById("prodUnit")?.value.trim() || "Box";
+  const prodType = document.querySelector('input[name="prodType"]:checked')?.value || "simple";
+  const isVariable = prodType === "variable";
+  const isFeatured = Boolean(document.getElementById("prodFeatured")?.checked);
+
+  let price = parseFloat(document.getElementById("prodPrice")?.value) || 0;
+  let originalPrice = parseFloat(document.getElementById("prodOriginalPrice")?.value) || 0;
+  let stock = parseInt(document.getElementById("prodStock")?.value, 10) || 100;
+
+  if (isVariable) {
+    const rows = document.querySelectorAll("#variantTableBody tr.variant-row");
+    const vPrices = [];
+    let totalStock = 0;
+    rows.forEach(r => {
+      const p = parseFloat(r.querySelector(".var-price")?.value);
+      const s = parseInt(r.querySelector(".var-stock")?.value, 10) || 0;
+      if (!isNaN(p) && p > 0) vPrices.push(p);
+      totalStock += s;
+    });
+    if (vPrices.length > 0) {
+      price = Math.min(...vPrices);
+      stock = totalStock;
+    }
+  }
+
+  let imageUrl = document.getElementById("prodImageUrl")?.value.trim();
+  if (!imageUrl) {
+    imageUrl = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
+  }
+
+  const thumb = document.getElementById("imagePreviewThumb");
+  if (thumb && thumb.src !== imageUrl) {
+    thumb.src = imageUrl;
+  }
+
+  let discountBadge = "";
+  if (originalPrice > price && price > 0) {
+    const discPct = Math.round(((originalPrice - price) / originalPrice) * 100);
+    if (discPct > 0) {
+      discountBadge = `<span class="product-badge product-badge-discount" style="background: #16a34a; color: #fff; padding: 0.2rem 0.5rem; border-radius: 6px; font-weight: 700; font-size: 0.75rem;">${discPct}% OFF</span>`;
+    }
+  }
+
+  const priceFormatted = (typeof formatCurrency === "function") ? formatCurrency(price) : `₹${price.toFixed(2)}`;
+  const mrpFormatted = (originalPrice > price) ? ((typeof formatCurrency === "function") ? formatCurrency(originalPrice) : `₹${originalPrice.toFixed(2)}`) : "";
+
+  previewBox.innerHTML = `
+    <div class="product-image-container" style="position: relative; border-radius: 12px 12px 0 0; overflow: hidden; background: #f8fafc; height: 180px;">
+      <img src="${imageUrl}" alt="${name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600'">
+      <div style="position: absolute; top: 10px; left: 10px; display: flex; flex-direction: column; gap: 4px;">
+        ${isVariable ? `<span class="badge badge-info" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 6px;">⚡ Variable</span>` : ''}
+        ${isFeatured ? `<span class="badge badge-warning" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 6px;">★ Featured</span>` : ''}
+      </div>
+      <div style="position: absolute; top: 10px; right: 10px;">
+        ${discountBadge}
+      </div>
+      <span class="badge" style="position: absolute; bottom: 8px; left: 10px; background: rgba(0,0,0,0.65); color: #fff; font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 4px;">
+        🌿 100% Certified Green Cracker
+      </span>
+    </div>
+    <div class="product-card-body" style="padding: 1rem; background: #fff; border-radius: 0 0 12px 12px;">
+      <div style="font-size: 0.75rem; color: #dc2626; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">
+        ${catName}
+      </div>
+      <h3 style="margin: 0 0 0.35rem 0; font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.3;">
+        ${name}
+      </h3>
+      <div style="font-size: 0.8rem; color: #64748b; margin-bottom: 0.75rem;">
+        Packaging: <strong>${unit}</strong> &bull; <span style="color: ${stock > 0 ? '#16a34a' : '#dc2626'}; font-weight: 600;">${stock > 0 ? `${stock} in stock` : 'Out of Stock'}</span>
+      </div>
+      <div style="display: flex; align-items: baseline; justify-content: space-between; border-top: 1px dashed #e2e8f0; padding-top: 0.65rem;">
+        <div>
+          <div style="font-size: 0.72rem; color: #64748b;">Special Rate</div>
+          <span style="font-size: 1.25rem; font-weight: 800; color: #b91c1c;">
+            ${isVariable ? `<small style="font-size: 0.75rem; font-weight: 500;">From </small>` : ''}${priceFormatted}
+          </span>
+          ${mrpFormatted ? `<span style="text-decoration: line-through; font-size: 0.82rem; color: #94a3b8; margin-left: 6px;">${mrpFormatted}</span>` : ''}
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" style="pointer-events: none; border-radius: 8px; font-weight: 700; padding: 0.35rem 0.75rem;">
+          🛒 Add to Cart
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 function openAddProductModal() {
   const form = document.getElementById("productForm");
   if (form) form.reset();
@@ -330,6 +908,12 @@ function openAddProductModal() {
   if (idField) idField.value = "";
   const title = document.getElementById("productModalTitle");
   if (title) title.textContent = "Add New Firecracker";
+
+  const stockField = document.getElementById("prodStock");
+  if (stockField) stockField.value = "100";
+
+  const unitField = document.getElementById("prodUnit");
+  if (unitField) unitField.value = "Box";
 
   populateCategoryDropdown();
 
@@ -342,6 +926,18 @@ function openAddProductModal() {
 
   const featEl = document.getElementById("prodFeatured");
   if (featEl) featEl.checked = false;
+
+  const thumb = document.getElementById("imagePreviewThumb");
+  if (thumb) thumb.src = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
+
+  const nameErr = document.getElementById("prodNameError");
+  const catErr = document.getElementById("prodCategoryError");
+  const priceErr = document.getElementById("prodPriceError");
+  if (nameErr) nameErr.style.display = "none";
+  if (catErr) catErr.style.display = "none";
+  if (priceErr) priceErr.style.display = "none";
+
+  goToWizardStep(1);
 
   const modal = document.getElementById("productEditModal");
   if (modal) {
@@ -399,7 +995,15 @@ function openEditProductModal(productId) {
     toggleProductType("simple");
   }
 
+  const thumb = document.getElementById("imagePreviewThumb");
+  if (thumb) thumb.src = product.image_url || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
+
   document.getElementById("productModalTitle").textContent = "Edit Firecracker";
+  const batchEl = document.getElementById("batchSaveCounter");
+  if (batchEl) batchEl.style.display = "none";
+
+  goToWizardStep(1);
+
   const modal = document.getElementById("productEditModal");
   if (modal) {
     modal.classList.remove("modal-hidden");
@@ -416,24 +1020,223 @@ function closeProductModal() {
     modal.classList.add("modal-hidden");
     modal.style.display = "none";
   }
+  wizardBatchAddedCount = 0;
+  const batchEl = document.getElementById("batchSaveCounter");
+  if (batchEl) batchEl.style.display = "none";
 }
 
 /**
- * Variable Product Manual Modal handlers
+ * Interactive Dashboard & POS User Manual Modal
  */
-function openVariableProductManualModal() {
-  const modal = document.getElementById("variableProductManualModal");
-  if (modal) {
+function openDashboardManualModal(tab = "pos") {
+  let modal = document.getElementById("dashboardManualModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "dashboardManualModal";
+    modal.className = "modal-overlay";
     modal.style.display = "flex";
-    modal.onclick = (e) => {
-      if (e.target === modal) closeVariableProductManualModal();
-    };
+    modal.innerHTML = `
+      <div class="modal-card" style="max-width: 850px; width: 95%; max-height: 88vh; display: flex; flex-direction: column; background: #ffffff; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.25);">
+        <div class="modal-header" style="border-bottom: 1px solid #e5e7eb; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; background: #111827; color: #ffffff;">
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 0.65rem; margin: 0; font-size: 1.25rem; color: #f59e0b; font-family: var(--font-heading);">
+            <span>📖</span> Dhanalakshmi Crackers Dashboard Manual
+          </h3>
+          <button type="button" class="modal-close" onclick="closeDashboardManualModal()" style="background: none; border: none; font-size: 1.75rem; cursor: pointer; color: #ffffff; line-height: 1;">&times;</button>
+        </div>
+        <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 0.65rem 1.25rem; display: flex; gap: 0.5rem; overflow-x: auto; flex-shrink: 0;">
+          <button type="button" class="btn btn-sm btn-manual-tab active" onclick="switchManualTab('pos', this)" style="border-radius: 20px; font-weight: 600;">⚡ POS Billing</button>
+          <button type="button" class="btn btn-sm btn-manual-tab" onclick="switchManualTab('cats', this)" style="border-radius: 20px; font-weight: 600;">🎆 15 Categories</button>
+          <button type="button" class="btn btn-sm btn-manual-tab" onclick="switchManualTab('vars', this)" style="border-radius: 20px; font-weight: 600;">✨ Variable Products</button>
+          <button type="button" class="btn btn-sm btn-manual-tab" onclick="switchManualTab('invoices', this)" style="border-radius: 20px; font-weight: 600;">🧾 Thermal Receipts</button>
+          <button type="button" class="btn btn-sm btn-manual-tab" onclick="switchManualTab('whatsapp', this)" style="border-radius: 20px; font-weight: 600;">📲 WhatsApp</button>
+        </div>
+        <div class="modal-body" id="manualModalBody" style="padding: 1.5rem; overflow-y: auto; flex: 1; font-size: 0.95rem; line-height: 1.6; color: #374151;">
+          <!-- Dynamically populated tab content -->
+        </div>
+        <div class="modal-footer" style="padding: 1rem 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; background: #fafafa; flex-shrink: 0;">
+          <a href="/admin/manual.html" target="_blank" class="btn btn-secondary btn-sm" style="text-decoration:none;">
+            📖 Open Full Manual Page ↗
+          </a>
+          <button type="button" class="btn btn-primary btn-sm" onclick="closeDashboardManualModal()">
+            Got It, Close
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  modal.style.display = "flex";
+  modal.onclick = (e) => {
+    if (e.target === modal) closeDashboardManualModal();
+  };
+
+  switchManualTab(tab);
+}
+
+function closeDashboardManualModal() {
+  const modal = document.getElementById("dashboardManualModal");
+  if (modal) modal.style.display = "none";
+}
+
+function switchManualTab(tabKey, clickedBtn) {
+  const body = document.getElementById("manualModalBody");
+  if (!body) return;
+
+  const tabs = document.querySelectorAll(".btn-manual-tab");
+  tabs.forEach(t => {
+    t.classList.remove("active");
+    t.style.background = "#e2e8f0";
+    t.style.color = "#334155";
+  });
+  if (clickedBtn) {
+    clickedBtn.classList.add("active");
+    clickedBtn.style.background = "#dc2626";
+    clickedBtn.style.color = "#ffffff";
+  } else {
+    tabs.forEach(t => {
+      if (t.textContent.toLowerCase().includes(tabKey)) {
+        t.classList.add("active");
+        t.style.background = "#dc2626";
+        t.style.color = "#ffffff";
+      }
+    });
+  }
+
+  if (tabKey === "pos") {
+    body.innerHTML = `
+      <h4 style="margin: 0 0 0.5rem 0; color: #111827; font-size: 1.15rem;">⚡ POS Counter Billing Workflow</h4>
+      <p style="color: #64748b; margin-bottom: 1rem;">Optimized for high-speed festival checkout with zero delays:</p>
+      <ol style="margin-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <li><strong>Quick Search:</strong> Type product name or SKU (e.g. <code>SPK-10</code>) or click category pills on top. Press <kbd>F2</kbd> to focus search bar.</li>
+        <li><strong>Add to Bill:</strong> Click on any product card or the Add button. For variable products, select desired size/shots in 1 tap.</li>
+        <li><strong>Customer Phone:</strong> Enter 10-digit mobile number. Customer purchase history & points automatically load.</li>
+        <li><strong>Payment &amp; Print:</strong> Choose Cash, UPI QR, or Card. Hit <strong>Complete &amp; Print</strong> for instant 80mm/58mm thermal receipt with store logo + WhatsApp dispatch!</li>
+      </ol>
+      <div style="margin-top: 1.25rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem 1rem; color: #1e40af;">
+        <strong>🚀 Quick Action:</strong> <a href="/admin/billing.html" style="color: #1d4ed8; font-weight: 700;">Open POS Billing Terminal Now ➔</a>
+      </div>
+    `;
+  } else if (tabKey === "cats") {
+    body.innerHTML = `
+      <h4 style="margin: 0 0 0.5rem 0; color: #111827; font-size: 1.15rem;">🎆 The 15 Official Firecracker Categories</h4>
+      <p style="color: #64748b; margin-bottom: 0.85rem; font-size: 0.88rem;">Both storefront pills and admin filters use these exact 15 standardized categories:</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.5rem; font-size: 0.88rem;">
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>1. <strong>✨ All</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">அனைத்தும்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>2. <strong>Gift Box</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">கிப்ட் பாக்ஸ்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>3. <strong>Sparklers</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">ஸ்பார்க்லர்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>4. <strong>Chakkar</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">சக்கரம்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>5. <strong>Flower Pots</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">பூச்சட்டி</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>6. <strong>Pencil | Star</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">பென்சில்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>7. <strong>Match Sticks</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">தீப்பெட்டி</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>8. <strong>Bijili</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">பிஜிலி</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>9. <strong>Wala</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">வாலா</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>10. <strong>Rocket</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">ராக்கெட்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>11. <strong>Fancy Crackers</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">பேன்சி</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>12. <strong>Night Out</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">நைட் அவுட்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>13. <strong>Multi Colour</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">மல்டி கலர்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>14. <strong>Bombs</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">பாம்</span>
+        </div>
+        <div style="background: #f8fafc; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between;">
+          <span>15. <strong>Gun &amp; Others</strong></span>
+          <span style="background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 0.15rem 0.45rem; border-radius: 4px;">கன் & இதர</span>
+        </div>
+      </div>
+      <div style="margin-top: 1rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.65rem 0.85rem; color: #166534; font-size: 0.85rem;">
+        <strong>Automatic Normalizer:</strong> Any product added or synced is automatically mapped to one of these official categories!
+      </div>
+    `;
+  } else if (tabKey === "vars") {
+    body.innerHTML = `
+      <h4 style="margin: 0 0 0.5rem 0; color: #111827; font-size: 1.15rem;">✨ Variable Products & Option Presets</h4>
+      <p style="color: #64748b; margin-bottom: 1rem;">Configure multiple sizes, lengths, or shots under a single parent firecracker:</p>
+      <ol style="margin-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <li>In Add/Edit Product modal, toggle to <strong>Variable Product</strong>.</li>
+        <li>Click 1-Click Presets: <strong>Sparklers (10cm-50cm)</strong>, <strong>Sky Shots (12-120)</strong>, <strong>Garlands (100-10000 Wala)</strong>, or <strong>Chakkar Sizes</strong>.</li>
+        <li>Set individual prices, original prices, and stock quantities for each variant.</li>
+        <li>Paste a YouTube or Web video link in <strong>Instruction / Video Guide Link</strong> to show live bursting demonstration to customers.</li>
+      </ol>
+      <div style="margin-top: 1.25rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 0.75rem 1rem; color: #92400e;">
+        <strong>Customer Experience:</strong> On the storefront, product cards display <em>From ₹35.00</em> with an <em>⚡ Options</em> button so buyers can choose their favorite size.
+      </div>
+    `;
+  } else if (tabKey === "invoices") {
+    body.innerHTML = `
+      <h4 style="margin: 0 0 0.5rem 0; color: #111827; font-size: 1.15rem;">🧾 Thermal Invoices (80mm & 58mm) with Logo</h4>
+      <p style="color: #64748b; margin-bottom: 1rem;">Crisp, smudge-free receipts designed for bluetooth and USB thermal printers:</p>
+      <ul style="margin-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <li><strong>Brand Logo:</strong> High-contrast Dhanalakshmi Crackers logo printed cleanly at the top of 80mm and 58mm receipts.</li>
+        <li><strong>Itemized Variants:</strong> Clearly shows variant details, quantities, rates, discounts, and customer savings.</li>
+        <li><strong>Festive Greeting:</strong> Authentic Tamil & English Diwali greetings at receipt footer.</li>
+        <li><strong>Instant Re-Print:</strong> Navigate to <em>Invoices Archive</em> anytime to reprint or download PDF.</li>
+      </ul>
+      <div style="margin-top: 1.25rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem 1rem; color: #1e40af;">
+        <strong>🚀 Quick Action:</strong> <a href="/admin/invoices.html" style="color: #1d4ed8; font-weight: 700;">Open Invoices Archive ➔</a>
+      </div>
+    `;
+  } else if (tabKey === "whatsapp") {
+    body.innerHTML = `
+      <h4 style="margin: 0 0 0.5rem 0; color: #111827; font-size: 1.15rem;">📲 WhatsApp Direct Billing</h4>
+      <p style="color: #64748b; margin-bottom: 1rem;">Deliver digital bills straight to your customer's smartphone:</p>
+      <ul style="margin-left: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+        <li>Enter 10-digit phone number — the system auto-formats with country code <code>91</code>.</li>
+        <li>Click <strong>Send via WhatsApp</strong> to launch WhatsApp Web or the native mobile app seamlessly.</li>
+        <li>Pre-filled greeting includes order summary, savings, and an interactive digital receipt link.</li>
+      </ul>
+    `;
   }
 }
 
+/**
+ * Variable Product Manual Modal handlers - aliased to Dashboard Manual
+ */
+function openVariableProductManualModal() {
+  openDashboardManualModal("vars");
+}
+
 function closeVariableProductManualModal() {
-  const modal = document.getElementById("variableProductManualModal");
-  if (modal) modal.style.display = "none";
+  closeDashboardManualModal();
 }
 
 /**
@@ -583,17 +1386,37 @@ function showCloudSyncHelpModal(reason = "") {
   };
 }
 
-async function saveProductForm(e) {
+async function saveProductForm(e, keepOpenAndAddAnother = false) {
   if (e && e.preventDefault) e.preventDefault();
   let id = document.getElementById("prodId").value.trim();
-  const name = document.getElementById("prodName").value.trim();
+  const name = document.getElementById("prodName")?.value.trim() || "";
+  const catSelect = document.getElementById("prodCategory");
+  let category_id = catSelect ? catSelect.value : "";
+
+  // Validate Step 1 basics
+  if (!name) {
+    showToast("Please enter a firecracker name.", "warning");
+    goToWizardStep(1);
+    const nameInput = document.getElementById("prodName");
+    if (nameInput) nameInput.focus();
+    return;
+  }
+
+  if (!category_id) {
+    showToast("Please select a category.", "warning");
+    goToWizardStep(1);
+    if (catSelect) catSelect.focus();
+    return;
+  }
+
   const prodType = document.querySelector('input[name="prodType"]:checked')?.value || "simple";
   const isVariable = prodType === "variable";
 
   let sku = document.getElementById("prodSku")?.value.trim() || "";
   let price = Number(document.getElementById("prodPrice")?.value) || 0;
   let original_price = Number(document.getElementById("prodOriginalPrice")?.value) || price;
-  let stock = parseInt(document.getElementById("prodStock")?.value, 10) || 0;
+  let stock = parseInt(document.getElementById("prodStock")?.value, 10);
+  if (isNaN(stock)) stock = 100;
   let unit = document.getElementById("prodUnit")?.value.trim() || "Box";
   const image_url = document.getElementById("prodImageUrl")?.value.trim();
   const video_url = document.getElementById("prodVideoUrl")?.value.trim();
@@ -626,6 +1449,7 @@ async function saveProductForm(e) {
 
     if (variants.length === 0) {
       showToast("Please add at least one valid variant with name and price.", "warning");
+      goToWizardStep(2);
       return;
     }
 
@@ -635,10 +1459,17 @@ async function saveProductForm(e) {
     stock = variants.reduce((sum, v) => sum + v.stock_quantity, 0);
     if (!sku) sku = variants[0]?.sku || `VAR-${Date.now().toString(36).toUpperCase()}`;
     if (!unit) unit = variants[0]?.unit || "Box";
+  } else {
+    // Validate simple price
+    if (isNaN(price) || price <= 0) {
+      showToast("Please enter a valid selling price.", "warning");
+      goToWizardStep(2);
+      const priceInput = document.getElementById("prodPrice");
+      if (priceInput) priceInput.focus();
+      return;
+    }
   }
 
-  const catSelect = document.getElementById("prodCategory");
-  let category_id = catSelect ? catSelect.value : "";
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   const category_name = (catSelect && catSelect.selectedOptions && catSelect.selectedOptions[0] && catSelect.value)
@@ -681,7 +1512,7 @@ async function saveProductForm(e) {
     is_active: true
   };
 
-  // Cloud PostgreSQL database payload strictly matching public.products columns
+  // Standard PostgreSQL database payload strictly matching public.products columns
   const dbPayload = {
     id,
     name,
@@ -691,7 +1522,7 @@ async function saveProductForm(e) {
     stock_quantity: stock,
     unit,
     category_id: category_id || null,
-    is_featured,
+    is_featured: Boolean(is_featured),
     image_url: image_url || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600",
     description: desc,
     is_active: true,
@@ -718,7 +1549,7 @@ async function saveProductForm(e) {
           p_image_url: dbPayload.image_url,
           p_description: desc,
           p_category_id: category_id || null,
-          p_is_featured: is_featured,
+          p_is_featured: Boolean(is_featured),
           p_is_active: true
         });
         if (!rpcErr && rpcData) {
@@ -734,11 +1565,21 @@ async function saveProductForm(e) {
       if (!rpcExecuted) {
         const { data: existing } = await sb.from("products").select("id").eq("id", id).maybeSingle();
         if (existing) {
-          const { data: updatedRows, error: updateErr } = await sb
+          let { data: updatedRows, error: updateErr } = await sb
             .from("products")
             .update(dbPayload)
             .eq("id", id)
             .select();
+
+          // If foreign key constraint failed on category_id, retry with category_id: null
+          if (updateErr && updateErr.message?.toLowerCase().includes("violates foreign key")) {
+            const fallbackCatPayload = { ...dbPayload, category_id: null };
+            const fallbackCatRes = await sb.from("products").update(fallbackCatPayload).eq("id", id).select();
+            if (!fallbackCatRes.error && fallbackCatRes.data && fallbackCatRes.data.length > 0) {
+              updatedRows = fallbackCatRes.data;
+              updateErr = null;
+            }
+          }
 
           if (updateErr) {
             onlineError = updateErr.message;
@@ -748,10 +1589,20 @@ async function saveProductForm(e) {
             onlineError = "Row Level Security (RLS) policy prevented update (0 rows changed).";
           }
         } else {
-          const { data: insertedRows, error: insertErr } = await sb
+          let { data: insertedRows, error: insertErr } = await sb
             .from("products")
             .insert(dbPayload)
             .select();
+
+          // If foreign key constraint failed on category_id, retry with category_id: null
+          if (insertErr && insertErr.message?.toLowerCase().includes("violates foreign key")) {
+            const fallbackCatPayload = { ...dbPayload, category_id: null };
+            const fallbackCatRes = await sb.from("products").insert(fallbackCatPayload).select();
+            if (!fallbackCatRes.error && fallbackCatRes.data && fallbackCatRes.data.length > 0) {
+              insertedRows = fallbackCatRes.data;
+              insertErr = null;
+            }
+          }
 
           if (insertErr) {
             onlineError = insertErr.message;
@@ -794,20 +1645,74 @@ async function saveProductForm(e) {
   }
 
   renderAdminProductsTable(adminProductList);
-  closeProductModal();
 
-  if (onlineSaved) {
-    showToast("🎉 Product updated ONLINE in Supabase cloud! Storefront is live.", "success");
-    const badge = document.getElementById("cloudSyncStatusBadge");
-    if (badge) {
-      badge.className = "table-header-sub badge badge-success";
-      badge.textContent = "☁️ Online Cloud Sync: Active (Live DB)";
+  if (keepOpenAndAddAnother) {
+    wizardBatchAddedCount++;
+    const batchBadge = document.getElementById("batchSaveCounter");
+    if (batchBadge) {
+      batchBadge.style.display = "inline-flex";
+      batchBadge.textContent = `✓ ${wizardBatchAddedCount} added`;
     }
-  } else if (onlineError) {
-    showToast("⚠️ Saved locally, but online cloud write was blocked.", "warning", 6000);
-    showCloudSyncHelpModal(onlineError);
+
+    // Preserve chosen category for superfast consecutive entry
+    const savedCat = catSelect ? catSelect.value : "";
+
+    // Reset form fields for the next firecracker
+    const form = document.getElementById("productForm");
+    if (form) form.reset();
+    document.getElementById("prodId").value = "";
+    document.getElementById("prodSku").value = "";
+    document.getElementById("prodPrice").value = "";
+    document.getElementById("prodOriginalPrice").value = "";
+    document.getElementById("prodStock").value = "100";
+    document.getElementById("prodUnit").value = "Box";
+    document.getElementById("prodImageUrl").value = "";
+    document.getElementById("prodVideoUrl").value = "";
+    document.getElementById("prodDesc").value = "";
+    if (savedCat && catSelect) catSelect.value = savedCat;
+
+    toggleProductType("simple");
+    const varTbody = document.getElementById("variantTableBody");
+    if (varTbody) varTbody.innerHTML = "";
+
+    const thumb = document.getElementById("imagePreviewThumb");
+    if (thumb) thumb.src = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
+
+    goToWizardStep(1);
+    const titleEl = document.getElementById("productModalTitle");
+    if (titleEl) titleEl.textContent = `Add Firecracker #${wizardBatchAddedCount + 1}`;
+
+    setTimeout(() => {
+      const nameInput = document.getElementById("prodName");
+      if (nameInput) nameInput.focus();
+    }, 150);
+
+    if (onlineSaved) {
+      showToast(`🎉 "${name}" saved live! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "success");
+    } else {
+      showToast(`🎉 "${name}" saved! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "success");
+    }
   } else {
-    showToast("Product saved successfully!", "success");
+    closeProductModal();
+
+    if (onlineSaved) {
+      showToast("🎉 Product updated ONLINE in Supabase cloud! Storefront is live.", "success");
+      const badge = document.getElementById("cloudSyncStatusBadge");
+      if (badge) {
+        badge.className = "table-header-sub badge badge-success";
+        badge.textContent = "☁️ Online Cloud Sync: Active (Live DB)";
+      }
+    } else if (onlineError) {
+      console.warn("Supabase online save note:", onlineError);
+      showToast(`💾 Firecracker "${name}" saved locally! Storefront is live.`, "info", 4500);
+      const badge = document.getElementById("cloudSyncStatusBadge");
+      if (badge) {
+        badge.className = "table-header-sub badge badge-warning";
+        badge.textContent = "☁️ Saved Locally (Cloud Check Note)";
+      }
+    } else {
+      showToast(`🎉 Firecracker "${name}" saved successfully!`, "success");
+    }
   }
 }
 
@@ -1619,12 +2524,21 @@ async function initAdminInvoices() {
   adminInvoicesList.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
   renderInvoicesArchiveTable(adminInvoicesList);
+  updateInvoiceSummaryStats();
 
   const searchInput = document.getElementById("invoiceSearchInput");
+  const clearBtn = document.getElementById("invoiceSearchClear");
   const channelFilter = document.getElementById("invoiceChannelFilter");
   const statusFilter = document.getElementById("invoicePaymentStatusFilter");
 
-  if (searchInput) searchInput.addEventListener("input", applyInvoiceFilters);
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      if (clearBtn) {
+        clearBtn.style.display = searchInput.value ? "flex" : "none";
+      }
+      applyInvoiceFilters();
+    });
+  }
   if (channelFilter) channelFilter.addEventListener("change", applyInvoiceFilters);
   if (statusFilter) statusFilter.addEventListener("change", applyInvoiceFilters);
 
@@ -1632,10 +2546,85 @@ async function initAdminInvoices() {
     listenSync(async (event) => {
       if (event.type === "order_created" || event.type === "order_updated") {
         adminInvoicesList = syncOrdersAndInvoices();
+        updateInvoiceSummaryStats();
         applyInvoiceFilters();
       }
     });
   }
+}
+
+function setInvoiceChannelPill(channel) {
+  const pills = document.querySelectorAll("#invoiceChannelPills .order-pill-btn");
+  pills.forEach(p => {
+    if (p.getAttribute("data-channel") === channel) {
+      p.classList.add("active");
+    } else {
+      p.classList.remove("active");
+    }
+  });
+
+  const hiddenSelect = document.getElementById("invoiceChannelFilter");
+  if (hiddenSelect) {
+    hiddenSelect.value = channel;
+  }
+  applyInvoiceFilters();
+}
+
+function clearInvoiceSearch() {
+  const searchInput = document.getElementById("invoiceSearchInput");
+  const clearBtn = document.getElementById("invoiceSearchClear");
+  if (searchInput) {
+    searchInput.value = "";
+    if (clearBtn) clearBtn.style.display = "none";
+    applyInvoiceFilters();
+  }
+}
+
+function copyInvoiceNum(invNum) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(invNum).then(() => {
+      if (typeof showToast === "function") showToast(`Copied #${invNum}`, "success");
+    }).catch(() => {
+      if (typeof showToast === "function") showToast(`Invoice #${invNum}`, "info");
+    });
+  } else {
+    if (typeof showToast === "function") showToast(`Invoice #${invNum}`, "info");
+  }
+}
+
+function updateInvoiceSummaryStats() {
+  const revEl = document.getElementById("invTotalRevenue");
+  const countEl = document.getElementById("invTotalCount");
+  const posEl = document.getElementById("invPosCount");
+  const onlineEl = document.getElementById("invOnlineCount");
+  const pillAll = document.getElementById("invPillCountAll");
+  const pillPos = document.getElementById("invPillCountPos");
+  const pillOnline = document.getElementById("invPillCountOnline");
+
+  if (!adminInvoicesList) return;
+
+  let totalRev = 0;
+  let totalCount = adminInvoicesList.length;
+  let posCount = 0;
+  let onlineCount = 0;
+
+  adminInvoicesList.forEach(inv => {
+    totalRev += Number(inv.total_amount || 0);
+    const isOnline = (inv.source || "").toLowerCase().includes("online") || !!inv.order_id;
+    if (isOnline) {
+      onlineCount++;
+    } else {
+      posCount++;
+    }
+  });
+
+  if (revEl) revEl.textContent = formatCurrency(totalRev);
+  if (countEl) countEl.textContent = totalCount;
+  if (posEl) posEl.textContent = posCount;
+  if (onlineEl) onlineEl.textContent = onlineCount;
+  if (pillAll) pillAll.textContent = totalCount;
+  if (pillPos) pillPos.textContent = posCount;
+  if (pillOnline) pillOnline.textContent = onlineCount;
 }
 
 function applyInvoiceFilters() {
@@ -1674,65 +2663,173 @@ function applyInvoiceFilters() {
 
 function renderInvoicesArchiveTable(invoices) {
   const tbody = document.getElementById("adminInvoicesTbody");
-  if (!tbody) return;
+  const mList = document.getElementById("adminInvoicesMobileList");
 
-  tbody.innerHTML = "";
-  if (invoices.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #9ca3af; padding: 2.5rem; font-size: 0.95rem;">No sales invoices found matching current criteria.</td></tr>`;
-    return;
+  // 1. Render Desktop Table View
+  if (tbody) {
+    tbody.innerHTML = "";
+    if (invoices.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: #9ca3af; padding: 2.5rem; font-size: 0.95rem;">No sales invoices found matching current criteria.</td></tr>`;
+    } else {
+      invoices.forEach(inv => {
+        const payStatus = (inv.payment_status || "paid").toLowerCase();
+        const ordStatus = (inv.order_status || inv.status || "confirmed").toLowerCase();
+        const isOnline = (inv.source || "").toLowerCase().includes("online") || !!inv.order_id;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${inv.invoice_number}</strong></td>
+          <td>
+            <span class="badge ${isOnline ? 'badge-warning' : 'badge-info'}" style="font-size: 0.72rem;">
+              ${isOnline ? '📦 Online Order' : '⚡ POS Bill'}
+            </span>
+          </td>
+          <td>
+            <strong>${inv.customer_name || 'Walk-in Customer'}</strong>
+            <div style="font-size: 0.75rem; color: #6b7280;">${inv.customer_phone || '-'}</div>
+          </td>
+          <td><strong>${formatCurrency(inv.total_amount)}</strong></td>
+          <td><span class="badge badge-info">${inv.payment_method || 'CASH'}</span></td>
+          <td>
+            <select class="status-select status-select-${payStatus}" onchange="updateInvoicePaymentStatus('${inv.invoice_number}', this.value)" title="Change Invoice Payment Status">
+              <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
+              <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
+              <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+              <option value="cancelled" ${payStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+            </select>
+          </td>
+          <td>
+            ${isOnline ? `
+              <select class="status-select status-select-${ordStatus}" onchange="updateInvoiceOrderStatus('${inv.invoice_number}', this.value)" title="Change Order Status">
+                <option value="pending" ${ordStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                <option value="confirmed" ${ordStatus === 'confirmed' ? 'selected' : ''}>📋 Confirmed</option>
+                <option value="dispatched" ${ordStatus === 'dispatched' ? 'selected' : ''}>🚚 Dispatched</option>
+                <option value="delivered" ${ordStatus === 'delivered' ? 'selected' : ''}>🎉 Delivered</option>
+                <option value="cancelled" ${ordStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+              </select>
+            ` : `
+              <span style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Counter POS</span>
+            `}
+          </td>
+          <td>${new Date(inv.created_at || Date.now()).toLocaleDateString("en-IN")}</td>
+          <td>
+            <div class="action-btn-group">
+              <a href="/invoice.html?invoice=${inv.invoice_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
+              <button class="action-btn" onclick="openAdminInvoiceModal('${inv.invoice_number}')">🖨️ View & Print</button>
+              <button class="action-btn" onclick="sendAdminInvoiceWhatsApp('${inv.invoice_number}')">📲 WhatsApp</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
   }
 
-  invoices.forEach(inv => {
-    const payStatus = (inv.payment_status || "paid").toLowerCase();
-    const ordStatus = (inv.order_status || inv.status || "confirmed").toLowerCase();
-    const isOnline = (inv.source || "").toLowerCase().includes("online") || !!inv.order_id;
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td><strong>${inv.invoice_number}</strong></td>
-      <td>
-        <span class="badge ${isOnline ? 'badge-warning' : 'badge-info'}" style="font-size: 0.72rem;">
-          ${isOnline ? '📦 Online Order' : '⚡ POS Bill'}
-        </span>
-      </td>
-      <td>
-        <strong>${inv.customer_name || 'Walk-in Customer'}</strong>
-        <div style="font-size: 0.75rem; color: #6b7280;">${inv.customer_phone || '-'}</div>
-      </td>
-      <td><strong>${formatCurrency(inv.total_amount)}</strong></td>
-      <td><span class="badge badge-info">${inv.payment_method || 'CASH'}</span></td>
-      <td>
-        <select class="status-select status-select-${payStatus}" onchange="updateInvoicePaymentStatus('${inv.invoice_number}', this.value)" title="Change Invoice Payment Status">
-          <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
-          <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
-          <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-          <option value="cancelled" ${payStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
-        </select>
-      </td>
-      <td>
-        ${isOnline ? `
-          <select class="status-select status-select-${ordStatus}" onchange="updateInvoiceOrderStatus('${inv.invoice_number}', this.value)" title="Change Order Status">
-            <option value="pending" ${ordStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-            <option value="confirmed" ${ordStatus === 'confirmed' ? 'selected' : ''}>📋 Confirmed</option>
-            <option value="dispatched" ${ordStatus === 'dispatched' ? 'selected' : ''}>🚚 Dispatched</option>
-            <option value="delivered" ${ordStatus === 'delivered' ? 'selected' : ''}>🎉 Delivered</option>
-            <option value="cancelled" ${ordStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
-          </select>
-        ` : `
-          <span style="font-size: 0.8rem; color: #6b7280; font-weight: 600;">Counter POS</span>
-        `}
-      </td>
-      <td>${new Date(inv.created_at || Date.now()).toLocaleDateString("en-IN")}</td>
-      <td>
-        <div class="action-btn-group">
-          <a href="/invoice.html?invoice=${inv.invoice_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
-          <button class="action-btn" onclick="openAdminInvoiceModal('${inv.invoice_number}')">🖨️ View & Print</button>
-          <button class="action-btn" onclick="sendAdminInvoiceWhatsApp('${inv.invoice_number}')">📲 WhatsApp</button>
+  // 2. Render Mobile Cards View (< 769px)
+  if (mList) {
+    mList.innerHTML = "";
+    if (invoices.length === 0) {
+      mList.innerHTML = `
+        <div class="admin-invoices-empty-card">
+          <span class="aiec-icon">🧾</span>
+          <p class="aiec-text">No sales invoices found matching current criteria.</p>
         </div>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
+      `;
+    } else {
+      invoices.forEach(inv => {
+        const payStatus = (inv.payment_status || "paid").toLowerCase();
+        const ordStatus = (inv.order_status || inv.status || "confirmed").toLowerCase();
+        const isOnline = (inv.source || "").toLowerCase().includes("online") || !!inv.order_id;
+        const hasPhone = inv.customer_phone && inv.customer_phone.trim() !== "" && inv.customer_phone !== "-";
+        const dateObj = new Date(inv.created_at || Date.now());
+        const dateStr = dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" });
+
+        const card = document.createElement("div");
+        card.className = "mobile-invoice-card";
+        card.innerHTML = `
+          <div class="mic-header">
+            <div class="mic-id-wrap">
+              <span class="mic-channel-badge ${isOnline ? 'mic-channel-online' : 'mic-channel-pos'}">
+                ${isOnline ? '📦 Online' : '⚡ POS'}
+              </span>
+              <span class="mic-id" onclick="copyInvoiceNum('${inv.invoice_number}')" title="Click to copy #${inv.invoice_number}">
+                #${inv.invoice_number}
+              </span>
+            </div>
+            <span class="mic-date">${dateStr}</span>
+          </div>
+
+          <div class="mic-body">
+            <div class="mic-customer-row">
+              <div class="mic-customer-info">
+                <div class="mic-customer-name">
+                  <span>👤</span>
+                  <span class="mic-name-text">${inv.customer_name || 'Walk-in Customer'}</span>
+                </div>
+                <div class="mic-customer-phone">
+                  <span>📞</span>
+                  <span>${inv.customer_phone || 'Walk-in Store Purchase'}</span>
+                </div>
+              </div>
+              ${hasPhone ? `
+                <div class="mic-quick-comms">
+                  <a href="tel:${inv.customer_phone}" class="mic-comm-btn call" title="Call Customer">📞</a>
+                  <button type="button" class="mic-comm-btn wa" onclick="sendAdminInvoiceWhatsApp('${inv.invoice_number}')" title="Send WhatsApp Invoice">💬</button>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="mic-amount-status-bar">
+              <div class="mic-amount-block">
+                <span class="mic-amount-label">Grand Total</span>
+                <span class="mic-amount-val">${formatCurrency(inv.total_amount)}</span>
+              </div>
+              <div class="mic-payment-ctrls">
+                <span class="mic-pay-mode-badge">${inv.payment_method || 'CASH'}</span>
+                <select class="status-select status-select-${payStatus}" onchange="updateInvoicePaymentStatus('${inv.invoice_number}', this.value)" title="Change Payment Status">
+                  <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
+                  <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
+                  <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                  <option value="cancelled" ${payStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                </select>
+              </div>
+            </div>
+
+            ${isOnline ? `
+              <div class="mic-order-status-row">
+                <span class="mic-order-status-label">📦 Delivery Status:</span>
+                <select class="status-select status-select-${ordStatus}" onchange="updateInvoiceOrderStatus('${inv.invoice_number}', this.value)" title="Change Order Delivery Status">
+                  <option value="pending" ${ordStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+                  <option value="confirmed" ${ordStatus === 'confirmed' ? 'selected' : ''}>📋 Confirmed</option>
+                  <option value="dispatched" ${ordStatus === 'dispatched' ? 'selected' : ''}>🚚 Dispatched</option>
+                  <option value="delivered" ${ordStatus === 'delivered' ? 'selected' : ''}>🎉 Delivered</option>
+                  <option value="cancelled" ${ordStatus === 'cancelled' ? 'selected' : ''}>❌ Cancelled</option>
+                </select>
+              </div>
+            ` : `
+              <div class="mic-pos-counter-row">
+                <span class="mic-pos-counter-text">⚡ Instant Counter Billing</span>
+                <span class="mic-pos-delivered-badge">Handed Over</span>
+              </div>
+            `}
+          </div>
+
+          <div class="mic-footer-actions">
+            <button type="button" class="btn btn-secondary btn-sm mic-act-btn" onclick="openAdminInvoiceModal('${inv.invoice_number}')" title="Preview & Print Invoice">
+              🖨️ Print
+            </button>
+            <a href="/invoice.html?invoice=${inv.invoice_number}&download=true" target="_blank" class="btn btn-secondary btn-sm mic-act-btn mic-btn-pdf" title="Download PDF Invoice">
+              📥 PDF
+            </a>
+            <button type="button" class="btn btn-secondary btn-sm mic-act-btn mic-btn-wa" onclick="sendAdminInvoiceWhatsApp('${inv.invoice_number}')" title="Share via WhatsApp">
+              📲 WhatsApp
+            </button>
+          </div>
+        `;
+        mList.appendChild(card);
+      });
+    }
+  }
 }
 
 function openAdminInvoiceModal(invoiceNumber) {
@@ -1870,12 +2967,21 @@ function initAdminCustomers() {
 
   list.forEach(c => {
     const tr = document.createElement("tr");
+    tr.className = "admin-customer-row";
     tr.innerHTML = `
-      <td><strong>${c.name}</strong></td>
-      <td>${c.phone}</td>
-      <td>${c.address}</td>
-      <td><span class="badge badge-info">${c.totalOrders}</span></td>
-      <td><strong>${formatCurrency(c.totalSpent)}</strong></td>
+      <td class="cust-name-cell" data-label="Customer Name">
+        <div class="cust-name-title"><strong>${c.name}</strong></div>
+      </td>
+      <td class="cust-phone-cell" data-label="Mobile Number">
+        ${c.phone && c.phone !== 'Walk-in' ? `<a href="tel:${c.phone}" class="cust-phone-link" style="color:var(--admin-primary); text-decoration:none; font-weight:600;">📱 ${c.phone}</a>` : '<span class="text-muted" style="color:#94a3b8;">In-store Walk-in</span>'}
+      </td>
+      <td class="cust-address-cell" data-label="Address / Location">${c.address || 'In-store Sivakasi Counter'}</td>
+      <td class="cust-orders-cell" data-label="Total Purchases">
+        <span class="badge badge-info">${c.totalOrders} ${c.totalOrders === 1 ? 'Order' : 'Orders'}</span>
+      </td>
+      <td class="cust-spend-cell" data-label="Total Spent">
+        <strong style="color: #047857; font-size: 1.05rem;">${formatCurrency(c.totalSpent)}</strong>
+      </td>
     `;
     tbody.appendChild(tr);
   });

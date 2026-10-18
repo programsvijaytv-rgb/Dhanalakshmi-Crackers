@@ -10,6 +10,8 @@ let activeCategory = "all";
  * Fetch Categories from Supabase or fallback
  */
 async function fetchCategories() {
+  const officialCats = typeof DEFAULT_CATEGORIES !== "undefined" ? DEFAULT_CATEGORIES : [];
+
   const sb = getSupabase();
   if (isSupabaseConfigured() && sb) {
     try {
@@ -18,9 +20,12 @@ async function fetchCategories() {
         .select("*")
         .eq("is_active", true)
         .order("display_order", { ascending: true });
-      if (!error && data && data.length > 0) {
-        loadedCategories = data;
-        return data;
+      if (!error && Array.isArray(data) && data.length > 0) {
+        loadedCategories = officialCats.map(oc => {
+          const remote = data.find(d => d.id === oc.id || d.slug === oc.slug || (d.name && d.name.toLowerCase().includes(oc.slug)));
+          return remote ? { ...oc, ...remote, name: oc.name, slug: oc.slug } : oc;
+        });
+        return loadedCategories;
       }
     } catch (e) {
       console.warn("Could not load categories from Supabase", e);
@@ -28,7 +33,7 @@ async function fetchCategories() {
   }
 
   // Load from local storage or fallback
-  loadedCategories = typeof getStoredCategories === "function" ? getStoredCategories() : DEFAULT_CATEGORIES;
+  loadedCategories = typeof getStoredCategories === "function" ? getStoredCategories() : officialCats;
   return loadedCategories;
 }
 
@@ -71,6 +76,16 @@ async function fetchProducts() {
     }
   }
 
+  // Normalize all local product categories
+  localProducts = localProducts.map(p => {
+    const norm = typeof normalizeCategory === "function" ? normalizeCategory(p.category_name, p.name, p.sku) : null;
+    if (norm) {
+      p.category_name = norm.name;
+      p.category_id = norm.id;
+    }
+    return p;
+  });
+
   // 2. Filter out products explicitly deleted in Admin Panel
   const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : [];
   localProducts = localProducts.filter(p => !deletedIds.includes(p.id));
@@ -98,15 +113,18 @@ async function fetchProducts() {
         data.forEach(remote => {
           if (deletedIds.includes(remote.id)) return; // Skipped if deleted by admin
 
-          const catName = (remote.categories && remote.categories.name) 
-            || (DEFAULT_CATEGORIES.find(c => c.id === remote.category_id)?.name) 
-            || "Assorted";
+          const norm = typeof normalizeCategory === "function" 
+            ? normalizeCategory(remote.categories?.name || remote.category_name, remote.name, remote.sku)
+            : null;
+          const catName = norm ? norm.name : (remote.categories?.name || "Sparklers - ஸ்பார்க்லர்");
+          const catId = norm ? norm.id : remote.category_id;
 
+          const existing = localProducts.find(p => p.id === remote.id || (remote.sku && p.sku === remote.sku));
           const remoteItem = {
             id: remote.id,
             name: remote.name,
             sku: remote.sku,
-            category_id: remote.category_id,
+            category_id: catId,
             category_name: catName,
             price: Number(remote.price),
             original_price: Number(remote.original_price || remote.price),
@@ -116,7 +134,10 @@ async function fetchProducts() {
             description: remote.description || "",
             image_url: remote.image_url,
             is_featured: Boolean(remote.is_featured),
-            is_active: remote.is_active !== false
+            is_active: remote.is_active !== false,
+            video_url: remote.video_url || existing?.video_url || "",
+            has_variants: remote.has_variants !== undefined ? Boolean(remote.has_variants) : Boolean(existing?.has_variants),
+            variants: (remote.variants && Array.isArray(remote.variants) && remote.variants.length > 0) ? remote.variants : (existing?.variants || [])
           };
 
           const existingIdx = localProducts.findIndex(p => p.id === remote.id || (remote.sku && p.sku === remote.sku));
@@ -141,6 +162,7 @@ async function fetchProducts() {
 
 /**
  * Render category filter pills on products page
+ * Exactly 15 categories: 1. All + 14 Official Categories
  */
 function renderCategoryPills(categories, targetElementId = "categoryFilterPills") {
   const container = document.getElementById(targetElementId);
@@ -148,7 +170,7 @@ function renderCategoryPills(categories, targetElementId = "categoryFilterPills"
 
   container.innerHTML = `
     <button class="filter-chip ${activeCategory === 'all' ? 'active' : ''}" onclick="filterByCategory('all')">
-      ✨ All Fireworks
+      ✨ All
     </button>
   `;
 
@@ -174,7 +196,7 @@ function filterByCategory(categoryId) {
   } else {
     // Find matching chip
     chips.forEach(chip => {
-      if (categoryId === 'all' && chip.textContent.includes("All Fireworks")) {
+      if (categoryId === 'all' && (chip.textContent.includes("All") || chip.textContent.includes("✨"))) {
         chip.classList.add("active");
       } else {
         const found = loadedCategories.find(c => c.id === categoryId);
@@ -196,11 +218,14 @@ function applyFilters() {
   const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
   const filtered = loadedProducts.filter(p => {
-    const matchesCategory = (activeCategory === "all") || (p.category_id === activeCategory);
+    const norm = typeof normalizeCategory === "function" ? normalizeCategory(p.category_name, p.name, p.sku) : null;
+    const catId = norm ? norm.id : p.category_id;
+    const matchesCategory = (activeCategory === "all") || (catId === activeCategory) || (p.category_id === activeCategory);
     const matchesSearch = !query || 
       p.name.toLowerCase().includes(query) || 
       (p.sku && p.sku.toLowerCase().includes(query)) ||
-      (p.description && p.description.toLowerCase().includes(query));
+      (p.description && p.description.toLowerCase().includes(query)) ||
+      (p.category_name && p.category_name.toLowerCase().includes(query));
     return matchesCategory && matchesSearch;
   });
 
@@ -219,6 +244,7 @@ function applyFilters() {
 
 /**
  * Render product cards in grid
+ * Clicking ANY place in product card (image, title, badges, text, price) shows the product details page
  */
 function renderProductsGrid(products, targetContainerId = "productsGrid") {
   const container = document.getElementById(targetContainerId);
@@ -246,8 +272,31 @@ function renderProductsGrid(products, targetContainerId = "productsGrid") {
 
     const card = document.createElement("div");
     card.className = "product-card";
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    card.setAttribute("aria-label", `View details for ${p.name}`);
+    card.style.cursor = "pointer";
+
+    // CLICK ANY PLACE IN PRODUCT SHOW THE PRODUCT PAGE LIKE IMAGE, TEXT
+    card.onclick = (e) => {
+      // Don't navigate if user clicked Add to Cart or Option button or quantity control
+      if (e.target.closest('.btn-add-cart, button, input, select, .qty-control, .stop-propagation')) {
+        return;
+      }
+      window.location.href = `product-details.html?id=${p.id}`;
+    };
+
+    card.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (!e.target.closest('.btn-add-cart, button, input, select, .qty-control')) {
+          e.preventDefault();
+          window.location.href = `product-details.html?id=${p.id}`;
+        }
+      }
+    };
+
     card.innerHTML = `
-      <div class="product-img-wrapper">
+      <div class="product-img-wrapper" title="Click anywhere to view details for ${p.name}">
         <img src="${p.image_url || 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600&auto=format&fit=crop&q=80'}" alt="${p.name}" class="product-img" loading="lazy">
         <div class="product-badges-corner">
           ${discount ? `<span class="product-badge-discount">🔥 ${discount}% OFF</span>` : ""}
@@ -351,6 +400,11 @@ async function loadProductDetails() {
   if (descEl) descEl.textContent = product.description || "Authentic Sivakasi fireworks with superior safety certification.";
   if (imgEl && product.image_url) imgEl.src = product.image_url;
 
+  const catBadge = document.getElementById("detailCategoryBadge");
+  if (catBadge) catBadge.textContent = product.category_name || "Crackers";
+  const breadcrumbCat = document.getElementById("breadcrumbCategory");
+  if (breadcrumbCat) breadcrumbCat.textContent = product.category_name || "Catalog";
+
   // Update Page Title dynamically
   document.title = `${product.name} | Dhanalakshmi Crackers Sivakasi`;
 
@@ -359,6 +413,7 @@ async function loadProductDetails() {
   const variantsGroup = document.getElementById("detailVariantsGroup");
   const pillsContainer = document.getElementById("detailVariantsPills");
   const variantBadge = document.getElementById("selectedVariantBadge");
+  const addBtn = document.getElementById("detailAddToCartBtn");
 
   let activeVariant = isVariable ? product.variants[0] : null;
 
@@ -379,9 +434,24 @@ async function loadProductDetails() {
         stockEl.className = "stock-status-pill out-of-stock";
       }
     }
+
+    if (addBtn) {
+      if (v.stock_quantity <= 0) {
+        addBtn.disabled = true;
+        addBtn.textContent = "Out of Stock";
+        addBtn.style.opacity = "0.6";
+        addBtn.style.cursor = "not-allowed";
+      } else {
+        addBtn.disabled = false;
+        addBtn.textContent = "🛒 Add to Cart";
+        addBtn.style.opacity = "1";
+        addBtn.style.cursor = "pointer";
+      }
+    }
   }
 
   if (isVariable && variantsGroup && pillsContainer) {
+    variantsGroup.classList.remove("d-none");
     variantsGroup.style.display = "block";
     pillsContainer.innerHTML = "";
 
@@ -411,50 +481,83 @@ async function loadProductDetails() {
 
     if (stockEl) {
       if (product.stock_quantity > 0) {
-        stockEl.textContent = `${product.stock_quantity} Boxes Available`;
+        stockEl.textContent = `${product.stock_quantity} Available`;
         stockEl.className = "stock-status-pill in-stock";
       } else {
         stockEl.textContent = "Out of Stock";
         stockEl.className = "stock-status-pill out-of-stock";
       }
     }
-  }
 
-  // Setup Add to Cart button
-  const addBtn = document.getElementById("detailAddToCartBtn");
-  if (addBtn) {
-    const isOutOfStock = isVariable ? (activeVariant && activeVariant.stock_quantity <= 0) : (product.stock_quantity <= 0);
-    if (isOutOfStock) {
-      addBtn.disabled = true;
-      addBtn.textContent = "Out of Stock";
-      addBtn.style.opacity = "0.6";
-      addBtn.style.cursor = "not-allowed";
-    } else {
-      addBtn.disabled = false;
-      addBtn.textContent = "🛒 Add to Cart";
-      addBtn.style.opacity = "1";
-      addBtn.style.cursor = "pointer";
-      addBtn.onclick = () => {
-        if (addBtn.disabled) return;
-        const qtyInput = document.getElementById("detailQtyInput");
-        const qty = qtyInput ? Math.max(1, parseInt(qtyInput.value, 10) || 1) : 1;
-        addToCart(product, qty, activeVariant);
-        animateAddButton(addBtn);
-      };
+    if (addBtn) {
+      if (product.stock_quantity <= 0) {
+        addBtn.disabled = true;
+        addBtn.textContent = "Out of Stock";
+        addBtn.style.opacity = "0.6";
+        addBtn.style.cursor = "not-allowed";
+      } else {
+        addBtn.disabled = false;
+        addBtn.textContent = "🛒 Add to Cart";
+        addBtn.style.opacity = "1";
+        addBtn.style.cursor = "pointer";
+      }
     }
   }
 
-  // Video Demonstration / Institution Guide
+  // Setup Add to Cart button click handler
+  if (addBtn) {
+    addBtn.onclick = () => {
+      if (addBtn.disabled) return;
+      const qtyInput = document.getElementById("detailQtyInput");
+      const qty = qtyInput ? Math.max(1, parseInt(qtyInput.value, 10) || 1) : 1;
+      addToCart(product, qty, activeVariant);
+      animateAddButton(addBtn);
+    };
+  }
+
+  // Video Demonstration / Instruction Guide Link (YouTube / Web)
   const videoCard = document.getElementById("detailVideoCard");
   const videoIframe = document.getElementById("detailVideoIframe");
-  const videoUrl = product.video_url || "https://www.youtube.com/watch?v=kY7XlB8mS78";
+  const videoExtLink = document.getElementById("detailVideoExternalLink");
+  const videoEmbedContainer = document.getElementById("detailVideoEmbedContainer");
+  const webInstrContainer = document.getElementById("detailWebInstructionContainer");
+  const webInstrLink = document.getElementById("detailWebInstructionLink");
 
-  if (videoCard && videoIframe && videoUrl) {
-    let embedUrl = videoUrl;
-    if (videoUrl.includes("watch?v=")) embedUrl = videoUrl.replace("watch?v=", "embed/");
-    else if (videoUrl.includes("youtu.be/")) embedUrl = videoUrl.replace("youtu.be/", "www.youtube.com/embed/");
-    videoIframe.src = embedUrl;
+  const rawVideoUrl = (product.video_url || "").trim();
+
+  if (videoCard && rawVideoUrl) {
+    videoCard.classList.remove("d-none");
     videoCard.style.display = "block";
+
+    if (videoExtLink) {
+      videoExtLink.href = rawVideoUrl;
+      videoExtLink.style.display = "inline-flex";
+    }
+
+    const isYouTube = rawVideoUrl.includes("youtube.com") || rawVideoUrl.includes("youtu.be");
+    if (isYouTube && videoIframe && videoEmbedContainer) {
+      let embedUrl = rawVideoUrl;
+      if (rawVideoUrl.includes("watch?v=")) {
+        const videoId = rawVideoUrl.split("watch?v=")[1]?.split("&")[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
+      } else if (rawVideoUrl.includes("youtu.be/")) {
+        const videoId = rawVideoUrl.split("youtu.be/")[1]?.split("?")[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
+      } else if (rawVideoUrl.includes("/shorts/")) {
+        const videoId = rawVideoUrl.split("/shorts/")[1]?.split("?")[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
+      } else if (!embedUrl.includes("/embed/")) {
+        embedUrl = `https://www.youtube.com/embed/${rawVideoUrl.split("/").pop()}?rel=0`;
+      }
+      videoIframe.src = embedUrl;
+      videoEmbedContainer.style.display = "block";
+      if (webInstrContainer) webInstrContainer.style.display = "none";
+    } else if (videoEmbedContainer && webInstrContainer && webInstrLink) {
+      // Non-YouTube Web Link / PDF / Instruction Guide
+      videoEmbedContainer.style.display = "none";
+      webInstrContainer.style.display = "block";
+      webInstrLink.href = rawVideoUrl;
+    }
   } else if (videoCard) {
     videoCard.style.display = "none";
   }

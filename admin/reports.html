@@ -29,6 +29,7 @@
       <a href="/admin/customers.html" class="admin-nav-item"><span class="icon">👥</span> Customers</a>
       <a href="/admin/reports.html" class="admin-nav-item active"><span class="icon">📈</span> Sales Reports</a>
       <a href="/admin/settings.html" class="admin-nav-item"><span class="icon">⚙️</span> Store Settings</a>
+      <a href="/admin/manual.html" class="admin-nav-item"><span class="icon">📖</span> User Manual</a>
     </nav>
 
     <div class="admin-sidebar-footer">
@@ -198,10 +199,10 @@
       const payTbody = document.getElementById("repPaymentBreakdownTbody");
       if (payTbody) {
         payTbody.innerHTML = Object.keys(payMap).filter(k => payMap[k].count > 0).map(k => `
-          <tr>
-            <td><strong>${k}</strong></td>
-            <td>${payMap[k].count} bills</td>
-            <td><strong>${formatCurrency(payMap[k].sum)}</strong></td>
+          <tr class="report-breakdown-row">
+            <td data-label="Payment Method"><strong>${k}</strong></td>
+            <td data-label="Bills Count">${payMap[k].count} transactions</td>
+            <td data-label="Total Collected"><strong style="color: #047857;">${formatCurrency(payMap[k].sum)}</strong></td>
           </tr>
         `).join("") || `<tr><td colspan="3" style="text-align: center; color: #9ca3af; padding: 1rem;">No transactions yet</td></tr>`;
       }
@@ -211,10 +212,10 @@
       if (prodTbody) {
         const sortedProds = Object.keys(prodMap).sort((a, b) => prodMap[b].qty - prodMap[a].qty).slice(0, 5);
         prodTbody.innerHTML = sortedProds.map(k => `
-          <tr>
-            <td><strong>${k}</strong></td>
-            <td>${prodMap[k].qty} units</td>
-            <td><strong>${formatCurrency(prodMap[k].rev)}</strong></td>
+          <tr class="report-breakdown-row">
+            <td data-label="Firecracker"><strong>${k}</strong></td>
+            <td data-label="Quantity Sold">${prodMap[k].qty} units</td>
+            <td data-label="Total Revenue"><strong style="color: #b91c1c;">${formatCurrency(prodMap[k].rev)}</strong></td>
           </tr>
         `).join("") || `<tr><td colspan="3" style="text-align: center; color: #9ca3af; padding: 1rem;">No POS sales recorded yet</td></tr>`;
       }

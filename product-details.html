@@ -95,10 +95,12 @@
   <!-- Product Details Content -->
   <main class="section">
     <div class="container" id="productDetailsContainer">
-      <div class="breadcrumb-bar">
-        <a href="products.html" class="breadcrumb-back-link">
+      <div class="breadcrumb-bar" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.25rem;">
+        <a href="products.html" class="breadcrumb-back-link" style="text-decoration:none;">
           &larr; Back to Fireworks Catalog
         </a>
+        <span style="color: #9ca3af;">/</span>
+        <span id="breadcrumbCategory" style="font-weight: 600; color: #dc2626; font-size: 0.9rem;"></span>
       </div>
 
       <div class="product-details-card">
@@ -115,9 +117,9 @@
 
         <!-- Product Information & Actions -->
         <div class="product-details-content">
-          <div class="detail-brand-tag">
-            <span>✨ 100% Sivakasi Factory Direct</span>
-            <span class="detail-batch-tag">2026 Festive Batch</span>
+          <div class="detail-brand-tag" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+            <span id="detailCategoryBadge" class="product-category-label" style="font-size: 0.85rem; font-weight: 700;">Crackers</span>
+            <span class="detail-batch-tag">✨ Sivakasi Certified</span>
           </div>
           <h1 id="detailTitle" class="detail-title">
             Loading...
@@ -143,7 +145,7 @@
           </div>
 
           <!-- Variant Option Selector (for Variable Products) -->
-          <div id="detailVariantsGroup" class="detail-variants-group d-none">
+          <div id="detailVariantsGroup" class="detail-variants-group">
             <div class="detail-variants-label-row">
               <span class="detail-variants-title">Select Size / Count / Option:</span>
               <span id="selectedVariantBadge" class="selected-variant-badge">Default</span>
@@ -184,16 +186,23 @@
             </ul>
           </div>
 
-          <!-- Video Demonstration / Institution Guide -->
-          <div id="detailVideoCard" class="detail-video-card d-none">
+          <!-- Video Demonstration / Instruction Guide -->
+          <div id="detailVideoCard" class="detail-video-card">
             <div class="detail-video-card-header">
               <span class="detail-video-card-title">
                 <span>🎬</span> Cracker Demonstration & Safety Video Guide
               </span>
-              <span class="badge badge-success badge-xs-text">HD Video</span>
+              <a id="detailVideoExternalLink" href="#" target="_blank" rel="noopener noreferrer" class="badge badge-success badge-xs-text" title="Open in new tab">
+                ▶ Watch Video ↗
+              </a>
             </div>
-            <div class="video-embed-container">
+            <div class="video-embed-container" id="detailVideoEmbedContainer">
               <iframe id="detailVideoIframe" src="" title="Cracker Demonstration & Safety Video Guide" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
+            <div id="detailWebInstructionContainer" class="detail-web-instruction-box">
+              <a id="detailWebInstructionLink" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm detail-web-instruction-btn">
+                <span>📖</span> Open Online Instruction Guide ↗
+              </a>
             </div>
           </div>
         </div>

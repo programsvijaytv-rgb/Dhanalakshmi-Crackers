@@ -100,7 +100,7 @@ ${pdfDownloadLink}✨ Thank you for choosing Dhanalakshmi Crackers!`;
 }
 
 /**
- * Open WhatsApp click-to-chat in a new tab
+ * Open WhatsApp click-to-chat in a new tab or trigger native app on mobile
  */
 function sendInvoiceViaWhatsApp(customerPhone, invoice, businessSettings = null) {
   if (!businessSettings && typeof localStorage !== "undefined") {
@@ -111,7 +111,8 @@ function sendInvoiceViaWhatsApp(customerPhone, invoice, businessSettings = null)
 
   let phone = cleanPhoneNumber(customerPhone);
   if (!phone || phone.length < 10) {
-    const entered = prompt("Enter customer 10-digit WhatsApp phone number (e.g. 9876543210):", customerPhone && customerPhone !== "undefined" ? customerPhone : "");
+    const prefill = (customerPhone && /\d/.test(customerPhone)) ? String(customerPhone).replace(/[^0-9]/g, "") : "";
+    const entered = prompt("Enter customer 10-digit WhatsApp mobile number (e.g. 9876543210):", prefill);
     if (!entered) {
       if (typeof showToast === "function") showToast("WhatsApp sending cancelled.", "info");
       return false;
@@ -126,8 +127,29 @@ function sendInvoiceViaWhatsApp(customerPhone, invoice, businessSettings = null)
 
   try {
     const text = formatWhatsAppInvoiceMessage(invoice, businessSettings);
-    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-    window.open(waUrl, "_blank", "noopener,noreferrer");
+    // Use api.whatsapp.com for best mobile deep-linking compatibility
+    const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`;
+    
+    // Popup-blocker-safe dispatch:
+    const link = document.createElement("a");
+    link.href = waUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // Fallback for strict mobile browsers that block new tab popups
+    const isMobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile/i.test(navigator.userAgent) || window.innerWidth < 768;
+    if (isMobile) {
+      setTimeout(() => {
+        // If still on the same page after 400ms, direct redirect to launch WhatsApp app
+        if (!document.hidden) {
+          window.location.href = waUrl;
+        }
+      }, 400);
+    }
+
     if (typeof showToast === "function") showToast("Opening WhatsApp with invoice details...", "success");
     return true;
   } catch (err) {
