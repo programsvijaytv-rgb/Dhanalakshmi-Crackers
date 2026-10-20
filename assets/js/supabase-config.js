@@ -876,17 +876,57 @@ function getStoredCustomProducts() {
 }
 
 /**
- * Retrieve list of deleted product IDs to prevent zombie items
+ * Retrieve list of deleted product IDs and SKUs to prevent zombie items
  */
 function getDeletedProductIds() {
   const raw = localStorage.getItem("dc_deleted_product_ids");
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) return parsed.map(x => String(x).trim());
     } catch (e) {}
   }
   return [];
+}
+
+/**
+ * Check if a product ID or SKU has been explicitly deleted
+ */
+function isProductDeleted(id, sku = "") {
+  const deleted = getDeletedProductIds();
+  if (deleted.length === 0) return false;
+  const idStr = String(id || "").trim().toLowerCase();
+  const skuStr = String(sku || "").trim().toLowerCase();
+  return deleted.some(d => {
+    const dLower = String(d).trim().toLowerCase();
+    return (idStr && dLower === idStr) || (skuStr && dLower === skuStr);
+  });
+}
+
+/**
+ * Permanently mark a product ID and SKU as deleted in local storage
+ */
+function markProductAsDeleted(id, sku = "") {
+  const deleted = getDeletedProductIds();
+  let modified = false;
+  if (id) {
+    const idTrimmed = String(id).trim();
+    if (!deleted.includes(idTrimmed)) {
+      deleted.push(idTrimmed);
+      modified = true;
+    }
+  }
+  if (sku) {
+    const skuTrimmed = String(sku).trim();
+    if (!deleted.includes(skuTrimmed)) {
+      deleted.push(skuTrimmed);
+      modified = true;
+    }
+  }
+  if (modified) {
+    localStorage.setItem("dc_deleted_product_ids", JSON.stringify(deleted));
+  }
+  return deleted;
 }
 
 /**

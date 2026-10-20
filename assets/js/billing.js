@@ -50,9 +50,18 @@ async function initPOS() {
   if (typeof listenSync === "function") {
     listenSync(async (event) => {
       if (event.type === "products_updated" && event.payload?.source !== "pos_sale") {
-        const [categories, products] = await Promise.all([fetchCategories(), fetchProducts()]);
+        const [categories, products] = await Promise.all([fetchCategories(), fetchProducts(true)]);
         posCategories = categories;
         posCatalog = products;
+
+        // If any item in active POS cart was deleted, purge it
+        if (Array.isArray(posCart) && posCart.length > 0) {
+          const catalogIds = new Set(posCatalog.map(p => String(p.id)));
+          const catalogSkus = new Set(posCatalog.filter(p => p.sku).map(p => String(p.sku).toUpperCase()));
+          posCart = posCart.filter(it => catalogIds.has(String(it.id)) || (it.sku && catalogSkus.has(String(it.sku).toUpperCase())));
+          renderPOSCart();
+        }
+
         renderPOSCategoryPills();
         renderPOSProductGrid();
       }

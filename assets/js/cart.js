@@ -330,11 +330,66 @@ function escapeCartHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+/**
+ * Validate active shopping cart against the live product catalog and automatically
+ * remove any products that were deleted or deactivated
+ */
+function syncCartWithCatalog(activeProducts) {
+  if (!Array.isArray(activeProducts) || activeProducts.length === 0) return;
+  const currentCart = getCart();
+  if (currentCart.length === 0) return;
+
+  const validProductIds = new Set(activeProducts.map(p => String(p.id)));
+  const validProductSkus = new Set(activeProducts.filter(p => p.sku).map(p => String(p.sku).trim().toUpperCase()));
+  const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : [];
+
+  let removedNames = [];
+  const cleanedCart = currentCart.filter(item => {
+    const itemId = String(item.id || "").trim();
+    const itemSku = String(item.sku || "").trim().toUpperCase();
+
+    // Check if explicitly marked deleted
+    if (typeof isProductDeleted === "function") {
+      if (isProductDeleted(itemId, itemSku)) {
+        removedNames.push(item.name);
+        return false;
+      }
+    } else if (deletedIds.some(d => String(d).toLowerCase() === itemId.toLowerCase() || (itemSku && String(d).toLowerCase() === itemSku.toLowerCase()))) {
+      removedNames.push(item.name);
+      return false;
+    }
+
+    // Check if still exists in active products
+    const isValid = validProductIds.has(itemId) || (itemSku && validProductSkus.has(itemSku));
+    if (!isValid) {
+      removedNames.push(item.name);
+      return false;
+    }
+    return true;
+  });
+
+  if (removedNames.length > 0) {
+    saveCart(cleanedCart);
+    showToast(`Removed unavailable item(s) from your cart: ${removedNames.join(", ")}`, "info", 5000);
+    renderCartPage();
+  }
+}
+window.syncCartWithCatalog = syncCartWithCatalog;
+
 // Auto update badge and floating cart on DOMContentLoaded and synchronize across tabs
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   updateCartBadge();
   renderCartPage();
   renderFloatingCart();
+
+  // If on cart page, validate items against latest catalog
+  const isCartPage = document.getElementById("cartItemsContainer");
+  if (isCartPage && typeof fetchProducts === "function") {
+    try {
+      const activeProducts = await fetchProducts();
+      syncCartWithCatalog(activeProducts);
+    } catch (_) {}
+  }
 
   window.addEventListener("storage", (e) => {
     if (e.key === CART_STORAGE_KEY) {
@@ -344,3 +399,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// Subscribe to real-time sync deletion events for cart cleanup
+if (typeof listenSync === "function") {
+  listenSync((event) => {
+    if (event.type === "products_updated") {
+      if (event.payload?.action === "delete" || event.payload?.action === "bulk_delete") {
+        const delId = event.payload.id;
+        const delSku = event.payload.sku;
+        const delIds = new Set((event.payload.deletedIds || []).map(String));
+        const delSkus = new Set((event.payload.deletedSkus || []).map(s => String(s).toUpperCase()));
+        if (delId) delIds.add(String(delId));
+        if (delSku) delSkus.add(String(delSku).toUpperCase());
+
+        const currentCart = getCart();
+        const cleaned = currentCart.filter(item => {
+          const iId = String(item.id || "");
+          const iSku = String(item.sku || "").toUpperCase();
+          if (delIds.has(iId)) return false;
+          if (iSku && delSkus.has(iSku)) return false;
+          return true;
+        });
+
+        if (cleaned.length !== currentCart.length) {
+          saveCart(cleaned);
+          renderCartPage();
+        }
+      }
+    }
+  });
+}

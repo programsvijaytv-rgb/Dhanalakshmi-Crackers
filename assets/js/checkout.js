@@ -95,7 +95,49 @@ async function handleOrderSubmit(e) {
     return;
   }
 
-  const cart = getCart();
+  let cart = getCart();
+  if (cart.length === 0) {
+    showToast("Your cart is empty.", "error");
+    window.location.href = "products.html";
+    return;
+  }
+
+  // Verify that all items in cart are active in the product catalog
+  if (typeof fetchProducts === "function") {
+    try {
+      const activeProducts = await fetchProducts(true);
+      if (Array.isArray(activeProducts) && activeProducts.length > 0) {
+        const validIds = new Set(activeProducts.map(p => String(p.id)));
+        const validSkus = new Set(activeProducts.filter(p => p.sku).map(p => String(p.sku).trim().toUpperCase()));
+        const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : [];
+
+        const unavailableItems = cart.filter(item => {
+          const iId = String(item.id || "").trim();
+          const iSku = String(item.sku || "").trim().toUpperCase();
+          if (typeof isProductDeleted === "function" && isProductDeleted(iId, iSku)) return true;
+          if (deletedIds.some(d => String(d).toLowerCase() === iId.toLowerCase() || (iSku && String(d).toLowerCase() === iSku.toLowerCase()))) return true;
+          return !validIds.has(iId) && (!iSku || !validSkus.has(iSku));
+        });
+
+        if (unavailableItems.length > 0) {
+          if (typeof syncCartWithCatalog === "function") {
+            syncCartWithCatalog(activeProducts);
+          }
+          renderCheckoutSummary();
+          showToast(`Unavailable item(s) detected: ${unavailableItems.map(i => i.name).join(", ")}. Cart has been updated. Please review before proceeding.`, "error", 7000);
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
+  cart = getCart();
+  if (cart.length === 0) {
+    showToast("Your cart is empty after removing unavailable products.", "error");
+    window.location.href = "products.html";
+    return;
+  }
+
   const totals = getCartTotals(0);
   const orderNumber = `ORD-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`;
 

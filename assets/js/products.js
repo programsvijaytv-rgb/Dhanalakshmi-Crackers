@@ -38,56 +38,10 @@ async function fetchCategories() {
  * Fetch Products from hybrid store (LocalStorage + Supabase)
  * Guarantees admin changes in Admin Panel immediately reflect on storefront without being overwritten
  */
-async function fetchProducts() {
-  // 1. Load local authoritative products (seeded with DEFAULT_PRODUCTS if empty)
-  let localProducts = typeof getStoredCustomProducts === "function" 
-    ? getStoredCustomProducts() 
-    : JSON.parse(localStorage.getItem("dc_custom_products") || "[]");
-
-  if (!localProducts || localProducts.length === 0) {
-    localProducts = [...DEFAULT_PRODUCTS];
-    localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
-  } else {
-    // Automatically upgrade any legacy dummy/unrelated placeholder images in stored catalog
-    const DUMMY_FIXES = {
-      "photo-1509198397868-475647b2a1e5": "https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?w=600&auto=format&fit=crop&q=80",
-      "photo-1533227268428-f9ed0900fb3b": "https://images.unsplash.com/photo-1531844251246-9a1bfaae09fc?w=600&auto=format&fit=crop&q=80",
-      "photo-1514525253161-7a46d19cd819": "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600&auto=format&fit=crop&q=80",
-      "photo-1513297887119-d46091b24bfa": "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&auto=format&fit=crop&q=80"
-    };
-
-    let hadFixes = false;
-    localProducts = localProducts.map(p => {
-      if (p.image_url) {
-        for (const [badKey, goodUrl] of Object.entries(DUMMY_FIXES)) {
-          if (p.image_url.includes(badKey)) {
-            p.image_url = goodUrl;
-            hadFixes = true;
-          }
-        }
-      }
-      return p;
-    });
-    if (hadFixes) {
-      localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
-    }
-  }
-
-  // Normalize all local product categories
-  localProducts = localProducts.map(p => {
-    const norm = typeof normalizeCategory === "function" ? normalizeCategory(p.category_name, p.name, p.sku) : null;
-    if (norm) {
-      p.category_name = norm.name;
-      p.category_id = norm.id;
-    }
-    return p;
-  });
-
-  // 2. Filter out products explicitly deleted in Admin Panel
+async function fetchProducts(forceRefresh = false) {
   const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : [];
-  localProducts = localProducts.filter(p => !deletedIds.includes(p.id));
 
-  // 3. Reconcile with Supabase cloud products if available
+  // 1. Reconcile with Supabase cloud products if available
   const sb = getSupabase();
   if (isSupabaseConfigured() && sb) {
     try {
@@ -97,18 +51,19 @@ async function fetchProducts() {
         .eq("is_active", true)
         .order("is_featured", { ascending: false });
 
-      if (!error && Array.isArray(data) && data.length > 0) {
-        // Build map of local products by ID and SKU
-        const localById = new Map();
-        const localBySku = new Map();
-        localProducts.forEach(p => {
-          if (p.id) localById.set(p.id, p);
-          if (p.sku) localBySku.set(p.sku, p);
-        });
-
-        // Remote products from Supabase are the authoritative online source
+      if (!error && Array.isArray(data)) {
+        // Map authoritative products from Supabase
+        const remoteProducts = [];
         data.forEach(remote => {
-          if (deletedIds.includes(remote.id)) return; // Skipped if deleted by admin
+          const rId = String(remote.id || "");
+          const rSku = String(remote.sku || "").trim();
+
+          // Filter out explicitly deleted products
+          if (typeof isProductDeleted === "function") {
+            if (isProductDeleted(rId, rSku)) return;
+          } else if (deletedIds.some(d => String(d).toLowerCase() === rId.toLowerCase() || (rSku && String(d).toLowerCase() === rSku.toLowerCase()))) {
+            return;
+          }
 
           const norm = typeof normalizeCategory === "function" 
             ? normalizeCategory(remote.categories?.name || remote.category_name, remote.name, remote.sku)
@@ -116,8 +71,7 @@ async function fetchProducts() {
           const catName = norm ? norm.name : (remote.categories?.name || "Sparklers - ஸ்பார்க்லர்");
           const catId = norm ? norm.id : remote.category_id;
 
-          const existing = localProducts.find(p => p.id === remote.id || (remote.sku && p.sku === remote.sku));
-          const remoteItem = {
+          remoteProducts.push({
             id: remote.id,
             name: remote.name,
             sku: remote.sku,
@@ -132,28 +86,87 @@ async function fetchProducts() {
             image_url: remote.image_url,
             is_featured: Boolean(remote.is_featured),
             is_active: remote.is_active !== false,
-            video_url: remote.video_url || existing?.video_url || "",
-            has_variants: remote.has_variants !== undefined ? Boolean(remote.has_variants) : Boolean(existing?.has_variants),
-            variants: (remote.variants && Array.isArray(remote.variants) && remote.variants.length > 0) ? remote.variants : (existing?.variants || [])
-          };
-
-          const existingIdx = localProducts.findIndex(p => p.id === remote.id || (remote.sku && p.sku === remote.sku));
-          if (existingIdx !== -1) {
-            localProducts[existingIdx] = { ...localProducts[existingIdx], ...remoteItem };
-          } else {
-            localProducts.push(remoteItem);
-          }
+            video_url: remote.video_url || "",
+            has_variants: Boolean(remote.has_variants),
+            variants: (remote.variants && Array.isArray(remote.variants)) ? remote.variants : []
+          });
         });
 
-        // Save reconciled products back to local storage
-        localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
+        // Retain ONLY non-deleted genuine local drafts that haven't synced yet
+        let localDrafts = [];
+        try {
+          const rawLocal = localStorage.getItem("dc_custom_products");
+          if (rawLocal) {
+            const parsed = JSON.parse(rawLocal);
+            if (Array.isArray(parsed)) {
+              const remoteIdSet = new Set(remoteProducts.map(p => String(p.id)));
+              const remoteSkuSet = new Set(remoteProducts.filter(p => p.sku).map(p => String(p.sku).trim().toUpperCase()));
+              localDrafts = parsed.filter(p => {
+                if (!p || !p.name) return false;
+                const pId = String(p.id || "");
+                const pSku = String(p.sku || "").trim().toUpperCase();
+                if (typeof isProductDeleted === "function" && isProductDeleted(pId, pSku)) return false;
+                if (remoteIdSet.has(pId) || (pSku && remoteSkuSet.has(pSku))) return false;
+                return Boolean(p.is_local_draft || p.created_offline);
+              });
+            }
+          }
+        } catch (_) {}
+
+        const activeCatalog = [...remoteProducts, ...localDrafts];
+
+        // Save authoritative catalog to local storage and update timestamp
+        localStorage.setItem("dc_custom_products", JSON.stringify(activeCatalog));
+        localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+        // Validate shopping cart against authoritative catalog
+        if (typeof syncCartWithCatalog === "function") {
+          syncCartWithCatalog(activeCatalog);
+        }
+
+        loadedProducts = activeCatalog;
+        return loadedProducts;
       }
     } catch (e) {
       console.warn("Could not sync remote products from Supabase, using local catalog", e);
     }
   }
 
+  // Fallback: load local authoritative products (seeded with DEFAULT_PRODUCTS if empty)
+  let localProducts = typeof getStoredCustomProducts === "function" 
+    ? getStoredCustomProducts() 
+    : JSON.parse(localStorage.getItem("dc_custom_products") || "[]");
+
+  if (!localProducts || localProducts.length === 0) {
+    localProducts = [...DEFAULT_PRODUCTS];
+  }
+
+  // Filter out products explicitly deleted
+  localProducts = localProducts.filter(p => {
+    if (!p) return false;
+    if (typeof isProductDeleted === "function") {
+      return !isProductDeleted(p.id, p.sku);
+    }
+    return !deletedIds.includes(p.id) && (!p.sku || !deletedIds.includes(p.sku));
+  });
+
+  // Normalize all local product categories
+  localProducts = localProducts.map(p => {
+    const norm = typeof normalizeCategory === "function" ? normalizeCategory(p.category_name, p.name, p.sku) : null;
+    if (norm) {
+      p.category_name = norm.name;
+      p.category_id = norm.id;
+    }
+    return p;
+  });
+
+  localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
   loadedProducts = localProducts;
+
+  if (typeof syncCartWithCatalog === "function") {
+    syncCartWithCatalog(loadedProducts);
+  }
+
   return loadedProducts;
 }
 
@@ -427,10 +440,28 @@ async function loadProductDetails() {
   if (!productId) return;
 
   await fetchProducts();
-  const product = loadedProducts.find(p => p.id === productId);
+  const product = loadedProducts.find(p => String(p.id) === String(productId) || (p.sku && p.sku === productId));
   if (!product) {
     const el = document.getElementById("productDetailsContainer");
-    if (el) el.innerHTML = `<h2>Product not found</h2><a href="products.html" class="btn btn-primary">Return to Catalog</a>`;
+    if (el) {
+      el.innerHTML = `
+        <div class="product-not-found-card" style="text-align: center; padding: 4rem 1.5rem; background: #ffffff; border-radius: 16px; border: 1px dashed #cbd5e1; margin: 2rem auto; max-width: 600px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+          <div style="font-size: 3.5rem; margin-bottom: 0.75rem;">🎆</div>
+          <h2 style="font-family: var(--font-heading); font-size: 1.5rem; color: #1e293b; margin-bottom: 0.5rem;">Product No Longer Available</h2>
+          <p style="color: #64748b; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.6;">
+            This firecracker has been removed from our catalog or is temporarily unavailable. Browse our full Diwali collection for more authentic Sivakasi fireworks.
+          </p>
+          <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+            <a href="products.html" class="btn btn-primary">Browse All Fireworks ➔</a>
+            <a href="index.html" class="btn btn-secondary">Return to Home</a>
+          </div>
+        </div>
+      `;
+    }
+    const recContainer = document.getElementById("recommendedProductsGrid");
+    if (recContainer) {
+      recContainer.innerHTML = "";
+    }
     return;
   }
 
@@ -789,11 +820,36 @@ async function initStoreGuideVideos() {
 /**
  * Re-fetch products and update storefront components without full page reload
  */
-async function refreshStorefrontProducts() {
-  const prods = await fetchProducts();
+async function refreshStorefrontProducts(payload = null) {
   const isCatalogPage = document.getElementById("productsGrid");
   const isHomePageFeatured = document.getElementById("featuredProductsGrid");
   const isDetailsPage = document.getElementById("productDetailsContainer");
+
+  // Instant in-memory cache eviction for 0-ms UI feedback
+  if (payload && (payload.action === "delete" || payload.action === "bulk_delete")) {
+    const delId = payload.id;
+    const delSku = payload.sku;
+    const delIds = new Set((payload.deletedIds || []).map(String));
+    const delSkus = new Set((payload.deletedSkus || []).map(s => String(s).toUpperCase()));
+
+    if (delId) delIds.add(String(delId));
+    if (delSku) delSkus.add(String(delSku).toUpperCase());
+
+    loadedProducts = loadedProducts.filter(p => {
+      const pId = String(p.id || "");
+      const pSku = String(p.sku || "").toUpperCase();
+      if (delIds.has(pId)) return false;
+      if (pSku && delSkus.has(pSku)) return false;
+      return true;
+    });
+
+    if (isCatalogPage) applyFilters();
+    if (isHomePageFeatured) renderHomeProducts(homeActiveTab, homeProductDisplayLimit);
+    if (isDetailsPage) loadProductDetails();
+  }
+
+  // Authoritative re-fetch and re-render
+  const prods = await fetchProducts(true);
 
   if (isCatalogPage) {
     applyFilters();
@@ -810,7 +866,7 @@ async function refreshStorefrontProducts() {
 if (typeof listenSync === "function") {
   listenSync((event) => {
     if (event.type === "products_updated") {
-      refreshStorefrontProducts();
+      refreshStorefrontProducts(event.payload);
     }
   });
 }

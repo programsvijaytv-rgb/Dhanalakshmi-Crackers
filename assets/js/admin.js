@@ -253,35 +253,120 @@ function clearProductSelection() {
 async function bulkDeleteSelectedProducts() {
   const count = selectedProductIds.size;
   if (count === 0) return;
-  if (!confirm(`Are you sure you want to delete ${count} selected firecrackers? They will be removed from your catalog and online store.`)) return;
+  if (!confirm(`Are you sure you want to delete ${count} selected firecrackers? They will be permanently removed from your catalog and online store.`)) return;
+
+  // 1. Verify administrator authorization
+  const sessionUser = sessionStorage.getItem("dc_auth_user");
+  let isAuthorized = false;
+  if (sessionUser) {
+    try {
+      const parsed = JSON.parse(sessionUser);
+      if (parsed && ["admin", "staff"].includes(parsed.role)) isAuthorized = true;
+    } catch (_) {}
+  }
+  const sbAuth = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  if (!isAuthorized && sbAuth) {
+    try {
+      const { data: { session } } = await sbAuth.auth.getSession();
+      if (session) isAuthorized = true;
+    } catch (_) {}
+  }
+  if (!isAuthorized) {
+    showToast("Unauthorized: Admin privileges required to delete products.", "error");
+    return;
+  }
 
   const idsToDelete = Array.from(selectedProductIds);
+  const targetProducts = adminProductList.filter(p => selectedProductIds.has(p.id));
+  const skusToDelete = targetProducts.map(p => p.sku).filter(Boolean);
+
   const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  let dbError = null;
+
   if (isSupabaseConfigured() && sb) {
     try {
-      await sb.from("products").delete().in("id", idsToDelete);
-    } catch (e) {
-      console.warn("Supabase bulk delete error:", e);
+      // Step A: Attempt permanent hard delete
+      let { data: deletedRows, error: delErr } = await sb
+        .from("products")
+        .delete()
+        .in("id", idsToDelete)
+        .select("id, sku");
+
+      if (delErr) {
+        // Step B: If FK error, fallback to soft-delete
+        const isFkErr = delErr.message?.toLowerCase().includes("foreign key") || 
+                        delErr.message?.toLowerCase().includes("violates") || 
+                        delErr.code === "23503";
+        if (isFkErr) {
+          console.warn("[Bulk Delete] Hard delete hit FK constraint. Applying safe soft-delete (is_active: false)...");
+          const { error: softErr } = await sb
+            .from("products")
+            .update({ is_active: false, updated_at: new Date().toISOString() })
+            .in("id", idsToDelete);
+          if (softErr) dbError = softErr.message;
+        } else {
+          dbError = delErr.message;
+        }
+      }
+    } catch (err) {
+      dbError = err.message || "Failed communicating with database.";
+    }
+
+    if (dbError) {
+      showToast(`Bulk delete failed: ${dbError}. Products remain visible.`, "error", 7000);
+      return;
     }
   }
 
+  // 2. Remove from local list
   adminProductList = adminProductList.filter(p => !selectedProductIds.has(p.id));
   localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
   localStorage.setItem("dc_products_updated_at", Date.now().toString());
 
-  const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : JSON.parse(localStorage.getItem("dc_deleted_product_ids") || "[]");
+  // 3. Mark IDs & SKUs as permanently deleted
   idsToDelete.forEach(id => {
-    if (!deletedIds.includes(id)) deletedIds.push(id);
+    if (typeof markProductAsDeleted === "function") {
+      markProductAsDeleted(id);
+    }
   });
-  localStorage.setItem("dc_deleted_product_ids", JSON.stringify(deletedIds));
+  skusToDelete.forEach(sku => {
+    if (typeof markProductAsDeleted === "function") {
+      markProductAsDeleted(null, sku);
+    }
+  });
 
+  // 4. Clean active cart
+  try {
+    const rawCart = localStorage.getItem("dc_shopping_cart");
+    if (rawCart) {
+      const cart = JSON.parse(rawCart);
+      if (Array.isArray(cart)) {
+        const idSet = new Set(idsToDelete.map(String));
+        const skuSet = new Set(skusToDelete.map(s => String(s).toUpperCase()));
+        const cleaned = cart.filter(it => !idSet.has(String(it.id)) && (!it.sku || !skuSet.has(String(it.sku).toUpperCase())));
+        if (cleaned.length !== cart.length) {
+          localStorage.setItem("dc_shopping_cart", JSON.stringify(cleaned));
+          if (typeof updateCartBadge === "function") updateCartBadge();
+          if (typeof renderFloatingCart === "function") renderFloatingCart();
+        }
+      }
+    }
+  } catch (_) {}
+
+  // 5. Broadcast real-time sync event
   if (typeof broadcastSync === "function") {
-    broadcastSync("products_updated", { action: "bulk_delete", total: count });
+    broadcastSync("products_updated", {
+      action: "bulk_delete",
+      total: count,
+      deletedIds: idsToDelete,
+      deletedSkus: skusToDelete,
+      timestamp: Date.now()
+    });
   }
 
   clearProductSelection();
   applyAdminFilters();
-  showToast(`Successfully deleted ${count} products. Store is live.`, "success");
+  showToast(`✓ Successfully deleted ${count} firecrackers from live store & database.`, "success");
 }
 
 async function bulkUpdateCategory(categoryId) {
@@ -1618,7 +1703,28 @@ async function syncPendingLocalProductsOnline(showFeedback = false) {
     }
 
     const remoteIds = new Set(remoteData.map(r => String(r.id)));
-    const pending = localProducts.filter(p => p && p.name && !remoteIds.has(String(p.id)));
+    const remoteSkus = new Set(remoteData.filter(r => r.sku).map(r => String(r.sku).trim().toUpperCase()));
+    const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : [];
+
+    // Filter strictly: NEVER sync products that were deleted or are already online by SKU
+    const pending = localProducts.filter(p => {
+      if (!p || !p.name) return false;
+      const pId = String(p.id || "");
+      const pSku = String(p.sku || "").trim().toUpperCase();
+
+      // Check deleted list
+      if (typeof isProductDeleted === "function") {
+        if (isProductDeleted(pId, pSku)) return false;
+      } else if (deletedIds.some(d => String(d).toLowerCase() === pId.toLowerCase() || (pSku && String(d).toLowerCase() === pSku.toLowerCase()))) {
+        return false;
+      }
+
+      // Already exists in remote cloud by ID or SKU
+      if (remoteIds.has(pId) || (pSku && remoteSkus.has(pSku))) return false;
+
+      // Only sync if product was explicitly saved locally (not an unverified legacy default)
+      return Boolean(p.is_local_draft || p.created_offline || (pId && !pId.startsWith("c1000000-")));
+    });
 
     if (pending.length > 0) {
       let syncedCount = 0;
@@ -1902,41 +2008,153 @@ async function saveProductForm(e, keepOpenAndAddAnother = false) {
 }
 
 async function deleteProduct(productId) {
-  if (!confirm("Are you sure you want to remove this product? It will be removed from the online store.")) return;
+  const targetProd = adminProductList.find(p => String(p.id) === String(productId));
+  const prodName = targetProd ? targetProd.name : "Firecracker";
+  const prodSku = targetProd?.sku || "";
 
-  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
-  let onlineDeleted = false;
-  if (isSupabaseConfigured() && sb) {
+  if (!confirm(`Are you sure you want to delete "${prodName}"? It will be permanently removed from the live online store.`)) return;
+
+  // 1. Security & Admin authorization verification
+  const sessionUser = sessionStorage.getItem("dc_auth_user");
+  let isAuthorized = false;
+  if (sessionUser) {
     try {
-      const { error } = await sb.from("products").delete().eq("id", productId);
-      if (!error) onlineDeleted = true;
-    } catch (e) {
-      console.warn("Supabase delete error:", e);
-    }
+      const parsed = JSON.parse(sessionUser);
+      if (parsed && ["admin", "staff"].includes(parsed.role)) isAuthorized = true;
+    } catch (_) {}
+  }
+  const sbAuth = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  if (!isAuthorized && sbAuth) {
+    try {
+      const { data: { session } } = await sbAuth.auth.getSession();
+      if (session) isAuthorized = true;
+    } catch (_) {}
+  }
+  if (!isAuthorized) {
+    showToast("Unauthorized: You must be logged in with admin privileges to delete products.", "error");
+    return;
   }
 
-  adminProductList = adminProductList.filter(p => p.id !== productId);
+  // 2. Database verification and deletion (Supabase)
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  let dbConfirmed = false;
+  let dbError = null;
+
+  if (isSupabaseConfigured() && sb) {
+    try {
+      // Step A: Attempt permanent hard deletion by primary key ID
+      let { data: deletedRows, error: delErr } = await sb
+        .from("products")
+        .delete()
+        .eq("id", productId)
+        .select("id, name, sku");
+
+      // Step B: If 0 rows affected by ID, check if target row has matching SKU in cloud
+      if (!delErr && (!deletedRows || deletedRows.length === 0) && prodSku) {
+        const skuRes = await sb
+          .from("products")
+          .delete()
+          .eq("sku", prodSku)
+          .select("id, name, sku");
+        if (!skuRes.error && skuRes.data && skuRes.data.length > 0) {
+          deletedRows = skuRes.data;
+        } else if (skuRes.error) {
+          delErr = skuRes.error;
+        }
+      }
+
+      if (!delErr && deletedRows && deletedRows.length > 0) {
+        dbConfirmed = true;
+      } else if (delErr) {
+        // Step C: Handle foreign-key relationships safely without breaking past customer orders/invoices
+        const isFkErr = delErr.message?.toLowerCase().includes("foreign key") ||
+                        delErr.message?.toLowerCase().includes("violates") ||
+                        delErr.code === "23503";
+        if (isFkErr) {
+          console.warn("[Delete] Hard delete prevented by foreign key reference (orders/invoices). Safely applying soft-delete (is_active: false):", delErr.message);
+          const { data: softRows, error: softErr } = await sb
+            .from("products")
+            .update({ is_active: false, updated_at: new Date().toISOString() })
+            .eq("id", productId)
+            .select("id, name, sku");
+
+          if (!softErr && softRows && softRows.length > 0) {
+            dbConfirmed = true;
+          } else {
+            dbError = softErr ? softErr.message : "Soft-delete failed after FK constraint.";
+          }
+        } else {
+          dbError = delErr.message;
+        }
+      } else {
+        // Step D: Verify whether product even existed in cloud database
+        const { data: existingCheck } = await sb.from("products").select("id").eq("id", productId).maybeSingle();
+        if (!existingCheck) {
+          // Product was not found in cloud DB (e.g. offline-only draft or already purged)
+          dbConfirmed = true;
+        } else {
+          dbError = "Database deletion not confirmed. Please check database permissions or RLS policies.";
+        }
+      }
+    } catch (err) {
+      dbError = err.message || "Network error communicating with database.";
+    }
+
+    // Step E: Error handling - if deletion failed, keep product visible and show the actual error
+    if (!dbConfirmed) {
+      showToast(`Deletion failed: ${dbError}. Product was not removed.`, "error", 7000);
+      return;
+    }
+  } else {
+    // Local / Demo mode without configured Supabase
+    dbConfirmed = true;
+  }
+
+  // 3. Update authoritative local catalog & prune product
+  adminProductList = adminProductList.filter(p => String(p.id) !== String(productId) && (!prodSku || String(p.sku || "") !== String(prodSku)));
   localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
   localStorage.setItem("dc_products_updated_at", Date.now().toString());
 
-  // Mark in deleted list
-  const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : JSON.parse(localStorage.getItem("dc_deleted_product_ids") || "[]");
-  if (!deletedIds.includes(productId)) {
-    deletedIds.push(productId);
+  // 4. Mark permanently in deleted IDs & SKUs list to prevent zombie re-sync
+  if (typeof markProductAsDeleted === "function") {
+    markProductAsDeleted(productId, prodSku);
+  } else {
+    const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : [];
+    if (!deletedIds.includes(productId)) deletedIds.push(productId);
+    if (prodSku && !deletedIds.includes(prodSku)) deletedIds.push(prodSku);
     localStorage.setItem("dc_deleted_product_ids", JSON.stringify(deletedIds));
   }
 
-  // Broadcast real-time sync event to storefront website
+  // 5. Invalidate from active shopping cart
+  try {
+    const rawCart = localStorage.getItem("dc_shopping_cart");
+    if (rawCart) {
+      const cart = JSON.parse(rawCart);
+      if (Array.isArray(cart)) {
+        const cleaned = cart.filter(it => String(it.id) !== String(productId) && (!prodSku || String(it.sku || "") !== String(prodSku)));
+        if (cleaned.length !== cart.length) {
+          localStorage.setItem("dc_shopping_cart", JSON.stringify(cleaned));
+          if (typeof updateCartBadge === "function") updateCartBadge();
+          if (typeof renderFloatingCart === "function") renderFloatingCart();
+        }
+      }
+    }
+  } catch (_) {}
+
+  // 6. Broadcast real-time sync event to public storefront
   if (typeof broadcastSync === "function") {
-    broadcastSync("products_updated", { id: productId, action: "delete" });
+    broadcastSync("products_updated", {
+      id: productId,
+      sku: prodSku,
+      name: prodName,
+      action: "delete",
+      timestamp: Date.now()
+    });
   }
 
+  // 7. Re-render table and show confirmed success feedback
   renderAdminProductsTable(adminProductList);
-  if (onlineDeleted) {
-    showToast("Product removed online from Supabase cloud & storefront.", "success");
-  } else {
-    showToast("Product removed locally.", "info");
-  }
+  showToast(`✓ Firecracker "${prodName}" deleted successfully from live store & database.`, "success", 5000);
 }
 
 // ==============================================================================
