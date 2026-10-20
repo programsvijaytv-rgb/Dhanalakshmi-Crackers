@@ -2065,12 +2065,24 @@ body.mobile-nav-locked {
 
   /* Header & Navigation */
   .site-header {
-    height: 4rem;
+    height: auto !important;
+    min-height: 3.85rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-header, #ffffff);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   }
 
   .nav-container {
-    height: 4rem;
-    gap: 0.75rem;
+    height: auto !important;
+    min-height: 3.85rem;
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+    gap: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .nav-links {
@@ -2079,34 +2091,94 @@ body.mobile-nav-locked {
 
   .mobile-nav-toggle {
     display: flex;
+    padding: 0.4rem;
+    min-width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
   }
 
   .mobile-bottom-nav {
     display: flex;
   }
 
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1 1 auto;
+    text-decoration: none;
+    overflow: hidden;
+  }
+
+  .brand-logo-img {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+  }
+
   .brand-symbol {
     width: 36px;
     height: 36px;
     font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
   }
 
   .brand-text h1,
   .brand-text .brand-title,
   .brand-text > span:first-child {
-    font-size: 1.1rem;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--primary);
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    margin: 0;
   }
 
   .brand-text .brand-sub,
   .brand-text > span:nth-child(2) {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--secondary);
+    text-transform: uppercase;
     letter-spacing: 0.4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    margin-top: 1px;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-shrink: 0;
   }
 
   .cart-btn-header {
-    padding: 0.45rem 0.8rem;
+    padding: 0.4rem 0.75rem;
     font-size: 0.8rem;
     gap: 0.35rem;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
   }
 
   .cart-counter {
@@ -2117,14 +2189,18 @@ body.mobile-nav-locked {
 
   /* Top Announcement Bar */
   .top-announcement {
-    padding: 0.35rem 0;
+    position: relative;
+    z-index: 99;
+    padding: 0.35rem 0.5rem;
     font-size: 0.72rem;
+    line-height: 1.35;
   }
 
   .top-announcement .container {
     flex-direction: column;
     gap: 0.15rem;
     text-align: center;
+    padding: 0;
   }
 
   /* Hero Banner Slider Section */
@@ -2517,10 +2593,22 @@ body.mobile-nav-locked {
   .features-grid {
     grid-template-columns: 1fr;
   }
+  .brand-logo-img {
+    width: 34px;
+    height: 34px;
+  }
   .brand-text h1,
   .brand-text .brand-title,
   .brand-text > span:first-child {
-    font-size: 0.98rem;
+    font-size: 0.95rem;
+  }
+  .brand-text .brand-sub,
+  .brand-text > span:nth-child(2) {
+    font-size: 0.58rem;
+  }
+  .cart-btn-header {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -5227,4 +5315,229 @@ body.mobile-nav-locked {
     font-size: 1.45rem;
   }
 }
+
+/* ==============================================================================
+   Bottom Floating Cart Bar (Mobile & Desktop Floating Pill)
+   Matches Exact Design: Cart icon with count, selected items, thumbs stack, View All button
+   ============================================================================== */
+.floating-cart-bar {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translate(-50%, 140%);
+  width: calc(100% - 24px);
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 8px 10px 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  z-index: 10000;
+  box-sizing: border-box;
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.floating-cart-bar.is-visible {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Page bottom buffer when floating cart is active */
+body.has-floating-cart {
+  padding-bottom: 95px !important;
+}
+
+/* Hide mobile bottom nav gracefully while floating cart is active so they don't overlap */
+body.has-floating-cart .mobile-bottom-nav {
+  transform: translateY(115%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
+.fc-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fc-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.fc-icon-wrap {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fc-cart-icon {
+  display: block;
+}
+
+.fc-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  min-width: 19px;
+  height: 19px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.35);
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.fc-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.25;
+}
+
+.fc-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #1e293b;
+  white-space: nowrap;
+  letter-spacing: -0.2px;
+}
+
+.fc-total {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.fc-total-val {
+  color: #dc2626;
+  font-weight: 800;
+  font-size: 0.95rem;
+  margin-left: 2px;
+}
+
+/* Thumbnails Stack */
+.fc-thumbs-stack {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  margin: 0 4px;
+  flex-shrink: 1;
+}
+
+.fc-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1.5px solid #ffffff;
+  background: #f8fafc;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.fc-more-count {
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 800;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1.5px solid #ffffff;
+}
+
+/* Action Button */
+.fc-btn {
+  background: #dc2626;
+  color: #ffffff;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 700;
+  font-size: 0.94rem;
+  padding: 11px 18px;
+  border-radius: 14px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fc-btn:hover {
+  background: #b91c1c;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45);
+  transform: scale(1.02);
+}
+
+.fc-btn:active {
+  transform: scale(0.97);
+}
+
+/* Micro-screen optimization (width < 380px) */
+@media (max-width: 380px) {
+  .floating-cart-bar {
+    padding: 7px 8px 7px 10px;
+    border-radius: 18px;
+  }
+  .fc-thumb:nth-child(n+3) {
+    display: none;
+  }
+  .fc-icon-wrap {
+    width: 38px;
+    height: 38px;
+  }
+  .fc-title {
+    font-size: 0.85rem;
+  }
+  .fc-total {
+    font-size: 0.78rem;
+  }
+  .fc-btn {
+    padding: 9px 12px;
+    font-size: 0.85rem;
+  }
+}
+
 

@@ -90,8 +90,8 @@ const DEFAULT_BUSINESS_SETTINGS = {
   tax_applicable: true,
   default_tax_rate: 18,
   invoice_prefix: "DC-",
-  invoice_footer: "Thank you for celebrating with Dhanalakshmi Crackers Thanjavur! Have a sparkling and safe Diwali.",
-  google_review_url: "https://share.google/AwTsdLuk9OtRHQhbR",
+  invoice_footer: "Thank you for celebrating with Dhanalakshmi Crackers! Have a sparkling and safe Diwali.",
+  google_review_url: "https://share.google/RqWbas77JcB57AOT2",
   guide_video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78"
 };
 
@@ -1032,7 +1032,9 @@ async function applyBusinessBranding() {
   });
 
   // Update Google Review link
-  const reviewUrl = settings.google_review_url || "https://share.google/AwTsdLuk9OtRHQhbR";
+  const reviewUrl = (settings.google_review_url && !settings.google_review_url.includes("AwTsdLuk9OtRHQhbR")) 
+    ? settings.google_review_url 
+    : "https://share.google/RqWbas77JcB57AOT2";
   document.querySelectorAll("[data-brand='google_review_url'], #writeGoogleReviewBtn, #modalGoogleReviewBtn").forEach(el => {
     if (el.tagName === "A") el.href = reviewUrl;
   });

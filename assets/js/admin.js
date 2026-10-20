@@ -2108,6 +2108,7 @@ function renderAdminOrdersTable(orders) {
       orders.forEach(o => {
         const payStatus = (o.payment_status || "unpaid").toLowerCase();
         const ordStatus = (o.status || "pending").toLowerCase();
+        const isPendingVerification = payStatus === "pending_verification" || (o.payment_method === "UPI" && payStatus === "pending");
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -2120,11 +2121,13 @@ function renderAdminOrdersTable(orders) {
           <td><span class="badge badge-info">${o.payment_method || 'COD'}</span></td>
           <td>
             <select class="status-select status-select-${payStatus}" onchange="updateOrderPaymentStatus('${o.order_number}', this.value); updateOrderSummaryStats();" title="Change Payment Status">
+              <option value="pending_verification" ${payStatus === 'pending_verification' ? 'selected' : ''}>⏳ Pending Verification</option>
               <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
               <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
               <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
               <option value="refunded" ${payStatus === 'refunded' ? 'selected' : ''}>↩️ Refunded</option>
             </select>
+            ${o.upi_utr ? `<div style="font-size: 0.72rem; color: #b45309; font-weight: 600; font-family: monospace; margin-top: 3px;" title="Customer UPI UTR / Ref">UTR: ${o.upi_utr}</div>` : ''}
           </td>
           <td>
             <select class="status-select status-select-${ordStatus}" onchange="updateOrderStatus('${o.order_number}', this.value); updateOrderSummaryStats();" title="Change Order Status">
@@ -2138,6 +2141,9 @@ function renderAdminOrdersTable(orders) {
           <td>${new Date(o.created_at || Date.now()).toLocaleDateString("en-IN")}</td>
           <td>
             <div class="action-btn-group">
+              ${isPendingVerification ? `
+                <button class="action-btn" onclick="verifyPaymentAndProcessOrder('${o.order_number}')" style="color: #059669; font-weight: 700; background: #ecfdf5; border-color: #a7f3d0;" title="Verify Payment in Soundbox & Process Order">✅ Verify</button>
+              ` : ''}
               <a href="/invoice.html?invoice=${o.order_number}&download=true" target="_blank" class="action-btn" style="color: #059669;" title="Download PDF Invoice">📥 PDF</a>
               <button class="action-btn" onclick="printOrderInvoice('${o.order_number}')" title="Print Invoice (A4 / 80mm / 58mm)">🖨️ Print</button>
               <button class="action-btn" onclick="openOrderDetailsModal('${o.order_number}')" title="View Order Details">👁️ Details</button>
@@ -2158,6 +2164,7 @@ function renderAdminOrdersTable(orders) {
       orders.forEach(o => {
         const payStatus = (o.payment_status || "unpaid").toLowerCase();
         const ordStatus = (o.status || "pending").toLowerCase();
+        const isPendingVerification = payStatus === "pending_verification" || (o.payment_method === "UPI" && payStatus === "pending");
         const itemsCount = (o.items || []).reduce((sum, it) => sum + (it.quantity || 1), 0);
         const itemNames = (o.items || []).map(it => `${it.quantity}x ${it.product_name}`).join(', ');
         const itemSummary = itemNames ? `${itemsCount} item${itemsCount === 1 ? '' : 's'} (${itemNames})` : (o.items && o.items.length > 0 ? `${itemsCount} items` : 'Festival Crackers Pack');
@@ -2203,6 +2210,7 @@ function renderAdminOrdersTable(orders) {
               <div class="moc-payment-block">
                 <span class="badge badge-info">${o.payment_method || 'COD'}</span>
                 <select class="status-select status-select-${payStatus}" onchange="updateOrderPaymentStatus('${o.order_number}', this.value); updateOrderSummaryStats();" title="Change Payment Status">
+                  <option value="pending_verification" ${payStatus === 'pending_verification' ? 'selected' : ''}>⏳ Pending Verification</option>
                   <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
                   <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
                   <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
@@ -2211,6 +2219,12 @@ function renderAdminOrdersTable(orders) {
               </div>
             </div>
 
+            ${o.upi_utr ? `
+              <div style="font-size: 0.75rem; color: #b45309; font-weight: 600; font-family: monospace; margin-top: 4px;">
+                UPI UTR: ${o.upi_utr}
+              </div>
+            ` : ''}
+
             <div class="moc-items-preview">
               <span>📦</span>
               <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${itemSummary}</span>
@@ -2218,6 +2232,11 @@ function renderAdminOrdersTable(orders) {
           </div>
 
           <div class="moc-footer-actions">
+            ${isPendingVerification ? `
+              <button type="button" class="btn btn-sm moc-act-btn" onclick="verifyPaymentAndProcessOrder('${o.order_number}')" style="background: #059669; border-color: #059669; color: #fff; font-weight: 700;">
+                ✅ Verify & Process
+              </button>
+            ` : ''}
             <button type="button" class="btn btn-secondary btn-sm moc-act-btn" onclick="openOrderDetailsModal('${o.order_number}')">
               👁️ Details
             </button>
@@ -2413,6 +2432,82 @@ async function updateOrderPaymentStatus(orderNumber, newPaymentStatus) {
 }
 
 /**
+ * Verify payment in soundbox / bank and process order for packing & dispatch
+ */
+async function verifyPaymentAndProcessOrder(orderNumber) {
+  const order = adminOrdersList.find(o => o.order_number === orderNumber);
+  if (!order) {
+    showToast("Order not found.", "error");
+    return;
+  }
+
+  const confirmed = confirm(`Verify payment of ${formatCurrency(order.total_amount)} for Order #${orderNumber}?\n\nThis will mark the payment as PAID and move the order to CONFIRMED for packing & dispatch.`);
+  if (!confirmed) return;
+
+  order.payment_status = "paid";
+  order.status = "confirmed";
+  localStorage.setItem("dc_orders_list", JSON.stringify(adminOrdersList));
+
+  // Sync to invoices history
+  const invoices = JSON.parse(localStorage.getItem("dc_invoices_history") || "[]");
+  let inv = invoices.find(i => i.invoice_number === orderNumber || i.order_id === orderNumber);
+  if (inv) {
+    inv.payment_status = "paid";
+    inv.order_status = "confirmed";
+    inv.status = "confirmed";
+  } else {
+    invoices.unshift({
+      invoice_number: order.order_number,
+      order_id: order.id || order.order_number,
+      source: "Online Order",
+      customer_name: order.customer_name || "Online Customer",
+      customer_phone: order.customer_phone || "",
+      customer_address: order.customer_address || "",
+      subtotal: Number(order.subtotal || order.total_amount || 0),
+      discount_amount: Number(order.discount || 0),
+      tax_rate: 18,
+      tax_amount: Number(order.tax_amount || 0),
+      total_amount: Number(order.total_amount || 0),
+      payment_method: order.payment_method || "UPI",
+      payment_status: "paid",
+      order_status: "confirmed",
+      status: "confirmed",
+      created_at: order.created_at || new Date().toISOString(),
+      items: order.items || []
+    });
+  }
+  localStorage.setItem("dc_invoices_history", JSON.stringify(invoices));
+
+  // Update Supabase if configured
+  const sb = getSupabase();
+  if (isSupabaseConfigured() && sb) {
+    try {
+      await sb.from("orders").update({
+        payment_status: "paid",
+        status: "confirmed",
+        updated_at: new Date().toISOString()
+      }).eq("order_number", orderNumber);
+
+      await sb.from("invoices").update({
+        payment_status: "paid",
+        notes: "Payment verified by store admin - Order Confirmed"
+      }).eq("invoice_number", orderNumber);
+    } catch (err) {
+      console.warn("Supabase verification update error:", err);
+    }
+  }
+
+  if (typeof broadcastSync === "function") {
+    broadcastSync("order_updated", { orderNumber, status: "confirmed", paymentStatus: "paid" });
+  }
+
+  showToast(`✅ Payment verified for Order #${orderNumber}! Order confirmed & processing.`, "success");
+  updateOrderSummaryStats();
+  applyOrderFilters();
+}
+window.verifyPaymentAndProcessOrder = verifyPaymentAndProcessOrder;
+
+/**
  * Open Print Invoice dialog for an online website order
  */
 function printOrderInvoice(orderNumber) {
@@ -2473,6 +2568,7 @@ function openOrderDetailsModal(orderNumber) {
 
   const payStatus = (order.payment_status || "unpaid").toLowerCase();
   const ordStatus = (order.status || "pending").toLowerCase();
+  const isPendingVerification = payStatus === "pending_verification" || (order.payment_method === "UPI" && payStatus !== "paid");
 
   modal.innerHTML = `
     <div class="modal-content" style="max-width: 650px;">
@@ -2509,6 +2605,7 @@ function openOrderDetailsModal(orderNumber) {
             <div style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
               <span style="font-size: 0.82rem; font-weight: 600;">Payment:</span>
               <select class="status-select status-select-${payStatus}" onchange="updateOrderPaymentStatus('${order.order_number}', this.value); updateOrderSummaryStats(); openOrderDetailsModal('${order.order_number}');">
+                <option value="pending_verification" ${payStatus === 'pending_verification' ? 'selected' : ''}>⏳ Pending Verification</option>
                 <option value="paid" ${payStatus === 'paid' ? 'selected' : ''}>✅ Paid</option>
                 <option value="unpaid" ${payStatus === 'unpaid' ? 'selected' : ''}>❌ Unpaid</option>
                 <option value="pending" ${payStatus === 'pending' ? 'selected' : ''}>⏳ Pending</option>
@@ -2516,9 +2613,24 @@ function openOrderDetailsModal(orderNumber) {
               </select>
             </div>
             <div style="font-size: 0.82rem; margin-top: 6px;">Mode: <strong>${order.payment_method || 'COD'}</strong></div>
+            ${order.upi_utr ? `<div style="font-size: 0.82rem; margin-top: 4px; color: #b45309;">UPI UTR / Ref: <strong style="font-family: monospace;">${order.upi_utr}</strong></div>` : ''}
             <div style="font-size: 0.75rem; color: #6b7280; margin-top: 2px;">Date: ${new Date(order.created_at || Date.now()).toLocaleString("en-IN")}</div>
           </div>
         </div>
+
+        ${isPendingVerification ? `
+          <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <div>
+              <div style="font-weight: 700; color: #92400e; font-size: 0.92rem;">⏳ Payment Verification Required</div>
+              <div style="font-size: 0.8rem; color: #78350f; margin-top: 2px;">
+                Check merchant soundbox / bank SMS for <strong>${formatCurrency(order.total_amount)}</strong>${order.upi_utr ? ` (UTR: <strong style="font-family: monospace;">${order.upi_utr}</strong>)` : ''}.
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="verifyPaymentAndProcessOrder('${order.order_number}'); closeOrderDetailsModal();" style="background: #059669; border-color: #059669; font-weight: 700; padding: 0.45rem 0.9rem;">
+              ✅ Verify Payment & Process Order
+            </button>
+          </div>
+        ` : ''}
 
         <h4 style="font-size: 0.92rem; font-weight: 700; margin-bottom: 0.5rem;">Ordered Fireworks Items</h4>
         <div style="max-height: 220px; overflow-y: auto; margin-bottom: 1rem; border: 1px solid #e5e7eb; border-radius: 6px;">
@@ -3194,7 +3306,9 @@ async function initAdminSettings() {
   document.getElementById("setTaxApplicable").checked = settings.tax_applicable !== false;
   document.getElementById("setInvoiceFooter").value = settings.invoice_footer || "";
   if (document.getElementById("setGoogleReviewUrl")) {
-    document.getElementById("setGoogleReviewUrl").value = settings.google_review_url || "https://share.google/AwTsdLuk9OtRHQhbR";
+    document.getElementById("setGoogleReviewUrl").value = (settings.google_review_url && !settings.google_review_url.includes("AwTsdLuk9OtRHQhbR")) 
+      ? settings.google_review_url 
+      : "https://share.google/RqWbas77JcB57AOT2";
   }
   if (document.getElementById("setGuideVideoUrl")) {
     document.getElementById("setGuideVideoUrl").value = settings.guide_video_url || "https://www.youtube.com/watch?v=kY7XlB8mS78";
@@ -3290,7 +3404,7 @@ async function saveAdminSettings(e) {
     default_tax_rate: Number(document.getElementById("setTaxRate").value) || 18,
     invoice_footer: document.getElementById("setInvoiceFooter").value.trim(),
     default_print_format: document.getElementById("setDefaultPrintFormat") ? document.getElementById("setDefaultPrintFormat").value : "80mm",
-    google_review_url: (document.getElementById("setGoogleReviewUrl") ? document.getElementById("setGoogleReviewUrl").value.trim() : "") || "https://share.google/AwTsdLuk9OtRHQhbR",
+    google_review_url: (document.getElementById("setGoogleReviewUrl") ? document.getElementById("setGoogleReviewUrl").value.trim() : "") || "https://share.google/RqWbas77JcB57AOT2",
     guide_video_url: (document.getElementById("setGuideVideoUrl") ? document.getElementById("setGuideVideoUrl").value.trim() : "") || "https://www.youtube.com/watch?v=kY7XlB8mS78"
   };
 

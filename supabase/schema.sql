@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS public.business_settings (
     invoice_footer TEXT DEFAULT 'Thank you for celebrating with Dhanalakshmi Crackers! Have a safe and joyous Diwali.',
     terms_conditions TEXT DEFAULT '1. Goods once sold will not be taken back. 2. Store in a cool and dry place away from heat. 3. Adult supervision is required for children.',
     logo_url TEXT,
-    google_review_url TEXT DEFAULT 'https://share.google/AwTsdLuk9OtRHQhbR',
+    google_review_url TEXT DEFAULT 'https://share.google/RqWbas77JcB57AOT2',
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW())
 );

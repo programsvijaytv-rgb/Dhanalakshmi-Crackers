@@ -22,6 +22,7 @@ function getCart() {
 function saveCart(cart) {
   localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
   updateCartBadge();
+  renderFloatingCart();
 }
 
 /**
@@ -98,6 +99,7 @@ function removeFromCart(cartItemId) {
 function clearCart() {
   localStorage.removeItem(CART_STORAGE_KEY);
   updateCartBadge();
+  renderFloatingCart();
 }
 
 /**
@@ -225,15 +227,120 @@ function renderCartPage() {
   }
 }
 
-// Auto update badge on DOMContentLoaded and synchronize across tabs
+/**
+ * Render Bottom Floating Cart Bar (matches mobile/desktop pill design)
+ */
+function renderFloatingCart() {
+  // Do not show on cart, checkout or admin pages
+  const path = (typeof window !== "undefined" && window.location && window.location.pathname ? window.location.pathname : "").toLowerCase();
+  if (path.includes("cart.html") || path.includes("checkout.html") || path.includes("/admin/") || path.includes("invoice.html")) {
+    const existing = document.getElementById("floatingCartBar");
+    if (existing) existing.remove();
+    document.body.classList.remove("has-floating-cart");
+    return;
+  }
+
+  const cart = getCart();
+  const totalItems = cart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+  let bar = document.getElementById("floatingCartBar");
+
+  if (totalItems <= 0) {
+    if (bar) {
+      bar.classList.remove("is-visible");
+      setTimeout(() => {
+        if (bar && !bar.classList.contains("is-visible")) bar.remove();
+      }, 350);
+    }
+    document.body.classList.remove("has-floating-cart");
+    return;
+  }
+
+  const totals = getCartTotals(0);
+
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = "floatingCartBar";
+    bar.className = "floating-cart-bar";
+    document.body.appendChild(bar);
+  }
+
+  // Deduplicate unique items for product thumbnail preview
+  const uniqueItems = [];
+  const seen = new Set();
+  cart.forEach(item => {
+    const key = item.id || item.cartItemId || item.name;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueItems.push(item);
+    }
+  });
+
+  const previewThumbs = uniqueItems.slice(0, 3);
+  const remainingCount = uniqueItems.length - previewThumbs.length;
+
+  const thumbsHtml = previewThumbs.map(item => {
+    const imgUrl = item.image_url || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=100';
+    return `<img src="${imgUrl}" class="fc-thumb" alt="${escapeCartHtml(item.name)}" title="${escapeCartHtml(item.name)}">`;
+  }).join("") + (remainingCount > 0 ? `<span class="fc-more-count">+${remainingCount}</span>` : "");
+
+  const formatPrice = typeof formatCurrency === "function" 
+    ? formatCurrency 
+    : (amt) => "₹" + Number(amt || 0).toLocaleString("en-IN");
+
+  bar.innerHTML = `
+    <div class="fc-content" onclick="window.location.href='cart.html'">
+      <div class="fc-left">
+        <div class="fc-icon-wrap">
+          <svg class="fc-cart-icon" width="22" height="22" viewBox="0 0 24 24" fill="#1e293b">
+            <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+          </svg>
+          <span class="fc-badge">${totalItems}</span>
+        </div>
+        <div class="fc-info">
+          <div class="fc-title">${totalItems} Item${totalItems === 1 ? '' : 's'} Selected</div>
+          <div class="fc-total">Total: <strong class="fc-total-val">${formatPrice(totals.subtotal)}</strong></div>
+        </div>
+      </div>
+
+      <div class="fc-thumbs-stack">
+        ${thumbsHtml}
+      </div>
+    </div>
+
+    <a href="cart.html" class="fc-btn" aria-label="View shopping cart with ${totalItems} items">
+      View All ➔
+    </a>
+  `;
+
+  // Trigger smooth slide up
+  requestAnimationFrame(() => {
+    bar.classList.add("is-visible");
+    document.body.classList.add("has-floating-cart");
+  });
+}
+window.renderFloatingCart = renderFloatingCart;
+
+function escapeCartHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// Auto update badge and floating cart on DOMContentLoaded and synchronize across tabs
 document.addEventListener("DOMContentLoaded", () => {
   updateCartBadge();
   renderCartPage();
+  renderFloatingCart();
 
   window.addEventListener("storage", (e) => {
     if (e.key === CART_STORAGE_KEY) {
       updateCartBadge();
       renderCartPage();
+      renderFloatingCart();
     }
   });
 });
