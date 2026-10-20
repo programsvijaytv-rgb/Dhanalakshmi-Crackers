@@ -49,10 +49,16 @@
   <!-- Main Content -->
   <div class="admin-main">
     <header class="admin-topbar">
-      <h1 class="admin-page-title">Store & Payment Settings</h1>
+      <div class="topbar-title-group">
+        <h1 class="admin-page-title">Store &amp; Payment Settings</h1>
+        <div id="liveSyncStatusPill" class="live-sync-pill" title="Every box updates lively in real-time across storefront and POS">
+          <span class="live-sync-dot"></span>
+          <span id="liveSyncStatusText">Live Synced ✓</span>
+        </div>
+      </div>
       <div class="topbar-actions">
         <button type="button" class="btn btn-primary btn-sm topbar-save-btn" onclick="document.getElementById('settingsForm').requestSubmit()">
-          💾 Save
+          💾 Save Now
         </button>
       </div>
     </header>
@@ -353,6 +359,73 @@
                 <span class="form-help-text">Preview and verify styling on connected thermal roll printers.</span>
               </div>
             </div>
+
+            <!-- Interactive Live Thermal Receipt & Invoice Preview Card (Updates lively with every box) -->
+            <div class="live-receipt-preview-card">
+              <div class="live-receipt-preview-header">
+                <div class="live-receipt-title">
+                  <span>🧾</span>
+                  <span>Live Receipt &amp; Invoice Preview</span>
+                  <span class="field-live-badge">● Live</span>
+                </div>
+                <span class="upi-verified-badge">Updates with Every Box</span>
+              </div>
+              
+              <div class="live-receipt-paper">
+                <div class="receipt-center">
+                  <div class="receipt-shop-name" id="liveReceiptShopName">Dhanalakshmi Crackers</div>
+                  <div class="receipt-tagline" id="liveReceiptTagline">Premium Sivakasi Crackers at Factory Prices</div>
+                  <div class="receipt-address-line" id="liveReceiptAddress">Main Road, Sivakasi - 626123, Tamil Nadu</div>
+                  <div class="receipt-contact-line">
+                    <span id="liveReceiptPhone">Phone: +91 98765 43210</span>
+                    <span id="liveReceiptWa" style="margin-left: 0.5rem;"></span>
+                  </div>
+                  <div class="receipt-gst-line" id="liveReceiptGst">GSTIN: 33AAAAA0000A1Z5</div>
+                </div>
+
+                <div class="receipt-dashed-divider"></div>
+
+                <div class="receipt-item-row">
+                  <span>1x Sivakasi 1000 Wala Crackers</span>
+                  <span>₹650.00</span>
+                </div>
+                <div class="receipt-item-row">
+                  <span>2x Sparklers 50cm Deluxe Pack</span>
+                  <span>₹350.00</span>
+                </div>
+
+                <div class="receipt-dashed-divider"></div>
+
+                <div class="receipt-item-row" style="font-weight: 600;">
+                  <span>Item Subtotal:</span>
+                  <span>₹1,000.00</span>
+                </div>
+
+                <div id="liveReceiptTaxRows">
+                  <div class="receipt-tax-row">
+                    <span>CGST (9.0%):</span>
+                    <span>₹90.00</span>
+                  </div>
+                  <div class="receipt-tax-row">
+                    <span>SGST (9.0%):</span>
+                    <span>₹90.00</span>
+                  </div>
+                </div>
+
+                <div class="receipt-total-row">
+                  <span>ESTIMATED TOTAL:</span>
+                  <span id="liveReceiptTotal">₹1,180.00</span>
+                </div>
+
+                <div class="receipt-footer-text" id="liveReceiptFooter">
+                  "Thank you for shopping with Dhanalakshmi Crackers! Have a sparkling Diwali."
+                </div>
+
+                <div class="receipt-upi-snippet" id="liveReceiptUpi">
+                  Pay via UPI: dhanalakshmi@upi
+                </div>
+              </div>
+            </div>
           </section>
 
           <!-- SECTION 4: Supabase Cloud Integration -->
@@ -438,6 +511,9 @@
   <script src="../assets/js/admin-nav.js"></script>
   <script src="../assets/js/admin.js"></script>
   <script>
+    let liveSaveDebounceTimer = null;
+    let qrDebounceTimer = null;
+
     // Initialize Admin Settings & Dynamic Preview Enhancements
     document.addEventListener("DOMContentLoaded", async function() {
       await initAdminSettings();
@@ -445,19 +521,10 @@
     });
 
     function setupSettingsEnhancements() {
-      updateUpiQrPreview();
-      updateLogoPreview();
-      updatePhoneTestLinks();
+      // 1. Initial lively render across all boxes
+      updateAllLiveBoxes();
       
-      // Populate Status Strip
-      const sName = document.getElementById("setShopName") ? document.getElementById("setShopName").value : "";
-      const sUpi = document.getElementById("setUpiId") ? document.getElementById("setUpiId").value : "";
-      if (document.getElementById("statusShopName")) {
-        document.getElementById("statusShopName").textContent = sName || "Dhanalakshmi Crackers";
-      }
-      if (document.getElementById("statusUpiId")) {
-        document.getElementById("statusUpiId").textContent = sUpi || "Not Configured";
-      }
+      // 2. Populate Status Strip Database Sync
       if (document.getElementById("statusCloudSync")) {
         const isCloud = isSupabaseConfigured();
         document.getElementById("statusCloudSync").innerHTML = isCloud 
@@ -465,16 +532,224 @@
           : '<span style="color:#d97706;">● Local Mode</span>';
       }
 
-      // Track input changes to reflect in mobile save bar
+      // 3. Track EVERY box lively: attach input and change event listeners to form
       const form = document.getElementById("settingsForm");
       if (form) {
-        form.addEventListener("input", function() {
-          const barText = document.querySelector(".mobile-save-text");
-          const barDot = document.querySelector(".mobile-save-dot");
-          if (barText) barText.textContent = "Unsaved Changes";
-          if (barDot) barDot.style.color = "#f59e0b";
-        });
+        form.addEventListener("input", handleLiveBoxInput);
+        form.addEventListener("change", handleLiveBoxInput);
       }
+    }
+
+    /**
+     * Triggered on EVERY input or change event across ANY box in Store & Payment Settings
+     */
+    function handleLiveBoxInput() {
+      // Immediate visual update across all preview boxes and status chips
+      updateAllLiveBoxes();
+
+      // Update sync indicators
+      const pill = document.getElementById("liveSyncStatusPill");
+      const pillText = document.getElementById("liveSyncStatusText");
+      if (pill) pill.classList.add("updating");
+      if (pillText) pillText.textContent = "Updating lively...";
+
+      const barText = document.querySelector(".mobile-save-text");
+      const barDot = document.querySelector(".mobile-save-dot");
+      if (barText) barText.textContent = "Updating lively...";
+      if (barDot) barDot.style.color = "#f59e0b";
+
+      // Debounce auto-save (450ms)
+      clearTimeout(liveSaveDebounceTimer);
+      liveSaveDebounceTimer = setTimeout(async () => {
+        await performLiveAutoSave();
+      }, 450);
+    }
+
+    /**
+     * Updates all visual components and previews lively as user types in each box
+     */
+    function updateAllLiveBoxes() {
+      const shopName = (document.getElementById("setShopName")?.value || "").trim();
+      const category = (document.getElementById("setBusinessCategory")?.value || "").trim();
+      const tagline = (document.getElementById("setTagline")?.value || "").trim();
+      const phone = (document.getElementById("setPhone")?.value || "").trim();
+      const waPhone = (document.getElementById("setWhatsappPhone")?.value || "").trim();
+      const email = (document.getElementById("setEmail")?.value || "").trim();
+      const hours = (document.getElementById("setOperatingHours")?.value || "").trim();
+      const address = (document.getElementById("setAddress")?.value || "").trim();
+      const gst = (document.getElementById("setGst")?.value || "").trim();
+      const upiId = (document.getElementById("setUpiId")?.value || "").trim();
+      const upiName = (document.getElementById("setUpiName")?.value || "").trim();
+      const taxApplicable = document.getElementById("setTaxApplicable") ? document.getElementById("setTaxApplicable").checked : true;
+      const taxRate = parseFloat(document.getElementById("setTaxRate")?.value) || 0;
+      const invoiceFooter = (document.getElementById("setInvoiceFooter")?.value || "").trim();
+
+      // 1. Status Strip updates
+      const sName = document.getElementById("statusShopName");
+      if (sName) {
+        const displayShop = shopName || "Dhanalakshmi Crackers";
+        if (sName.textContent !== displayShop) {
+          sName.textContent = displayShop;
+          sName.classList.remove("val-pulse");
+          void sName.offsetWidth;
+          sName.classList.add("val-pulse");
+        }
+      }
+
+      const sUpi = document.getElementById("statusUpiId");
+      if (sUpi) {
+        const displayUpi = upiId || "Not Configured";
+        if (sUpi.textContent !== displayUpi) {
+          sUpi.textContent = displayUpi;
+          sUpi.classList.remove("val-pulse");
+          void sUpi.offsetWidth;
+          sUpi.classList.add("val-pulse");
+        }
+      }
+
+      // 2. UPI Preview Card updates
+      updateUpiQrPreview();
+
+      // 3. Logo preview updates
+      updateLogoPreview();
+
+      // 4. Phone & WhatsApp test links updates
+      updatePhoneTestLinks();
+
+      // 5. Live Receipt & Invoice Preview updates
+      const rShop = document.getElementById("liveReceiptShopName");
+      if (rShop) rShop.textContent = shopName || "DHANALAKSHMI CRACKERS";
+
+      const rTagline = document.getElementById("liveReceiptTagline");
+      if (rTagline) rTagline.textContent = tagline || "Premium Sivakasi Crackers at Factory Prices";
+
+      const rAddress = document.getElementById("liveReceiptAddress");
+      if (rAddress) rAddress.textContent = address || "Main Road, Sivakasi - 626123, Tamil Nadu";
+
+      const rPhone = document.getElementById("liveReceiptPhone");
+      if (rPhone) rPhone.textContent = phone ? `Phone: ${phone}` : "Phone: +91 98765 43210";
+
+      const rWa = document.getElementById("liveReceiptWa");
+      if (rWa) rWa.textContent = waPhone ? `WA: ${waPhone}` : "";
+
+      const rGst = document.getElementById("liveReceiptGst");
+      if (rGst) {
+        rGst.textContent = gst ? `GSTIN: ${gst.toUpperCase()}` : "GSTIN: Unregistered / Composition";
+      }
+
+      // Dynamic Tax Calculation in Live Receipt
+      const rTaxRows = document.getElementById("liveReceiptTaxRows");
+      const rTotal = document.getElementById("liveReceiptTotal");
+      const subtotal = 1000.00;
+      if (rTaxRows && rTotal) {
+        if (taxApplicable && taxRate > 0) {
+          const halfRate = (taxRate / 2).toFixed(1);
+          const halfAmt = ((subtotal * (taxRate / 2)) / 100).toFixed(2);
+          const totalAmt = (subtotal + (subtotal * taxRate) / 100).toFixed(2);
+          rTaxRows.innerHTML = `
+            <div class="receipt-tax-row">
+              <span>CGST (${halfRate}%):</span>
+              <span>₹${halfAmt}</span>
+            </div>
+            <div class="receipt-tax-row">
+              <span>SGST (${halfRate}%):</span>
+              <span>₹${halfAmt}</span>
+            </div>
+          `;
+          rTotal.textContent = `₹${totalAmt}`;
+        } else {
+          rTaxRows.innerHTML = `
+            <div class="receipt-tax-row" style="color: #64748b; font-style: italic;">
+              <span>GST Tax:</span>
+              <span>Exempt / Zero-Rated</span>
+            </div>
+          `;
+          rTotal.textContent = `₹${subtotal.toFixed(2)}`;
+        }
+      }
+
+      const rFooter = document.getElementById("liveReceiptFooter");
+      if (rFooter) {
+        rFooter.textContent = invoiceFooter ? `"${invoiceFooter}"` : '"Thank you for shopping with Dhanalakshmi Crackers! Have a sparkling Diwali."';
+      }
+
+      const rUpi = document.getElementById("liveReceiptUpi");
+      if (rUpi) {
+        rUpi.textContent = upiId ? `Pay via UPI: ${upiId}` : "Pay via UPI: dhanalakshmi@upi";
+      }
+
+      // Active preset chip highlight
+      document.querySelectorAll(".tax-preset-chip").forEach(chip => {
+        chip.classList.toggle("active", chip.textContent.trim() === `${taxRate}%`);
+      });
+    }
+
+    /**
+     * Persists settings to localStorage, broadcasts across tabs, and commits to Supabase
+     */
+    async function performLiveAutoSave() {
+      const settings = {
+        shop_name: (document.getElementById("setShopName")?.value || "").trim(),
+        business_category: (document.getElementById("setBusinessCategory")?.value || "").trim(),
+        tagline: (document.getElementById("setTagline")?.value || "").trim(),
+        logo_url: (document.getElementById("setLogoUrl")?.value || "").trim(),
+        phone: (document.getElementById("setPhone")?.value || "").trim(),
+        whatsapp_phone: (document.getElementById("setWhatsappPhone")?.value || "").trim(),
+        email: (document.getElementById("setEmail")?.value || "").trim(),
+        operating_hours: (document.getElementById("setOperatingHours")?.value || "").trim(),
+        address: (document.getElementById("setAddress")?.value || "").trim(),
+        business_description: (document.getElementById("setBusinessDesc")?.value || "").trim(),
+        currency_symbol: "₹",
+        currency_code: "INR",
+        time_zone: "Asia/Kolkata",
+        tax_applicable: document.getElementById("setTaxApplicable") ? document.getElementById("setTaxApplicable").checked : true,
+        gst_number: (document.getElementById("setGst")?.value || "").trim(),
+        upi_id: (document.getElementById("setUpiId")?.value || "").trim(),
+        upi_name: (document.getElementById("setUpiName")?.value || "").trim(),
+        default_tax_rate: Number(document.getElementById("setTaxRate")?.value) || 18,
+        invoice_footer: (document.getElementById("setInvoiceFooter")?.value || "").trim(),
+        default_print_format: document.getElementById("setDefaultPrintFormat")?.value || "80mm",
+        google_review_url: (document.getElementById("setGoogleReviewUrl")?.value || "").trim() || "https://share.google/AwTsdLuk9OtRHQhbR",
+        guide_video_url: (document.getElementById("setGuideVideoUrl")?.value || "").trim() || "https://www.youtube.com/watch?v=kY7XlB8mS78"
+      };
+
+      const chosenFormat = document.getElementById("setDefaultPrintFormat")?.value || "80mm";
+      localStorage.setItem("dc_default_print_format", chosenFormat);
+
+      // Save to localStorage immediately
+      localStorage.setItem("dc_business_settings", JSON.stringify(settings));
+      localStorage.setItem("dc_settings_customized", "true");
+      localStorage.setItem("dc_settings_updated_at", Date.now().toString());
+
+      // Broadcast to other tabs & storefront in real-time
+      if (typeof broadcastSync === "function") {
+        broadcastSync("settings_updated", settings);
+      }
+
+      // Update cloud database asynchronously if online
+      const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+      if (isSupabaseConfigured() && sb) {
+        try {
+          await sb.from("business_settings").upsert({
+            id: "a0000000-0000-0000-0000-000000000001",
+            ...settings,
+            updated_at: new Date().toISOString()
+          });
+        } catch (err) {
+          console.warn("Supabase background settings sync:", err);
+        }
+      }
+
+      // Update status indicators to saved
+      const pill = document.getElementById("liveSyncStatusPill");
+      const pillText = document.getElementById("liveSyncStatusText");
+      if (pill) pill.classList.remove("updating");
+      if (pillText) pillText.textContent = "Live Synced ✓";
+
+      const barText = document.querySelector(".mobile-save-text");
+      const barDot = document.querySelector(".mobile-save-dot");
+      if (barText) barText.textContent = "All boxes updated lively ✓";
+      if (barDot) barDot.style.color = "#10b981";
     }
 
     function switchSettingsTab(tabName) {
@@ -509,18 +784,25 @@
       const payeeDisplayEl = document.getElementById("liveUpiPayeeDisplay");
       const testUpiBtn = document.getElementById("testUpiIntentBtn");
 
-      if (!upiIdEl || !qrImgEl) return;
+      if (!upiIdEl) return;
 
       const upiId = upiIdEl.value.trim() || "dhanalakshmi@upi";
       const upiName = (upiNameEl ? upiNameEl.value.trim() : "") || "Dhanalakshmi Crackers";
 
-      const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=1.00&cu=INR&tn=${encodeURIComponent('Dhanalakshmi Crackers Test')}`;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=${encodeURIComponent(upiUri)}`;
-
-      qrImgEl.src = qrUrl;
       if (vpaDisplayEl) vpaDisplayEl.textContent = upiId;
       if (payeeDisplayEl) payeeDisplayEl.textContent = upiName;
+
+      const upiUri = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(upiName)}&am=1.00&cu=INR&tn=${encodeURIComponent('Dhanalakshmi Crackers Test')}`;
       if (testUpiBtn) testUpiBtn.href = upiUri;
+
+      // Debounce the network QR image generation
+      clearTimeout(qrDebounceTimer);
+      qrDebounceTimer = setTimeout(() => {
+        if (qrImgEl) {
+          const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=6&data=${encodeURIComponent(upiUri)}`;
+          qrImgEl.src = qrUrl;
+        }
+      }, 300);
     }
 
     function copyUpiIdToClipboard() {
@@ -579,6 +861,7 @@
       const presets = document.querySelectorAll(".tax-preset-chip");
       if (rateInput) rateInput.disabled = !checked;
       presets.forEach(p => p.disabled = !checked);
+      handleLiveBoxInput();
     }
 
     function setTaxPreset(rate) {
@@ -586,9 +869,7 @@
       if (rateInput) {
         rateInput.value = rate;
       }
-      document.querySelectorAll(".tax-preset-chip").forEach(chip => {
-        chip.classList.toggle("active", chip.textContent.trim() === `${rate}%`);
-      });
+      handleLiveBoxInput();
     }
 
     function toggleServiceKeyVisibility() {

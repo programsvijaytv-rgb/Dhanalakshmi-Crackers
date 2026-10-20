@@ -967,18 +967,33 @@ async function applyBusinessBranding() {
   const rawPhone = cleanPhoneNumber(phone);
   const rawWhatsapp = cleanPhoneNumber(whatsappPhone);
 
-  // Update Shop Name
-  document.querySelectorAll(".brand-text h1, [data-brand='shop_name'], .drawer-brand-title").forEach(el => {
+  // Update Shop Name (Brand Title) & Category (Subtitle)
+  document.querySelectorAll(".brand-text").forEach(brandEl => {
+    const titleEl = brandEl.querySelector(".brand-title") || brandEl.querySelector("h1") || brandEl.firstElementChild;
+    if (titleEl) {
+      titleEl.textContent = shopName;
+    }
+    const subEl = brandEl.querySelector(".brand-sub") || (brandEl.children.length > 1 ? brandEl.children[1] : null);
+    if (subEl && subEl !== titleEl) {
+      subEl.textContent = categoryTag.toUpperCase();
+    }
+  });
+
+  document.querySelectorAll("[data-brand='shop_name'], .drawer-brand-title").forEach(el => {
     el.textContent = shopName;
   });
 
-  // Update Tagline / Category
-  document.querySelectorAll(".brand-text span, [data-brand='category'], .drawer-brand-subtitle").forEach(el => {
+  // Update Tagline / Category (Only explicit category elements)
+  document.querySelectorAll("[data-brand='category'], .drawer-brand-subtitle").forEach(el => {
     el.textContent = categoryTag.toUpperCase();
   });
 
   // Update Logo if custom logo URL is provided
   if (settings.logo_url) {
+    document.querySelectorAll(".brand-logo-img").forEach(img => {
+      img.src = settings.logo_url;
+      img.alt = shopName;
+    });
     document.querySelectorAll(".brand-symbol, .logo-badge").forEach(el => {
       el.innerHTML = `<img src="${settings.logo_url}" alt="${shopName}" style="width: 100%; height: 100%; object-fit: contain; border-radius: inherit;">`;
     });

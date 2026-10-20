@@ -170,19 +170,23 @@ button, input, select, textarea {
   box-shadow: 0 4px 10px rgba(194, 29, 29, 0.3);
 }
 
-.brand-text h1 {
+.brand-text h1,
+.brand-text .brand-title,
+.brand-text > span:first-child {
   font-family: var(--font-heading);
   font-size: 1.35rem;
   font-weight: 800;
   line-height: 1.1;
   color: var(--primary);
   letter-spacing: -0.5px;
+  display: block;
 }
 
-.brand-text span {
+.brand-text .brand-sub,
+.brand-text > span:nth-child(2) {
   font-size: 0.75rem;
   color: var(--secondary);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   display: block;
@@ -2087,11 +2091,14 @@ body.mobile-nav-locked {
     font-size: 1.2rem;
   }
 
-  .brand-text h1 {
+  .brand-text h1,
+  .brand-text .brand-title,
+  .brand-text > span:first-child {
     font-size: 1.1rem;
   }
 
-  .brand-text span {
+  .brand-text .brand-sub,
+  .brand-text > span:nth-child(2) {
     font-size: 0.65rem;
     letter-spacing: 0.4px;
   }
@@ -2510,7 +2517,9 @@ body.mobile-nav-locked {
   .features-grid {
     grid-template-columns: 1fr;
   }
-  .brand-text h1 {
+  .brand-text h1,
+  .brand-text .brand-title,
+  .brand-text > span:first-child {
     font-size: 0.98rem;
   }
 }

@@ -3258,6 +3258,212 @@ body.admin-drawer-locked {
   text-decoration: none;
 }
 
+/* ==============================================================================
+   Settings Real-Time Lively Updates & Dynamic Receipt Preview
+   ============================================================================== */
+.topbar-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.live-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.28rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+.live-sync-pill.updating {
+  background: #fffbeb;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.live-sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+  display: inline-block;
+  animation: livePulseDot 2s infinite ease-in-out;
+}
+
+.live-sync-pill.updating .live-sync-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+  animation: livePulseFast 0.6s infinite ease-in-out;
+}
+
+@keyframes livePulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.6; }
+}
+
+@keyframes livePulseFast {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.4; }
+}
+
+.field-live-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.12rem 0.45rem;
+  border-radius: 12px;
+  margin-left: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-strip-val.val-pulse {
+  animation: valFlash 0.3s ease;
+}
+
+@keyframes valFlash {
+  0% { color: #f59e0b; transform: scale(1.02); }
+  100% { color: #111827; transform: scale(1); }
+}
+
+/* Interactive Live Receipt Preview Showcase Card */
+.live-receipt-preview-card {
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.live-receipt-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.live-receipt-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.live-receipt-paper {
+  background: #ffffff;
+  border: 1px dashed #94a3b8;
+  border-radius: 8px;
+  padding: 1.25rem;
+  max-width: 420px;
+  margin: 0 auto;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  font-family: 'Courier New', Courier, monospace;
+  color: #0f172a;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.receipt-center {
+  text-align: center;
+}
+
+.receipt-shop-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+
+.receipt-tagline {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+  font-style: italic;
+}
+
+.receipt-contact-line,
+.receipt-address-line,
+.receipt-gst-line {
+  font-size: 0.78rem;
+  color: #334155;
+  margin-top: 0.2rem;
+  word-break: break-word;
+}
+
+.receipt-dashed-divider {
+  border: none;
+  border-top: 1px dashed #94a3b8;
+  margin: 0.75rem 0;
+}
+
+.receipt-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  margin-bottom: 0.3rem;
+}
+
+.receipt-tax-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #475569;
+  margin-bottom: 0.25rem;
+}
+
+.receipt-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  padding-top: 0.35rem;
+  border-top: 1px dashed #64748b;
+}
+
+.receipt-footer-text {
+  text-align: center;
+  font-size: 0.78rem;
+  color: #475569;
+  font-style: italic;
+  margin-top: 0.6rem;
+  line-height: 1.4;
+}
+
+.receipt-upi-snippet {
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0.45rem;
+  margin-top: 0.65rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #0284c7;
+}
+
 .label-no-margin {
   margin-bottom: 0;
 }
