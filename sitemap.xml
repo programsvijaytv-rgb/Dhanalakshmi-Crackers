@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Primary Homepage - Thanjavur Crackers -->
+  <url>
+    <loc>https://dhanalakshmicrackers.com/</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png</image:loc>
+      <image:title>Dhanalakshmi Crackers Thanjavur Logo</image:title>
+      <image:caption>Best Fireworks Showroom in Thanjavur, Tamil Nadu</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Complete Fireworks Catalogue & Price List -->
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Product Details Showcase -->
+  <url>
+    <loc>https://dhanalakshmicrackers.com/product-details.html</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Category Landing Pages -->
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=gift-box</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=sparklers</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=chakkar</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=flower-pots</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=pencil-twinkling-star</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=match-sticks</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=bijili</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=wala</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=rocket</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=fancy-crackers</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=night-out</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=multi-colour-fancy-out</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=bombs</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://dhanalakshmicrackers.com/products.html?category=gun-others</loc>
+    <lastmod>2026-10-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+</urlset>

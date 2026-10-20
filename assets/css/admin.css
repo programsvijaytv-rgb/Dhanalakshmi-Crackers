@@ -4003,8 +4003,7 @@ body.admin-drawer-locked {
     text-transform: uppercase;
   }
 
-  /* Product Add/Edit Modal Mobile Optimization */
-  #productEditModal .modal-content,
+  /* Product Import Modal Mobile Optimization */
   #productImportModal .modal-content {
     border-radius: 16px 16px 0 0 !important;
     max-height: 94vh !important;
@@ -4477,10 +4476,21 @@ body.admin-drawer-locked {
   min-width: 15px;
 }
 
+.wizard-modal form#productForm {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+
 .wizard-body {
   padding: 1.5rem !important;
   overflow-y: auto !important;
-  flex: 1 !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
 }
 
 .wizard-step-pane {
@@ -4498,7 +4508,7 @@ body.admin-drawer-locked {
 }
 
 .wizard-footer {
-  padding: 1rem 1.5rem !important;
+  padding: 0.85rem 1.25rem !important;
   background: #f8fafc !important;
   border-top: 1px solid #e2e8f0 !important;
   display: flex !important;
@@ -4506,7 +4516,10 @@ body.admin-drawer-locked {
   justify-content: space-between !important;
   gap: 0.75rem !important;
   flex-shrink: 0 !important;
-  flex-wrap: wrap !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 50 !important;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04) !important;
 }
 
 .wizard-footer-left,
@@ -4515,6 +4528,17 @@ body.admin-drawer-locked {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.wizard-btn-next {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 700 !important;
+  min-width: 140px !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .btn-amber {
@@ -4687,4 +4711,231 @@ body.admin-drawer-locked {
 .d-none {
   display: none !important;
 }
+
+/* ==============================================================================
+   Mobile UI: Add New Firecracker Centered Floating Modal (<= 768px)
+   ============================================================================== */
+body.modal-open {
+  overflow: hidden !important;
+}
+
+@media (max-width: 768px) {
+  /* Centered floating modal overlay with dark blur backdrop */
+  #productEditModal.modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    background: rgba(0, 0, 0, 0.65) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px) !important;
+    z-index: 2000 !important;
+    display: none;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    overscroll-behavior: contain !important;
+  }
+
+  /* Centered floating card with rounded corners, subtle shadow & 90dvh max height */
+  #productEditModal .wizard-modal {
+    width: calc(100% - 24px) !important;
+    max-width: calc(100% - 24px) !important;
+    max-height: 90vh !important;
+    max-height: 90dvh !important;
+    height: auto !important;
+    margin: auto !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    background: #ffffff !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    position: relative !important;
+  }
+
+  /* Fixed dark navy header at top of modal */
+  #productEditModal .wizard-modal .modal-header {
+    background: #111827 !important;
+    color: #ffffff !important;
+    flex-shrink: 0 !important;
+    padding: 0.95rem 1.15rem !important;
+    border-radius: 16px 16px 0 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    border-bottom: 1px solid #1f2937 !important;
+  }
+
+  #productEditModal .wizard-modal .modal-title {
+    color: #f59e0b !important;
+    font-size: 1.18rem !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+  }
+
+  #productEditModal .wizard-modal .modal-close {
+    color: #9ca3af !important;
+    font-size: 1.6rem !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+    line-height: 1 !important;
+    padding: 0.2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: color 0.15s ease !important;
+  }
+
+  #productEditModal .wizard-modal .modal-close:hover {
+    color: #ffffff !important;
+  }
+
+  /* Stepper navigation bar pinned below header */
+  #productEditModal .wizard-stepper-bar {
+    flex-shrink: 0 !important;
+    padding: 0.6rem 0.85rem !important;
+    gap: 0.3rem !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none;
+  }
+
+  #productEditModal .wizard-stepper-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  #productEditModal .wizard-step-pill {
+    padding: 0.35rem 0.65rem !important;
+    font-size: 0.78rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Form flex layout */
+  #productEditModal .wizard-modal form#productForm {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+  }
+
+  /* Scrollable form body inside floating modal */
+  #productEditModal .wizard-body {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    padding: 1rem 1rem 1.5rem 1rem !important;
+  }
+
+  /* Fixed action footer pinned at the bottom of the modal */
+  #productEditModal .wizard-footer {
+    flex-shrink: 0 !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 100 !important;
+    background: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-radius: 0 0 16px 16px !important;
+    padding: 0.75rem 1rem !important;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0.6rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #productEditModal .wizard-footer-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  #productEditModal .wizard-footer-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    flex: 1 !important;
+    justify-content: flex-end !important;
+  }
+
+  /* Finger-friendly, visible Next & Save buttons */
+  #productEditModal .wizard-btn-next,
+  #productEditModal .wizard-footer-right .btn {
+    flex: 1 !important;
+    min-height: 42px !important;
+    padding: 0.65rem 0.95rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25) !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    touch-action: manipulation;
+  }
+
+  /* Finger-friendly, visible Cancel & Back buttons */
+  #productEditModal .wizard-footer-left .btn {
+    min-height: 42px !important;
+    padding: 0.65rem 0.9rem !important;
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    touch-action: manipulation;
+  }
+
+  /* Compact spacing for short screen / landscape mobile */
+  @media (max-height: 500px) {
+    #productEditModal .wizard-modal .modal-header {
+      padding: 0.6rem 1rem !important;
+    }
+    #productEditModal .wizard-stepper-bar {
+      padding: 0.4rem 0.75rem !important;
+    }
+    #productEditModal .wizard-body {
+      padding: 0.75rem 1rem !important;
+    }
+    #productEditModal .wizard-footer {
+      padding: 0.55rem 1rem !important;
+    }
+  }
+}
+
+/* Extra small mobile screens (<= 420px) */
+@media (max-width: 420px) {
+  #productEditModal .wizard-footer-right .btn {
+    font-size: 0.82rem !important;
+    padding: 0.6rem 0.65rem !important;
+  }
+
+  #productEditModal .wizard-btn-next {
+    font-size: 0.86rem !important;
+    padding: 0.65rem 0.75rem !important;
+  }
+}
+
 

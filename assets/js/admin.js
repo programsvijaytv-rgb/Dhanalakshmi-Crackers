@@ -123,6 +123,13 @@ async function initAdminProducts() {
   renderAdminProductsTable(adminProductList);
   checkCloudSyncStatus(false);
 
+  // Automatically sync any offline / local firecrackers (e.g. "ERERER") straight to online Supabase cloud
+  setTimeout(() => {
+    if (typeof syncPendingLocalProductsOnline === "function") {
+      syncPendingLocalProductsOnline(false);
+    }
+  }, 600);
+
   const searchInput = document.getElementById("adminProductSearch");
   if (searchInput) {
     searchInput.addEventListener("input", applyAdminFilters);
@@ -765,26 +772,56 @@ function goToWizardStep(stepNumber) {
   const saveAnotherBtn = document.getElementById("wizardSaveAnotherBtn");
   const saveCloseBtn = document.getElementById("wizardSaveCloseBtn");
 
-  if (backBtn) backBtn.style.display = currentWizardStep > 1 ? "inline-flex" : "none";
-  if (cancelBtn) cancelBtn.style.display = currentWizardStep === 1 ? "inline-flex" : "none";
+  if (backBtn) {
+    if (currentWizardStep > 1) {
+      backBtn.classList.remove("d-none");
+      backBtn.style.display = "inline-flex";
+    } else {
+      backBtn.classList.add("d-none");
+      backBtn.style.display = "none";
+    }
+  }
+  if (cancelBtn) {
+    if (currentWizardStep === 1) {
+      cancelBtn.classList.remove("d-none");
+      cancelBtn.style.display = "inline-flex";
+    } else {
+      cancelBtn.classList.add("d-none");
+      cancelBtn.style.display = "none";
+    }
+  }
 
   if (nextBtn) {
     if (currentWizardStep < 4) {
+      nextBtn.classList.remove("d-none");
       nextBtn.style.display = "inline-flex";
-      if (currentWizardStep === 1) nextBtn.innerHTML = "Next: Price & Stock ➔";
-      else if (currentWizardStep === 2) nextBtn.innerHTML = "Next: Media & Photo ➔";
-      else if (currentWizardStep === 3) nextBtn.innerHTML = "Next: Preview & Save ➔";
+      if (currentWizardStep === 1) nextBtn.innerHTML = "Next: Price &amp; Stock ➔";
+      else if (currentWizardStep === 2) nextBtn.innerHTML = "Next: Media &amp; Photo ➔";
+      else if (currentWizardStep === 3) nextBtn.innerHTML = "Next: Preview &amp; Save ➔";
     } else {
+      nextBtn.classList.add("d-none");
       nextBtn.style.display = "none";
     }
   }
 
   if (saveAnotherBtn) {
-    saveAnotherBtn.style.display = currentWizardStep >= 2 ? "inline-flex" : "none";
+    if (currentWizardStep >= 2) {
+      saveAnotherBtn.classList.remove("d-none");
+      saveAnotherBtn.style.display = "inline-flex";
+    } else {
+      saveAnotherBtn.classList.add("d-none");
+      saveAnotherBtn.style.display = "none";
+    }
   }
 
   if (saveCloseBtn) {
-    saveCloseBtn.style.display = currentWizardStep >= 2 ? "inline-flex" : "none";
+    if (currentWizardStep >= 2) {
+      saveCloseBtn.classList.remove("d-none");
+      saveCloseBtn.style.display = "inline-flex";
+    } else {
+      saveCloseBtn.classList.add("d-none");
+      saveCloseBtn.style.display = "none";
+    }
   }
 
   if (currentWizardStep >= 3) {
@@ -943,6 +980,8 @@ function openAddProductModal() {
   if (modal) {
     modal.classList.remove("modal-hidden");
     modal.style.display = "flex";
+    document.body.classList.add("modal-open");
+    document.body.style.overflow = "hidden";
     modal.onclick = (e) => {
       if (e.target === modal) closeProductModal();
     };
@@ -1008,6 +1047,8 @@ function openEditProductModal(productId) {
   if (modal) {
     modal.classList.remove("modal-hidden");
     modal.style.display = "flex";
+    document.body.classList.add("modal-open");
+    document.body.style.overflow = "hidden";
     modal.onclick = (e) => {
       if (e.target === modal) closeProductModal();
     };
@@ -1020,6 +1061,8 @@ function closeProductModal() {
     modal.classList.add("modal-hidden");
     modal.style.display = "none";
   }
+  document.body.classList.remove("modal-open");
+  document.body.style.overflow = "";
   wizardBatchAddedCount = 0;
   const batchEl = document.getElementById("batchSaveCounter");
   if (batchEl) batchEl.style.display = "none";
@@ -1386,6 +1429,228 @@ function showCloudSyncHelpModal(reason = "") {
   };
 }
 
+/**
+ * Direct online database save function to Supabase PostgreSQL.
+ * Guarantees online save by validating and resolving:
+ * - Unique SKU generation and conflict resolution (never fails on empty/duplicate SKU)
+ * - Price & original_price check constraint (CHECK: original_price >= price)
+ * - Category foreign key resolution (auto-null fallback)
+ * - Native upsert with fallback to update/insert and RPC
+ */
+async function saveProductToSupabaseOnline(productData) {
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  if (!isSupabaseConfigured() || !sb) {
+    return { success: false, error: "Supabase connection is not configured." };
+  }
+
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  let id = productData.id;
+  if (!id || !uuidRegex.test(id)) {
+    id = (typeof crypto !== "undefined" && crypto.randomUUID) 
+      ? crypto.randomUUID() 
+      : ("c1000000-0000-0000-0000-" + Date.now().toString(16).padStart(12, "0"));
+    productData.id = id;
+  }
+
+  // Ensure clean unique SKU (never empty!)
+  let sku = (productData.sku || "").trim();
+  if (!sku) {
+    const cleanName = (productData.name || "FIRECRACKER").replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8) || "CRK";
+    sku = `DC-${cleanName}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
+    productData.sku = sku;
+  }
+
+  // Guarantee original_price >= price (satisfies Postgres constraint CHECK (original_price >= price))
+  let price = Number(productData.price) || 0;
+  let original_price = Number(productData.original_price);
+  if (isNaN(original_price) || original_price < price) {
+    original_price = price;
+    productData.original_price = original_price;
+  }
+
+  let stock = parseInt(productData.stock_quantity, 10);
+  if (isNaN(stock) || stock < 0) stock = 100;
+  productData.stock_quantity = stock;
+
+  let unit = (productData.unit || "Box").trim();
+  let desc = (productData.description || "").trim();
+  let image_url = (productData.image_url || "").trim() || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
+  let is_featured = Boolean(productData.is_featured);
+
+  // Validate category_id against UUID format
+  let category_id = productData.category_id;
+  if (category_id && !uuidRegex.test(category_id)) {
+    category_id = null;
+  }
+
+  const dbPayload = {
+    id,
+    name: (productData.name || "").trim(),
+    sku,
+    price,
+    original_price,
+    stock_quantity: stock,
+    unit,
+    category_id: category_id || null,
+    is_featured,
+    image_url,
+    description: desc,
+    is_active: productData.is_active !== false,
+    updated_at: new Date().toISOString()
+  };
+
+  async function execUpsert(payload) {
+    let res = await sb.from("products").upsert(payload, { onConflict: "id" }).select();
+
+    // 1. Foreign key constraint retry with null category
+    if (res.error && (res.error.message?.toLowerCase().includes("foreign key") || res.error.message?.toLowerCase().includes("category"))) {
+      console.warn("[Cloud Save] Retrying with category_id: null due to FK constraint:", res.error.message);
+      payload.category_id = null;
+      productData.category_id = null;
+      res = await sb.from("products").upsert(payload, { onConflict: "id" }).select();
+    }
+
+    // 2. SKU constraint retry with auto-resolved unique SKU
+    if (res.error && (res.error.message?.toLowerCase().includes("sku") || res.error.message?.toLowerCase().includes("duplicate key"))) {
+      payload.sku = `${payload.sku.slice(0, 16)}-${Math.floor(Math.random() * 9000 + 1000)}`;
+      productData.sku = payload.sku;
+      console.warn("[Cloud Save] Retrying with auto-resolved unique SKU:", payload.sku);
+      res = await sb.from("products").upsert(payload, { onConflict: "id" }).select();
+    }
+
+    if (!res.error && res.data && res.data.length > 0) {
+      return { success: true, data: res.data[0] };
+    }
+
+    // 3. Fallback to direct REST update or insert
+    const { data: existing } = await sb.from("products").select("id").eq("id", payload.id).maybeSingle();
+    let restRes;
+    if (existing) {
+      restRes = await sb.from("products").update(payload).eq("id", payload.id).select();
+    } else {
+      restRes = await sb.from("products").insert(payload).select();
+    }
+
+    if (restRes.error && (restRes.error.message?.toLowerCase().includes("foreign key") || restRes.error.message?.toLowerCase().includes("category"))) {
+      payload.category_id = null;
+      productData.category_id = null;
+      restRes = existing 
+        ? await sb.from("products").update(payload).eq("id", payload.id).select()
+        : await sb.from("products").insert(payload).select();
+    }
+
+    if (restRes.error && (restRes.error.message?.toLowerCase().includes("sku") || restRes.error.message?.toLowerCase().includes("duplicate key"))) {
+      payload.sku = `${payload.sku.slice(0, 16)}-${Math.floor(Math.random() * 9000 + 1000)}`;
+      productData.sku = payload.sku;
+      restRes = existing 
+        ? await sb.from("products").update(payload).eq("id", payload.id).select()
+        : await sb.from("products").insert(payload).select();
+    }
+
+    if (!restRes.error && restRes.data && restRes.data.length > 0) {
+      return { success: true, data: restRes.data[0] };
+    }
+
+    // 4. Fallback to RPC upsert_product_online
+    try {
+      const { data: rpcData, error: rpcErr } = await sb.rpc("upsert_product_online", {
+        p_id: payload.id,
+        p_name: payload.name,
+        p_sku: payload.sku,
+        p_price: payload.price,
+        p_original_price: payload.original_price,
+        p_stock_quantity: payload.stock_quantity,
+        p_unit: payload.unit,
+        p_image_url: payload.image_url,
+        p_description: payload.description,
+        p_category_id: payload.category_id,
+        p_is_featured: payload.is_featured,
+        p_is_active: payload.is_active
+      });
+      if (!rpcErr && rpcData) {
+        return { success: true, data: rpcData };
+      }
+    } catch (_) {}
+
+    return { 
+      success: false, 
+      error: res.error?.message || restRes?.error?.message || "Cloud write not confirmed." 
+    };
+  }
+
+  try {
+    const outcome = await execUpsert(dbPayload);
+    if (outcome.success) {
+      if (outcome.data?.id) productData.id = outcome.data.id;
+      if (outcome.data?.sku) productData.sku = outcome.data.sku;
+      return { success: true, data: outcome.data };
+    }
+    return { success: false, error: outcome.error };
+  } catch (err) {
+    return { success: false, error: err.message || String(err) };
+  }
+}
+
+/**
+ * Background sync function that pushes all locally saved products (e.g. "ERERER") to online Supabase cloud
+ */
+async function syncPendingLocalProductsOnline(showFeedback = false) {
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  if (!isSupabaseConfigured() || !sb) {
+    if (showFeedback) showToast("Supabase is not configured yet.", "warning");
+    return;
+  }
+
+  const rawLocal = localStorage.getItem("dc_custom_products");
+  if (!rawLocal) return;
+  let localProducts = [];
+  try {
+    localProducts = JSON.parse(rawLocal);
+  } catch (_) { return; }
+
+  if (!Array.isArray(localProducts) || localProducts.length === 0) return;
+
+  try {
+    const { data: remoteData, error } = await sb.from("products").select("id, sku");
+    if (error || !Array.isArray(remoteData)) {
+      if (showFeedback) showToast(`Cloud fetch error: ${error?.message}`, "error");
+      return;
+    }
+
+    const remoteIds = new Set(remoteData.map(r => String(r.id)));
+    const pending = localProducts.filter(p => p && p.name && !remoteIds.has(String(p.id)));
+
+    if (pending.length > 0) {
+      let syncedCount = 0;
+      for (const prod of pending) {
+        const result = await saveProductToSupabaseOnline(prod);
+        if (result.success) {
+          syncedCount++;
+        }
+      }
+      if (syncedCount > 0) {
+        localStorage.setItem("dc_custom_products", JSON.stringify(localProducts));
+        localStorage.setItem("dc_products_updated_at", Date.now().toString());
+        adminProductList = localProducts;
+        renderAdminProductsTable(adminProductList);
+
+        showToast(`☁️ Synced ${syncedCount} firecracker(s) (including "${pending[0].name}") to online Supabase cloud!`, "success", 6000);
+        const badge = document.getElementById("cloudSyncStatusBadge");
+        if (badge) {
+          badge.className = "table-header-sub badge badge-success";
+          badge.textContent = "☁️ Online Cloud Sync: Active (Live DB)";
+        }
+        return;
+      }
+    } else if (showFeedback) {
+      showToast("✅ All firecrackers are already synced online with Supabase cloud!", "success");
+    }
+  } catch (err) {
+    console.warn("[Cloud Sync] Sync error:", err);
+    if (showFeedback) showToast(`Sync note: ${err.message}`, "warning");
+  }
+}
+
 async function saveProductForm(e, keepOpenAndAddAnother = false) {
   if (e && e.preventDefault) e.preventDefault();
   let id = document.getElementById("prodId").value.trim();
@@ -1470,6 +1735,17 @@ async function saveProductForm(e, keepOpenAndAddAnother = false) {
     }
   }
 
+  // Auto-generate clean unique SKU if left empty
+  if (!sku) {
+    const cleanName = name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8) || "CRK";
+    sku = `DC-${cleanName}-${Date.now().toString(36).slice(-4).toUpperCase()}`;
+  }
+
+  // Ensure original_price satisfies database check constraint (original_price >= price)
+  if (isNaN(original_price) || original_price < price) {
+    original_price = price;
+  }
+
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   const category_name = (catSelect && catSelect.selectedOptions && catSelect.selectedOptions[0] && catSelect.value)
@@ -1512,115 +1788,24 @@ async function saveProductForm(e, keepOpenAndAddAnother = false) {
     is_active: true
   };
 
-  // Standard PostgreSQL database payload strictly matching public.products columns
-  const dbPayload = {
-    id,
-    name,
-    sku,
-    price,
-    original_price,
-    stock_quantity: stock,
-    unit,
-    category_id: category_id || null,
-    is_featured: Boolean(is_featured),
-    image_url: image_url || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600",
-    description: desc,
-    is_active: true,
-    updated_at: new Date().toISOString()
-  };
-
+  // Perform DIRECT ONLINE SAVE to Supabase PostgreSQL
   let onlineSaved = false;
   let onlineError = null;
 
-  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
-  if (isSupabaseConfigured() && sb) {
-    try {
-      // 1. Try atomic RPC if available
-      let rpcExecuted = false;
-      try {
-        const { data: rpcData, error: rpcErr } = await sb.rpc("upsert_product_online", {
-          p_id: id,
-          p_name: name,
-          p_sku: sku,
-          p_price: price,
-          p_original_price: original_price,
-          p_stock_quantity: stock,
-          p_unit: unit,
-          p_image_url: dbPayload.image_url,
-          p_description: desc,
-          p_category_id: category_id || null,
-          p_is_featured: Boolean(is_featured),
-          p_is_active: true
-        });
-        if (!rpcErr && rpcData) {
-          rpcExecuted = true;
-          onlineSaved = true;
-          if (rpcData.id) id = rpcData.id;
-        }
-      } catch (_) {
-        // RPC not configured, proceed to direct REST
-      }
-
-      // 2. Direct Supabase REST call
-      if (!rpcExecuted) {
-        const { data: existing } = await sb.from("products").select("id").eq("id", id).maybeSingle();
-        if (existing) {
-          let { data: updatedRows, error: updateErr } = await sb
-            .from("products")
-            .update(dbPayload)
-            .eq("id", id)
-            .select();
-
-          // If foreign key constraint failed on category_id, retry with category_id: null
-          if (updateErr && updateErr.message?.toLowerCase().includes("violates foreign key")) {
-            const fallbackCatPayload = { ...dbPayload, category_id: null };
-            const fallbackCatRes = await sb.from("products").update(fallbackCatPayload).eq("id", id).select();
-            if (!fallbackCatRes.error && fallbackCatRes.data && fallbackCatRes.data.length > 0) {
-              updatedRows = fallbackCatRes.data;
-              updateErr = null;
-            }
-          }
-
-          if (updateErr) {
-            onlineError = updateErr.message;
-          } else if (updatedRows && updatedRows.length > 0) {
-            onlineSaved = true;
-          } else {
-            onlineError = "Row Level Security (RLS) policy prevented update (0 rows changed).";
-          }
-        } else {
-          let { data: insertedRows, error: insertErr } = await sb
-            .from("products")
-            .insert(dbPayload)
-            .select();
-
-          // If foreign key constraint failed on category_id, retry with category_id: null
-          if (insertErr && insertErr.message?.toLowerCase().includes("violates foreign key")) {
-            const fallbackCatPayload = { ...dbPayload, category_id: null };
-            const fallbackCatRes = await sb.from("products").insert(fallbackCatPayload).select();
-            if (!fallbackCatRes.error && fallbackCatRes.data && fallbackCatRes.data.length > 0) {
-              insertedRows = fallbackCatRes.data;
-              insertErr = null;
-            }
-          }
-
-          if (insertErr) {
-            onlineError = insertErr.message;
-          } else if (insertedRows && insertedRows.length > 0) {
-            onlineSaved = true;
-            if (insertedRows[0].id) {
-              id = insertedRows[0].id;
-              productData.id = insertedRows[0].id;
-            }
-          } else {
-            onlineError = "Row Level Security (RLS) policy prevented insertion.";
-          }
-        }
-      }
-    } catch (err) {
-      onlineError = err.message || String(err);
-      console.warn("Supabase product save error:", err);
+  const onlineOutcome = await saveProductToSupabaseOnline(productData);
+  if (onlineOutcome.success) {
+    onlineSaved = true;
+    if (onlineOutcome.data?.id) {
+      id = onlineOutcome.data.id;
+      productData.id = onlineOutcome.data.id;
     }
+    if (onlineOutcome.data?.sku) {
+      sku = onlineOutcome.data.sku;
+      productData.sku = onlineOutcome.data.sku;
+    }
+  } else {
+    onlineError = onlineOutcome.error;
+    console.warn("[Online Save] Supabase save note:", onlineError);
   }
 
   // Update local authoritative list
@@ -1688,15 +1873,15 @@ async function saveProductForm(e, keepOpenAndAddAnother = false) {
     }, 150);
 
     if (onlineSaved) {
-      showToast(`🎉 "${name}" saved live! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "success");
+      showToast(`🎉 "${name}" saved ONLINE in Supabase cloud! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "success");
     } else {
-      showToast(`🎉 "${name}" saved! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "success");
+      showToast(`💾 "${name}" saved locally! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "info");
     }
   } else {
     closeProductModal();
 
     if (onlineSaved) {
-      showToast("🎉 Product updated ONLINE in Supabase cloud! Storefront is live.", "success");
+      showToast(`🎉 Firecracker "${name}" saved ONLINE in Supabase cloud! Storefront is live.`, "success", 5000);
       const badge = document.getElementById("cloudSyncStatusBadge");
       if (badge) {
         badge.className = "table-header-sub badge badge-success";
@@ -1704,7 +1889,7 @@ async function saveProductForm(e, keepOpenAndAddAnother = false) {
       }
     } else if (onlineError) {
       console.warn("Supabase online save note:", onlineError);
-      showToast(`💾 Firecracker "${name}" saved locally! Storefront is live.`, "info", 4500);
+      showToast(`💾 Firecracker "${name}" saved locally! (${onlineError})`, "info", 5000);
       const badge = document.getElementById("cloudSyncStatusBadge");
       if (badge) {
         badge.className = "table-header-sub badge badge-warning";

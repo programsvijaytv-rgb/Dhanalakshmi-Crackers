@@ -316,11 +316,11 @@
       const inv = loadedInvoice;
       const settings = JSON.parse(localStorage.getItem("dc_business_settings") || "{}");
       const shopName = settings.shop_name || "Dhanalakshmi Crackers";
-      const shopAddress = settings.address || "142, By-pass Road, Sivakasi - 626123, Tamil Nadu";
+      const shopAddress = settings.address || "Main Road, Thanjavur - 613001, Tamil Nadu";
       const shopPhone = settings.phone || "+91 98765 43210";
       const gstNo = settings.gst_number || "33AAAAA0000A1Z5";
-      const defaultLocalLogo = "assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png";
-      const logoUrl = settings.logo_url || defaultLocalLogo;
+      const defaultOfficialLogo = "https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png";
+      const logoUrl = settings.logo_url || defaultOfficialLogo;
       const isTaxApplicable = settings.tax_applicable !== false;
       const footerNote = settings.invoice_footer || "Thank you for shopping with Dhanalakshmi Crackers! Have a safe and sparkling celebration. 🪔";
       const dateStr = inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString("en-IN");

@@ -13,7 +13,9 @@
   <!-- Sidebar -->
   <aside class="admin-sidebar">
     <div class="admin-sidebar-header">
-      <div class="logo-badge">🪔</div>
+      <div class="logo-badge" style="padding: 2px;">
+        <img src="https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png" alt="Dhanalakshmi Crackers Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: inherit;">
+      </div>
       <div>
         <div class="brand-title">Dhanalakshmi</div>
         <div class="brand-sub">Admin & POS</div>
@@ -98,6 +100,7 @@
           <div class="cloud-sync-header-group">
             <span id="cloudSyncStatusBadge" class="table-header-sub badge badge-info cloud-sync-badge" onclick="checkCloudSyncStatus(true)" title="Click to test live cloud database connection">☁️ Checking Online Cloud Sync...</span>
             <button type="button" class="btn btn-secondary btn-sm btn-cloud-status" onclick="checkCloudSyncStatus(true)" title="Test Cloud Database Status">Cloud Status</button>
+            <button type="button" class="btn btn-primary btn-sm btn-cloud-sync" onclick="syncPendingLocalProductsOnline(true)" title="Push all local firecrackers to online Supabase cloud">☁️ Sync to Cloud</button>
           </div>
         </div>
 
@@ -400,13 +403,13 @@
             </button>
           </div>
           <div class="wizard-footer-right">
-            <button type="button" class="btn btn-primary btn-sm" id="wizardNextBtn" onclick="wizardGoNext()">
+            <button type="button" class="btn btn-primary btn-sm wizard-btn-next" id="wizardNextBtn" onclick="wizardGoNext()">
               Next: Price &amp; Stock ➔
             </button>
-            <button type="button" class="btn btn-amber btn-sm" id="wizardSaveAnotherBtn" onclick="saveProductForm(event, true)" title="Save this firecracker and immediately add the next one">
+            <button type="button" class="btn btn-amber btn-sm d-none" id="wizardSaveAnotherBtn" onclick="saveProductForm(event, true)" title="Save this firecracker and immediately add the next one">
               ➕ Save &amp; Add Another
             </button>
-            <button type="submit" class="btn btn-success btn-sm" id="wizardSaveCloseBtn" onclick="saveProductForm(event, false)">
+            <button type="submit" class="btn btn-success btn-sm d-none" id="wizardSaveCloseBtn" onclick="saveProductForm(event, false)">
               💾 Save Firecracker
             </button>
           </div>

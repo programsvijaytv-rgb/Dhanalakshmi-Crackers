@@ -147,6 +147,16 @@ button, input, select, textarea {
   text-decoration: none;
 }
 
+.brand-logo-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15));
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
 .brand-symbol {
   width: 44px;
   height: 44px;
@@ -4720,3 +4730,492 @@ body.mobile-nav-locked {
 .d-none {
   display: none !important;
 }
+
+/* Accessible Screen Reader / SEO Utility */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.drawer-brand-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  flex-shrink: 0;
+}
+
+/* ==============================================================================
+   Thanjavur Showroom & Local Delivery Section (Local SEO + GEO)
+   ============================================================================== */
+.local-showroom-section {
+  padding: 5rem 0;
+  background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%);
+  border-top: 1px solid #fed7aa;
+  border-bottom: 1px solid #fed7aa;
+  position: relative;
+}
+
+.showroom-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.showroom-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fef3c7;
+  color: #92400e;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid #fde68a;
+  margin-bottom: 1rem;
+}
+
+.showroom-title {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #1f2937;
+  margin-bottom: 1.25rem;
+}
+
+.showroom-title span {
+  color: var(--primary);
+}
+
+.showroom-desc {
+  font-size: 1.05rem;
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.showroom-features-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 2rem;
+}
+
+.showroom-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.975rem;
+  color: #374151;
+}
+
+.showroom-feature-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.showroom-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.showroom-card-box {
+  background: #ffffff;
+  border: 2px solid #fdba74;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 15px 35px -5px rgba(217, 119, 6, 0.15);
+}
+
+.showroom-card-header {
+  border-bottom: 1px solid #ffedd5;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.showroom-card-header h3 {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #9a3412;
+}
+
+.showroom-card-header p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.showroom-detail-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  align-items: flex-start;
+}
+
+.detail-row-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.detail-row-content strong {
+  display: block;
+  font-size: 0.9rem;
+  color: #111827;
+  margin-bottom: 0.15rem;
+}
+
+.detail-row-content p, .detail-row-content span {
+  font-size: 0.875rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.showroom-areas-chipbox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.showroom-area-chip {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+}
+
+/* ==============================================================================
+   AEO & GEO FAQ Accordion Section
+   ============================================================================== */
+.aeo-faq-section {
+  padding: 5rem 0;
+  background: #ffffff;
+}
+
+.faq-container {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.faq-accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.faq-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  background: #f9fafb;
+}
+
+.faq-item[open] {
+  border-color: #fca5a5;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.06);
+}
+
+.faq-summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1.25rem 1.5rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  user-select: none;
+}
+
+.faq-summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-summary::after {
+  content: "＋";
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.faq-item[open] .faq-summary::after {
+  content: "−";
+  color: var(--secondary);
+}
+
+.faq-answer {
+  padding: 0 1.5rem 1.35rem 1.5rem;
+  color: #4b5563;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+}
+
+.faq-answer strong {
+  color: #111827;
+}
+
+@media (max-width: 900px) {
+  .showroom-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .showroom-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* ==============================================================================
+   SORT BY OPTION FILTERS (SHOP PAGE) & HOME PRODUCTS NAV & RECOMMENDED SECTION
+   ============================================================================== */
+
+/* Shop Page Sort By Controls */
+.catalog-sort-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #f9fafb;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.sort-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.sort-icon {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.catalog-sort-select {
+  padding: 0.45rem 1rem 0.45rem 0.65rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-main);
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition);
+}
+
+.catalog-sort-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(194, 29, 29, 0.1);
+}
+
+/* Quick Sort Chips on Shop Page */
+.sort-quick-chips-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-color);
+  width: 100%;
+}
+
+.sort-quick-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sort-chip-btn {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: #ffffff;
+  color: #4b5563;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sort-chip-btn:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.sort-chip-btn.active {
+  background: linear-gradient(135deg, var(--primary), #991b1b);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(194, 29, 29, 0.25);
+}
+
+/* Home Page Products Nav Bar & Filter Tabs */
+.home-products-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+  background: #ffffff;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.home-products-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.home-product-tab {
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #4b5563;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.home-product-tab:hover {
+  background: #f3f4f6;
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.home-product-tab.active {
+  background: linear-gradient(135deg, var(--primary), #a11414);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(194, 29, 29, 0.25);
+}
+
+.home-sort-quick-link {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-md);
+  background: rgba(194, 29, 29, 0.06);
+  transition: all 0.2s ease;
+}
+
+.home-sort-quick-link:hover {
+  background: rgba(194, 29, 29, 0.12);
+  transform: translateX(2px);
+}
+
+/* Recommended Products Section on Product Page */
+.recommended-products-section {
+  margin-top: 3.5rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.recommended-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.recommended-title {
+  font-family: var(--font-heading);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.recommended-subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.recommended-view-all {
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .catalog-sort-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .home-products-nav-bar {
+    padding: 0.75rem;
+  }
+  .home-products-tabs {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .home-product-tab {
+    white-space: nowrap;
+    font-size: 0.82rem;
+    padding: 0.45rem 0.85rem;
+  }
+  .recommended-title {
+    font-size: 1.45rem;
+  }
+}
+

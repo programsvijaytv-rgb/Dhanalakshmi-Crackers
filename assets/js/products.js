@@ -21,10 +21,7 @@ async function fetchCategories() {
         .eq("is_active", true)
         .order("display_order", { ascending: true });
       if (!error && Array.isArray(data) && data.length > 0) {
-        loadedCategories = officialCats.map(oc => {
-          const remote = data.find(d => d.id === oc.id || d.slug === oc.slug || (d.name && d.name.toLowerCase().includes(oc.slug)));
-          return remote ? { ...oc, ...remote, name: oc.name, slug: oc.slug } : oc;
-        });
+        loadedCategories = data;
         return loadedCategories;
       }
     } catch (e) {
@@ -210,14 +207,34 @@ function filterByCategory(categoryId) {
   applyFilters();
 }
 
+let activeSort = "featured";
+
 /**
- * Filter by search text and active category
+ * Handle user changing the sort-by dropdown or quick-sort chips
+ */
+function handleSortChange(sortValue) {
+  activeSort = sortValue || "featured";
+
+  const select = document.getElementById("catalogSortSelect");
+  if (select && select.value !== activeSort) {
+    select.value = activeSort;
+  }
+
+  document.querySelectorAll(".sort-chip-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.sort === activeSort);
+  });
+
+  applyFilters();
+}
+
+/**
+ * Filter by search text and active category, then apply active sort
  */
 function applyFilters() {
   const searchInput = document.getElementById("productSearchInput");
   const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
-  const filtered = loadedProducts.filter(p => {
+  let filtered = loadedProducts.filter(p => {
     const norm = typeof normalizeCategory === "function" ? normalizeCategory(p.category_name, p.name, p.sku) : null;
     const catId = norm ? norm.id : p.category_id;
     const matchesCategory = (activeCategory === "all") || (catId === activeCategory) || (p.category_id === activeCategory);
@@ -228,6 +245,37 @@ function applyFilters() {
       (p.category_name && p.category_name.toLowerCase().includes(query));
     return matchesCategory && matchesSearch;
   });
+
+  // Apply Sort Option Filters (Price Low-to-High, High-to-Low, Discount, Name, Featured)
+  if (activeSort === "price-asc") {
+    filtered.sort((a, b) => Number(a.price) - Number(b.price));
+  } else if (activeSort === "price-desc") {
+    filtered.sort((a, b) => Number(b.price) - Number(a.price));
+  } else if (activeSort === "discount-desc") {
+    filtered.sort((a, b) => {
+      const origA = Number(a.original_price || a.price);
+      const prcA = Number(a.price);
+      const discA = origA > prcA ? (origA - prcA) / origA : 0;
+
+      const origB = Number(b.original_price || b.price);
+      const prcB = Number(b.price);
+      const discB = origB > prcB ? (origB - prcB) / origB : 0;
+
+      return discB - discA;
+    });
+  } else if (activeSort === "name-asc") {
+    filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+  } else if (activeSort === "name-desc") {
+    filtered.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+  } else {
+    // default "featured": featured items first, then in-stock
+    filtered.sort((a, b) => {
+      const featA = Boolean(a.is_featured);
+      const featB = Boolean(b.is_featured);
+      if (featB !== featA) return featB ? 1 : -1;
+      return (Number(b.stock_quantity) > 0 ? 1 : 0) - (Number(a.stock_quantity) > 0 ? 1 : 0);
+    });
+  }
 
   const countBadge = document.getElementById("catalogResultsCount");
   if (countBadge) {
@@ -561,6 +609,100 @@ async function loadProductDetails() {
   } else if (videoCard) {
     videoCard.style.display = "none";
   }
+
+  // Render Recommended Products for Product Details Page
+  renderRecommendedProducts(product);
+}
+
+/**
+ * Render Recommended Products under the product details page
+ * Selects 4 products from the same category, backfilling with top featured items
+ */
+function renderRecommendedProducts(currentProduct) {
+  const container = document.getElementById("recommendedProductsGrid");
+  if (!container || !loadedProducts || loadedProducts.length === 0 || !currentProduct) return;
+
+  const currentId = String(currentProduct.id);
+  const currentCatId = currentProduct.category_id;
+  const currentCatName = (currentProduct.category_name || "").toLowerCase();
+
+  // 1. Same category items first (excluding current product)
+  let candidates = loadedProducts.filter(p => {
+    if (String(p.id) === currentId) return false;
+    if (currentCatId && p.category_id && String(p.category_id) === String(currentCatId)) return true;
+    if (currentCatName && p.category_name && p.category_name.toLowerCase() === currentCatName) return true;
+    return false;
+  });
+
+  // 2. If fewer than 4 candidates, backfill with top featured or affordable items
+  if (candidates.length < 4) {
+    const others = loadedProducts.filter(p => 
+      String(p.id) !== currentId && !candidates.some(c => String(c.id) === String(p.id))
+    );
+    others.sort((a, b) => (Boolean(b.is_featured) ? 1 : 0) - (Boolean(a.is_featured) ? 1 : 0));
+    candidates = candidates.concat(others);
+  }
+
+  // Display top 4 recommended items
+  const recommended = candidates.slice(0, 4);
+  renderProductsGrid(recommended, "recommendedProductsGrid");
+}
+
+let homeActiveTab = "featured";
+let homeProductDisplayLimit = 12;
+
+/**
+ * Render home page products with tabs: Featured, Low-to-High, Under ₹100, Gift Hampers, High-to-Low
+ */
+function renderHomeProducts(tab = "featured", limit = null) {
+  if (tab) homeActiveTab = tab;
+  if (limit) homeProductDisplayLimit = limit;
+
+  const container = document.getElementById("featuredProductsGrid");
+  if (!container || !loadedProducts || loadedProducts.length === 0) return;
+
+  // Update home tabs active state
+  document.querySelectorAll(".home-product-tab").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === homeActiveTab);
+  });
+
+  let prods = [...loadedProducts];
+
+  if (homeActiveTab === "low-to-high") {
+    // Low to high price
+    prods.sort((a, b) => Number(a.price) - Number(b.price));
+  } else if (homeActiveTab === "under-100") {
+    prods = prods.filter(p => Number(p.price) <= 100);
+    prods.sort((a, b) => Number(a.price) - Number(b.price));
+  } else if (homeActiveTab === "gift-boxes") {
+    prods = prods.filter(p => 
+      (p.category_name && p.category_name.toLowerCase().includes("gift")) || 
+      (p.name && p.name.toLowerCase().includes("box"))
+    );
+  } else if (homeActiveTab === "high-to-low") {
+    prods.sort((a, b) => Number(b.price) - Number(a.price));
+  } else {
+    // Featured first, then in-stock
+    prods.sort((a, b) => (Boolean(b.is_featured) ? 1 : 0) - (Boolean(a.is_featured) ? 1 : 0));
+  }
+
+  const toShow = prods.slice(0, homeProductDisplayLimit);
+  renderProductsGrid(toShow, "featuredProductsGrid");
+
+  const loadMoreBtn = document.getElementById("homeLoadMoreBtn");
+  if (loadMoreBtn) {
+    if (prods.length > homeProductDisplayLimit) {
+      loadMoreBtn.style.display = "inline-flex";
+      loadMoreBtn.textContent = `➕ Show More Fireworks (${prods.length - homeProductDisplayLimit} more)`;
+    } else {
+      loadMoreBtn.style.display = "none";
+    }
+  }
+}
+
+function loadMoreHomeProducts() {
+  homeProductDisplayLimit += 12;
+  renderHomeProducts(homeActiveTab, homeProductDisplayLimit);
 }
 
 // Initializer for Product Listing & Details pages
@@ -587,6 +729,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
+    // Check if URL specified sort parameter (e.g. ?sort=price-asc)
+    const sortQuery = urlParams.get("sort");
+    if (sortQuery) {
+      activeSort = sortQuery;
+      const select = document.getElementById("catalogSortSelect");
+      if (select) select.value = sortQuery;
+      document.querySelectorAll(".sort-chip-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.sort === sortQuery);
+      });
+    }
+
     if (isCatalogPage) {
       renderCategoryPills(cats);
       applyFilters();
@@ -598,8 +751,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (isHomePageFeatured) {
-      const featured = prods.filter(p => p.is_featured).slice(0, 6);
-      renderProductsGrid(featured, "featuredProductsGrid");
+      renderHomeProducts("featured", 12);
     }
   }
 
@@ -647,8 +799,7 @@ async function refreshStorefrontProducts() {
     applyFilters();
   }
   if (isHomePageFeatured) {
-    const featured = prods.filter(p => p.is_featured).slice(0, 6);
-    renderProductsGrid(featured, "featuredProductsGrid");
+    renderHomeProducts(homeActiveTab, homeProductDisplayLimit);
   }
   if (isDetailsPage) {
     loadProductDetails();
@@ -663,4 +814,5 @@ if (typeof listenSync === "function") {
     }
   });
 }
+
 
