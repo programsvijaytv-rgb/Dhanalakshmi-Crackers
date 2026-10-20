@@ -475,6 +475,13 @@ body.admin-body {
   border-color: #fde68a;
 }
 
+.status-select-pending_verification {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+  font-weight: 700;
+}
+
 .status-select-confirmed {
   background-color: #f0f9ff;
   color: #075985;

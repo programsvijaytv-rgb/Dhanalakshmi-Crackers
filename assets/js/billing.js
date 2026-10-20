@@ -448,7 +448,7 @@ async function completePOSSale() {
     const tempInvNum = generateInvoiceNumber("DC-");
     showUPIQRModal(grandTotal, tempInvNum, async () => {
       await processInvoiceSave(tempInvNum, custName, custPhone, subtotal, discountAmount, taxAmount, grandTotal);
-    });
+    }, { mode: "pos" });
     return;
   }
 

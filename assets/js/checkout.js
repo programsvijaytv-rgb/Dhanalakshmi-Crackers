@@ -126,9 +126,13 @@ async function handleOrderSubmit(e) {
   // Handle UPI modal flow if selected
   if (paymentMethod === "UPI" && typeof showUPIQRModal === "function") {
     showUPIQRModal(totals.grandTotal, orderNumber, async (payResult) => {
-      orderPayload.payment_status = "paid";
+      orderPayload.payment_status = "pending_verification";
+      orderPayload.upi_utr = (payResult && payResult.utrNumber) ? payResult.utrNumber.trim() : "";
+      if (orderPayload.upi_utr) {
+        orderPayload.notes = (orderPayload.notes ? orderPayload.notes + " | " : "") + `UPI UTR: ${orderPayload.upi_utr}`;
+      }
       await executeOrderPlacement(orderPayload, cart);
-    });
+    }, { mode: "checkout" });
     return;
   }
 
@@ -282,52 +286,94 @@ function showOrderConfirmationModal(order) {
   }
 
   const isPaid = order.payment_status === "paid";
+  const isPendingVerification = order.payment_status === "pending_verification" || (order.payment_method === "UPI" && !isPaid);
+
+  let iconHtml = '📦';
+  let iconBg = '#fef3c7';
+  let iconColor = '#d97706';
+  let headingText = 'Order Placed Successfully!';
+  let subText = `Your order <strong>#${order.order_number}</strong> has been received by Dhanalakshmi Crackers.`;
+  let badgeClass = 'badge-warning';
+  let badgeText = 'CASH ON DELIVERY';
+
+  if (isPaid) {
+    iconHtml = '✓';
+    iconBg = '#dcfce7';
+    iconColor = '#16a34a';
+    headingText = 'Payment Confirmed & Order Placed! 🎉';
+    subText = `Your payment has been received! Official GST Invoice <strong>#${order.order_number}</strong> is generated below.`;
+    badgeClass = 'badge-success';
+    badgeText = 'PAID (VERIFIED)';
+  } else if (isPendingVerification) {
+    iconHtml = '⏳';
+    iconBg = '#eff6ff';
+    iconColor = '#2563eb';
+    headingText = 'Order Placed — Verification Pending ⏳';
+    subText = `Thank you, <strong>${order.customer_name || 'Customer'}</strong>! We have received your order <strong>#${order.order_number}</strong> with UPI payment details.`;
+    badgeClass = '';
+    badgeText = '⏳ PENDING VERIFICATION';
+  }
 
   modal.innerHTML = `
-    <div class="modal-content" style="max-width: 520px; text-align: center; position: relative;">
-      <button type="button" class="modal-close" onclick="closeOrderConfirmModal()" style="position: absolute; top: 1rem; right: 1rem;">&times;</button>
+    <div class="modal-content" style="max-width: 520px; text-align: center; position: relative; border-radius: 16px; overflow: hidden;">
+      <button type="button" class="modal-close" onclick="closeOrderConfirmModal()" style="position: absolute; top: 1rem; right: 1rem; font-size: 1.5rem; background: none; border: none; cursor: pointer; color: #64748b;">&times;</button>
       <div class="modal-body" style="padding: 2.25rem 1.75rem;">
-        <div style="width: 64px; height: 64px; background: ${isPaid ? '#dcfce7' : '#fef3c7'}; color: ${isPaid ? '#16a34a' : '#d97706'}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 1rem auto; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
-          ${isPaid ? '✓' : '📦'}
+        <div style="width: 64px; height: 64px; background: ${iconBg}; color: ${iconColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 1rem auto; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+          ${iconHtml}
         </div>
-        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 0.35rem; color: #111827;">
-          ${isPaid ? 'Payment Confirmed & Order Placed! 🎉' : 'Order Placed Successfully!'}
+        <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.45rem; font-weight: 800; margin-bottom: 0.35rem; color: #111827;">
+          ${headingText}
         </h2>
-        <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 1.25rem;">
-          ${isPaid 
-            ? `Your payment has been received! Official GST Invoice <strong>#${order.order_number}</strong> is generated below.` 
-            : `Your order <strong>#${order.order_number}</strong> has been received by Dhanalakshmi Crackers.`}
+        <p style="color: #6b7280; font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.45;">
+          ${subText}
         </p>
 
-        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.1rem; text-align: left; margin-bottom: 1.5rem; font-size: 0.9rem;">
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 1.1rem; text-align: left; margin-bottom: 1.25rem; font-size: 0.9rem;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
             <span style="color: #6b7280;">Total Amount:</span>
-            <strong style="color: #c21d1d; font-size: 1.1rem;">${formatCurrency(order.total_amount)}</strong>
+            <strong style="color: #c21d1d; font-size: 1.15rem;">${formatCurrency(order.total_amount)}</strong>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem; align-items: center;">
             <span style="color: #6b7280;">Payment Status:</span>
-            <span class="badge ${isPaid ? 'badge-success' : 'badge-warning'}">
-              ${isPaid ? 'PAID (VERIFIED)' : 'CASH ON DELIVERY'}
-            </span>
+            ${isPendingVerification ? `
+              <span class="badge" style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-weight: 700; font-size: 0.78rem;">
+                ⏳ PENDING VERIFICATION
+              </span>
+            ` : `
+              <span class="badge ${badgeClass}">${badgeText}</span>
+            `}
           </div>
           <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
             <span style="color: #6b7280;">Payment Mode:</span>
             <span style="font-weight: 600;">${order.payment_method}</span>
           </div>
+          ${order.upi_utr ? `
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+              <span style="color: #6b7280;">UPI UTR / Ref No:</span>
+              <strong style="font-family: monospace; color: #1e293b;">${order.upi_utr}</strong>
+            </div>
+          ` : ''}
           <div style="display: flex; justify-content: space-between;">
             <span style="color: #6b7280;">Customer:</span>
             <span style="font-weight: 600;">${order.customer_name}</span>
           </div>
         </div>
 
+        ${isPendingVerification ? `
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 0.85rem 1rem; text-align: left; font-size: 0.82rem; color: #166534; margin-bottom: 1.25rem; line-height: 1.45;">
+            ✅ <strong>Verification in Progress:</strong><br>
+            Our store team is verifying your payment with our merchant soundbox / bank statement. Once verified, we will pack and dispatch your order. You can also send payment proof directly via WhatsApp below!
+          </div>
+        ` : ''}
+
         <!-- Invoice PDF and Sharing Actions -->
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
           <a href="invoice.html?invoice=${order.order_number}&download=true" target="_blank" class="btn btn-primary btn-block" style="background: #059669; border-color: #059669; padding: 0.85rem; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <span>📥</span> Download Invoice PDF
+            <span>📥</span> Download Invoice / Order Slip
           </a>
 
           <button type="button" class="btn btn-accent btn-block" onclick="sendOrderConfirmationWhatsApp('${order.order_number}')">
-            <span>📲</span> Send Invoice via WhatsApp
+            <span>📲</span> ${isPendingVerification ? 'Send Payment Proof via WhatsApp' : 'Send Invoice via WhatsApp'}
           </button>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
@@ -346,6 +392,8 @@ function showOrderConfirmationModal(order) {
       </div>
     </div>
   `;
+
+  modal.style.display = "flex";
 
   modal.style.display = "flex";
   document.body.style.overflow = "hidden";
@@ -387,19 +435,24 @@ function sendOrderConfirmationWhatsApp(orderNumber) {
   const origin = window.location.origin;
   const pdfLink = `${origin}/invoice.html?invoice=${order.order_number}&download=true`;
 
+  const isPendingVerification = order.payment_status === "pending_verification" || (order.payment_method === "UPI" && order.payment_status !== "paid");
+  const payStatusDisplay = isPendingVerification 
+    ? `UPI (PENDING VERIFICATION)${order.upi_utr ? '\n🔢 *UPI UTR / Ref:* ' + order.upi_utr : ''}`
+    : `${order.payment_method} (${(order.payment_status || 'PAID').toUpperCase()})`;
+
   const msg = 
 `🎆 *${settings.shop_name || 'Dhanalakshmi Crackers'}* 🎆
 _Direct from Sivakasi - Safe & Certified Fireworks_
 
-🧾 *TAX INVOICE: #${order.order_number}*
+🧾 *ORDER: #${order.order_number}*
 👤 *Customer:* ${order.customer_name}
 💰 *Total Amount:* ${formatCurrency(order.total_amount)}
-💳 *Payment:* ${order.payment_method} (${(order.payment_status || 'PAID').toUpperCase()})
+💳 *Payment:* ${payStatusDisplay}
 ━━━━━━━━━━━━━━━━━━━━━
-📄 *Download Official PDF Invoice:*
+📄 *Download Official PDF Invoice / Slip:*
 ${pdfLink}
 ━━━━━━━━━━━━━━━━━━━━━
-✨ Thank you for choosing Dhanalakshmi Crackers! Wishing you a sparkling and safe Diwali! 🪔
+${isPendingVerification ? '⏳ *Verification:* Store staff will verify receipt in merchant soundbox/bank before dispatch.\n━━━━━━━━━━━━━━━━━━━━━\n' : ''}✨ Thank you for choosing Dhanalakshmi Crackers! Wishing you a sparkling and safe Diwali! 🪔
 📞 Helpline / WhatsApp: ${settings.whatsapp_phone || settings.phone || '+91 98765 43210'}`;
 
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
