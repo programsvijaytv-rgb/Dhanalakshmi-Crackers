@@ -136,7 +136,7 @@ function renderFormattedInvoiceContent() {
   const settings = JSON.parse(localStorage.getItem("dc_business_settings") || "{}");
   const shopName = settings.shop_name || "Dhanalakshmi Crackers";
   const shopAddress = settings.address || "142, By-pass Road, Sivakasi - 626123, Tamil Nadu";
-  const shopPhone = settings.phone || "+91 98765 43210";
+  const shopPhone = settings.phone || "+91 94431 88531";
   const gstNo = settings.gst_number || "33AAAAA0000A1Z5";
   const isInsideAdmin = typeof window !== "undefined" && window.location.pathname.includes("/admin");
   const defaultLocalLogo = isInsideAdmin ? "../assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png" : "assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png";
@@ -524,7 +524,7 @@ ${downloadUrl}
 
 Warm Diwali Wishes,
 ${shopName} Sivakasi
-Helpline: ${settings.phone || '+91 98765 43210'}`
+Helpline: ${settings.phone || '+91 94431 88531'}`
   );
 
   window.open(`mailto:${email}?subject=${subject}&body=${body}`, "_blank");

@@ -13,8 +13,8 @@
   <!-- Sidebar -->
   <aside class="admin-sidebar">
     <div class="admin-sidebar-header">
-      <div class="logo-badge" style="padding: 2px;">
-        <img src="https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png" alt="Dhanalakshmi Crackers Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: inherit;">
+      <div class="logo-badge">
+        <img src="https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png" alt="Dhanalakshmi Crackers Logo">
       </div>
       <div>
         <div class="brand-title">Dhanalakshmi</div>
@@ -193,7 +193,7 @@
         </button>
       </div>
 
-      <form id="productForm" onsubmit="event.preventDefault(); saveProductForm(event, false);">
+      <form id="productForm" novalidate onsubmit="event.preventDefault(); saveProductForm(event, false);">
         <input type="hidden" id="prodId">
 
         <div class="wizard-body">
@@ -234,8 +234,13 @@
 
             <div class="form-row-2">
               <div class="form-group">
-                <label class="form-label" for="prodCategory">Category *</label>
-                <select id="prodCategory" class="form-input" required onchange="updateLiveCardPreview()">
+                <div class="category-label-row">
+                  <label class="form-label" for="prodCategory">Category *</label>
+                  <button type="button" class="btn btn-secondary btn-xs btn-new-category" onclick="promptAddNewCategory()">
+                    <span>➕</span> New Category
+                  </button>
+                </div>
+                <select id="prodCategory" class="form-input" required onchange="handleCategorySelectChange(this)">
                   <option value="">-- Select Category --</option>
                 </select>
                 <div id="prodCategoryError" class="text-danger field-error-msg">⚠️ Please select a category</div>
@@ -409,7 +414,7 @@
             <button type="button" class="btn btn-amber btn-sm d-none" id="wizardSaveAnotherBtn" onclick="saveProductForm(event, true)" title="Save this firecracker and immediately add the next one">
               ➕ Save &amp; Add Another
             </button>
-            <button type="submit" class="btn btn-success btn-sm d-none" id="wizardSaveCloseBtn" onclick="saveProductForm(event, false)">
+            <button type="button" class="btn btn-success btn-sm d-none" id="wizardSaveCloseBtn" onclick="saveProductForm(event, false)">
               💾 Save Firecracker
             </button>
           </div>

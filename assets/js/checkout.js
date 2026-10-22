@@ -495,7 +495,7 @@ _Direct from Sivakasi - Safe & Certified Fireworks_
 ${pdfLink}
 ━━━━━━━━━━━━━━━━━━━━━
 ${isPendingVerification ? '⏳ *Verification:* Store staff will verify receipt in merchant soundbox/bank before dispatch.\n━━━━━━━━━━━━━━━━━━━━━\n' : ''}✨ Thank you for choosing Dhanalakshmi Crackers! Wishing you a sparkling and safe Diwali! 🪔
-📞 Helpline / WhatsApp: ${settings.whatsapp_phone || settings.phone || '+91 98765 43210'}`;
+📞 Helpline / WhatsApp: ${settings.whatsapp_phone || settings.phone || '+91 94431 88531'}`;
 
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 }
@@ -532,7 +532,7 @@ Wishing you and your family a safe, sparkling Diwali!
 
 Best regards,
 ${shopName} Sivakasi
-${settings.phone || '+91 98765 43210'}`
+${settings.phone || '+91 94431 88531'}`
   );
 
   window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;

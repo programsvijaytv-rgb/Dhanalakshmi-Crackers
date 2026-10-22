@@ -46,7 +46,10 @@ CREATE OR REPLACE FUNCTION public.upsert_product_online(
     p_description TEXT,
     p_category_id UUID,
     p_is_featured BOOLEAN,
-    p_is_active BOOLEAN
+    p_is_active BOOLEAN,
+    p_video_url TEXT DEFAULT NULL,
+    p_has_variants BOOLEAN DEFAULT FALSE,
+    p_variants JSONB DEFAULT '[]'::jsonb
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -57,10 +60,12 @@ DECLARE
 BEGIN
     INSERT INTO public.products (
         id, name, sku, price, original_price, stock_quantity,
-        unit, image_url, description, category_id, is_featured, is_active, updated_at
+        unit, image_url, description, category_id, is_featured, is_active,
+        video_url, has_variants, variants, updated_at
     ) VALUES (
         p_id, p_name, p_sku, p_price, p_original_price, p_stock_quantity,
-        p_unit, p_image_url, p_description, p_category_id, p_is_featured, p_is_active, NOW()
+        p_unit, p_image_url, p_description, p_category_id, p_is_featured, p_is_active,
+        p_video_url, p_has_variants, p_variants, NOW()
     )
     ON CONFLICT (id) DO UPDATE SET
         name = EXCLUDED.name,
@@ -74,6 +79,9 @@ BEGIN
         category_id = EXCLUDED.category_id,
         is_featured = EXCLUDED.is_featured,
         is_active = EXCLUDED.is_active,
+        video_url = EXCLUDED.video_url,
+        has_variants = EXCLUDED.has_variants,
+        variants = EXCLUDED.variants,
         updated_at = NOW()
     RETURNING * INTO v_result;
 

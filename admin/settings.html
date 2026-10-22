@@ -13,8 +13,8 @@
   <!-- Sidebar -->
   <aside class="admin-sidebar">
     <div class="admin-sidebar-header">
-      <div class="logo-badge" style="padding: 2px;">
-        <img src="https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png" alt="Dhanalakshmi Crackers Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: inherit;">
+      <div class="logo-badge">
+        <img src="https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png" alt="Dhanalakshmi Crackers Logo">
       </div>
       <div>
         <div class="brand-title">Dhanalakshmi</div>
@@ -160,7 +160,7 @@
                     <span>📞</span> Call Test
                   </a>
                 </div>
-                <input type="tel" inputmode="tel" id="setPhone" class="form-input" placeholder="+91 98765 43210" required oninput="updatePhoneTestLinks()">
+                <input type="tel" inputmode="tel" id="setPhone" class="form-input" placeholder="+91 94431 88531" required oninput="updatePhoneTestLinks()">
               </div>
               <div class="form-group">
                 <div class="form-label-row">
@@ -169,7 +169,7 @@
                     <span>💬</span> WhatsApp Test
                   </a>
                 </div>
-                <input type="tel" inputmode="tel" id="setWhatsappPhone" class="form-input" placeholder="+91 98765 43210" required oninput="updatePhoneTestLinks()">
+                <input type="tel" inputmode="tel" id="setWhatsappPhone" class="form-input" placeholder="+91 94431 88531" required oninput="updatePhoneTestLinks()">
               </div>
             </div>
 
@@ -377,8 +377,8 @@
                   <div class="receipt-tagline" id="liveReceiptTagline">Premium Sivakasi Crackers at Factory Prices</div>
                   <div class="receipt-address-line" id="liveReceiptAddress">Main Road, Sivakasi - 626123, Tamil Nadu</div>
                   <div class="receipt-contact-line">
-                    <span id="liveReceiptPhone">Phone: +91 98765 43210</span>
-                    <span id="liveReceiptWa" style="margin-left: 0.5rem;"></span>
+                    <span id="liveReceiptPhone">Phone: +91 94431 88531</span>
+                    <span id="liveReceiptWa"></span>
                   </div>
                   <div class="receipt-gst-line" id="liveReceiptGst">GSTIN: 33AAAAA0000A1Z5</div>
                 </div>
@@ -396,7 +396,7 @@
 
                 <div class="receipt-dashed-divider"></div>
 
-                <div class="receipt-item-row" style="font-weight: 600;">
+                <div class="receipt-item-row receipt-subtotal-highlight">
                   <span>Item Subtotal:</span>
                   <span>₹1,000.00</span>
                 </div>
@@ -523,6 +523,7 @@
     function setupSettingsEnhancements() {
       // 1. Initial lively render across all boxes
       updateAllLiveBoxes();
+      updatePhoneTestLinks();
       
       // 2. Populate Status Strip Database Sync
       if (document.getElementById("statusCloudSync")) {
@@ -627,7 +628,7 @@
       if (rAddress) rAddress.textContent = address || "Main Road, Sivakasi - 626123, Tamil Nadu";
 
       const rPhone = document.getElementById("liveReceiptPhone");
-      if (rPhone) rPhone.textContent = phone ? `Phone: ${phone}` : "Phone: +91 98765 43210";
+      if (rPhone) rPhone.textContent = phone ? `Phone: ${phone}` : "Phone: +91 94431 88531";
 
       const rWa = document.getElementById("liveReceiptWa");
       if (rWa) rWa.textContent = waPhone ? `WA: ${waPhone}` : "";
@@ -730,9 +731,10 @@
       const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
       if (isSupabaseConfigured() && sb) {
         try {
+          const { default_print_format, ...dbSettings } = settings;
           await sb.from("business_settings").upsert({
             id: "a0000000-0000-0000-0000-000000000001",
-            ...settings,
+            ...dbSettings,
             updated_at: new Date().toISOString()
           });
         } catch (err) {

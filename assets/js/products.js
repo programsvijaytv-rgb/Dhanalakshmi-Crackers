@@ -11,6 +11,7 @@ let activeCategory = "all";
  */
 async function fetchCategories() {
   const officialCats = typeof DEFAULT_CATEGORIES !== "undefined" ? DEFAULT_CATEGORIES : [];
+  let mergedCats = [];
 
   const sb = getSupabase();
   if (isSupabaseConfigured() && sb) {
@@ -21,16 +22,26 @@ async function fetchCategories() {
         .eq("is_active", true)
         .order("display_order", { ascending: true });
       if (!error && Array.isArray(data) && data.length > 0) {
-        loadedCategories = data;
-        return loadedCategories;
+        mergedCats = [...data];
       }
     } catch (e) {
       console.warn("Could not load categories from Supabase", e);
     }
   }
 
-  // Load from local storage or fallback
-  loadedCategories = typeof getStoredCategories === "function" ? getStoredCategories() : officialCats;
+  // Load from local storage or fallback, and merge custom categories
+  const storedCats = typeof getStoredCategories === "function" ? getStoredCategories() : officialCats;
+  if (mergedCats.length === 0) {
+    mergedCats = storedCats;
+  } else {
+    storedCats.forEach(sc => {
+      if (!mergedCats.some(mc => String(mc.id) === String(sc.id) || mc.name.toLowerCase() === sc.name.toLowerCase())) {
+        mergedCats.push(sc);
+      }
+    });
+  }
+
+  loadedCategories = mergedCats;
   return loadedCategories;
 }
 
@@ -65,11 +76,93 @@ async function fetchProducts(forceRefresh = false) {
             return;
           }
 
-          const norm = typeof normalizeCategory === "function" 
-            ? normalizeCategory(remote.categories?.name || remote.category_name, remote.name, remote.sku)
-            : null;
-          const catName = norm ? norm.name : (remote.categories?.name || "Sparklers - ஸ்பார்க்லர்");
-          const catId = norm ? norm.id : remote.category_id;
+          let catName = remote.categories?.name || remote.category_name || "";
+          let catId = remote.category_id || null;
+
+          if (catId && (!catName || catName === "Assorted")) {
+            const matchCat = (loadedCategories && loadedCategories.find(c => String(c.id) === String(catId))) ||
+                             (typeof DEFAULT_CATEGORIES !== "undefined" && DEFAULT_CATEGORIES.find(c => String(c.id) === String(catId)));
+            if (matchCat) catName = matchCat.name;
+          } else if (!catId && catName) {
+            const matchCat = (loadedCategories && loadedCategories.find(c => c.name.toLowerCase() === catName.toLowerCase())) ||
+                             (typeof DEFAULT_CATEGORIES !== "undefined" && DEFAULT_CATEGORIES.find(c => c.name.toLowerCase() === catName.toLowerCase()));
+            if (matchCat) catId = matchCat.id;
+          }
+          if (!catName) catName = "Others";
+
+          let hasVariants = Boolean(remote.has_variants);
+          let variants = (remote.variants && Array.isArray(remote.variants)) ? remote.variants : [];
+          if (typeof remote.variants === "string") {
+            try { variants = JSON.parse(remote.variants); } catch (_) {}
+          }
+          if (!Array.isArray(variants)) variants = [];
+          if (variants.length > 0) hasVariants = true;
+
+          let videoUrl = remote.video_url || "";
+          let cleanDescription = remote.description || "";
+
+          // Extract embedded DC_META if present in description
+          if (cleanDescription && cleanDescription.includes("<!--DC_META:")) {
+            const metaMatch = cleanDescription.match(/<!--DC_META:([\s\S]*?)-->/);
+            if (metaMatch && metaMatch[1]) {
+              try {
+                const parsedMeta = JSON.parse(metaMatch[1]);
+                if (parsedMeta.has_variants) hasVariants = true;
+                if (Array.isArray(parsedMeta.variants) && parsedMeta.variants.length > 0) {
+                  variants = parsedMeta.variants;
+                  hasVariants = true;
+                }
+                if (parsedMeta.video_url && !videoUrl) {
+                  videoUrl = parsedMeta.video_url;
+                }
+              } catch (_) {}
+            }
+            cleanDescription = cleanDescription.replace(/<!--DC_META:[\s\S]*?-->/g, "").trim();
+          }
+
+          // Fallback to local storage product variants if remote didn't have any
+          if (variants.length === 0) {
+            const rawStored = localStorage.getItem("dc_custom_products");
+            if (rawStored) {
+              try {
+                const parsedStored = JSON.parse(rawStored);
+                if (Array.isArray(parsedStored)) {
+                  const matchLocal = parsedStored.find(lp => String(lp.id) === String(remote.id) || (lp.sku && lp.sku === remote.sku));
+                  if (matchLocal) {
+                    let lv = matchLocal.variants;
+                    if (typeof lv === "string") {
+                      try { lv = JSON.parse(lv); } catch (_) {}
+                    }
+                    if (Array.isArray(lv) && lv.length > 0) {
+                      variants = lv;
+                      hasVariants = true;
+                    }
+                    if (matchLocal.video_url && !videoUrl) {
+                      videoUrl = matchLocal.video_url;
+                    }
+                  }
+                }
+              } catch (_) {}
+            }
+          }
+
+          // Fallback to DEFAULT_PRODUCTS if still empty
+          if (variants.length === 0 && typeof DEFAULT_PRODUCTS !== "undefined") {
+            const defMatch = DEFAULT_PRODUCTS.find(dp => String(dp.id) === String(remote.id) || (dp.sku && dp.sku === remote.sku));
+            if (defMatch) {
+              let dv = defMatch.variants;
+              if (typeof dv === "string") {
+                try { dv = JSON.parse(dv); } catch (_) {}
+              }
+              if (Array.isArray(dv) && dv.length > 0) {
+                variants = dv;
+                hasVariants = true;
+              }
+              if (defMatch.video_url && !videoUrl) {
+                videoUrl = defMatch.video_url;
+              }
+            }
+          }
 
           remoteProducts.push({
             id: remote.id,
@@ -82,13 +175,13 @@ async function fetchProducts(forceRefresh = false) {
             stock_quantity: Number(remote.stock_quantity),
             min_stock_alert: Number(remote.min_stock_alert || 10),
             unit: remote.unit || "Box",
-            description: remote.description || "",
+            description: cleanDescription,
             image_url: remote.image_url,
             is_featured: Boolean(remote.is_featured),
             is_active: remote.is_active !== false,
-            video_url: remote.video_url || "",
-            has_variants: Boolean(remote.has_variants),
-            variants: (remote.variants && Array.isArray(remote.variants)) ? remote.variants : []
+            video_url: videoUrl,
+            has_variants: Boolean(hasVariants || variants.length > 0),
+            variants: variants
           });
         });
 
@@ -150,12 +243,12 @@ async function fetchProducts(forceRefresh = false) {
     return !deletedIds.includes(p.id) && (!p.sku || !deletedIds.includes(p.sku));
   });
 
-  // Normalize all local product categories
+  // Ensure local products preserve accurate categories
   localProducts = localProducts.map(p => {
-    const norm = typeof normalizeCategory === "function" ? normalizeCategory(p.category_name, p.name, p.sku) : null;
-    if (norm) {
-      p.category_name = norm.name;
-      p.category_id = norm.id;
+    if (!p.category_name && p.category_id) {
+      const matchCat = (loadedCategories && loadedCategories.find(c => String(c.id) === String(p.category_id))) ||
+                       (typeof DEFAULT_CATEGORIES !== "undefined" && DEFAULT_CATEGORIES.find(c => String(c.id) === String(p.category_id)));
+      if (matchCat) p.category_name = matchCat.name;
     }
     return p;
   });
@@ -248,9 +341,9 @@ function applyFilters() {
   const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
 
   let filtered = loadedProducts.filter(p => {
-    const norm = typeof normalizeCategory === "function" ? normalizeCategory(p.category_name, p.name, p.sku) : null;
-    const catId = norm ? norm.id : p.category_id;
-    const matchesCategory = (activeCategory === "all") || (catId === activeCategory) || (p.category_id === activeCategory);
+    const matchesCategory = (activeCategory === "all") || 
+      (String(p.category_id) === String(activeCategory)) || 
+      (p.category_name && p.category_name.toLowerCase() === String(activeCategory).toLowerCase());
     const matchesSearch = !query || 
       p.name.toLowerCase().includes(query) || 
       (p.sku && p.sku.toLowerCase().includes(query)) ||
@@ -476,19 +569,33 @@ async function loadProductDetails() {
   const unitEl = document.getElementById("detailUnit");
 
   if (titleEl) titleEl.textContent = product.name;
-  if (descEl) descEl.textContent = product.description || "Authentic Sivakasi fireworks with superior safety certification.";
+  const rawDesc = (product.description || "Authentic Sivakasi fireworks with superior safety certification.");
+  if (descEl) descEl.textContent = rawDesc.replace(/<!--DC_META:[\s\S]*?-->/g, "").trim();
   if (imgEl && product.image_url) imgEl.src = product.image_url;
 
+  let catName = product.category_name;
+  if (!catName || catName === "Assorted" || catName === "Ground Chakkars") {
+    const matchCat = (loadedCategories && loadedCategories.find(c => String(c.id) === String(product.category_id))) ||
+                     (typeof DEFAULT_CATEGORIES !== "undefined" && DEFAULT_CATEGORIES.find(c => String(c.id) === String(product.category_id)));
+    if (matchCat) catName = matchCat.name;
+  }
   const catBadge = document.getElementById("detailCategoryBadge");
-  if (catBadge) catBadge.textContent = product.category_name || "Crackers";
+  if (catBadge) catBadge.textContent = catName || "Crackers";
   const breadcrumbCat = document.getElementById("breadcrumbCategory");
-  if (breadcrumbCat) breadcrumbCat.textContent = product.category_name || "Catalog";
+  if (breadcrumbCat) breadcrumbCat.textContent = catName || "Catalog";
 
   // Update Page Title dynamically
   document.title = `${product.name} | Dhanalakshmi Crackers Sivakasi`;
 
   // Variable Product Handling
-  const isVariable = Boolean(product.has_variants && Array.isArray(product.variants) && product.variants.length > 0);
+  let variants = product.variants;
+  if (typeof variants === "string") {
+    try { variants = JSON.parse(variants); } catch (_) {}
+  }
+  if (!Array.isArray(variants)) variants = [];
+  product.variants = variants;
+
+  const isVariable = Boolean((product.has_variants || variants.length > 0) && variants.length > 0);
   const variantsGroup = document.getElementById("detailVariantsGroup");
   const pillsContainer = document.getElementById("detailVariantsPills");
   const variantBadge = document.getElementById("selectedVariantBadge");
@@ -531,7 +638,7 @@ async function loadProductDetails() {
 
   if (isVariable && variantsGroup && pillsContainer) {
     variantsGroup.classList.remove("d-none");
-    variantsGroup.style.display = "block";
+    variantsGroup.style.setProperty("display", "block", "important");
     pillsContainer.innerHTML = "";
 
     product.variants.forEach((v, idx) => {
@@ -602,7 +709,25 @@ async function loadProductDetails() {
   const webInstrContainer = document.getElementById("detailWebInstructionContainer");
   const webInstrLink = document.getElementById("detailWebInstructionLink");
 
-  const rawVideoUrl = (product.video_url || "").trim();
+  // Helper to extract clean YouTube embed URL
+  function getYouTubeEmbedUrl(url) {
+    if (!url || typeof url !== "string") return null;
+    const trimmed = url.trim();
+    if (!trimmed) return null;
+    try {
+      const match = trimmed.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i);
+      if (match && match[1]) {
+        return `https://www.youtube.com/embed/${match[1]}?rel=0`;
+      }
+      if (trimmed.includes("youtube.com/embed/")) {
+        return trimmed;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  const settings = typeof getStoredBusinessSettings === "function" ? getStoredBusinessSettings() : {};
+  const rawVideoUrl = (product.video_url || settings.guide_video_url || "https://www.youtube.com/watch?v=kY7XlB8mS78").trim();
 
   if (videoCard && rawVideoUrl) {
     videoCard.classList.remove("d-none");
@@ -613,21 +738,8 @@ async function loadProductDetails() {
       videoExtLink.style.display = "inline-flex";
     }
 
-    const isYouTube = rawVideoUrl.includes("youtube.com") || rawVideoUrl.includes("youtu.be");
-    if (isYouTube && videoIframe && videoEmbedContainer) {
-      let embedUrl = rawVideoUrl;
-      if (rawVideoUrl.includes("watch?v=")) {
-        const videoId = rawVideoUrl.split("watch?v=")[1]?.split("&")[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
-      } else if (rawVideoUrl.includes("youtu.be/")) {
-        const videoId = rawVideoUrl.split("youtu.be/")[1]?.split("?")[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
-      } else if (rawVideoUrl.includes("/shorts/")) {
-        const videoId = rawVideoUrl.split("/shorts/")[1]?.split("?")[0];
-        embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
-      } else if (!embedUrl.includes("/embed/")) {
-        embedUrl = `https://www.youtube.com/embed/${rawVideoUrl.split("/").pop()}?rel=0`;
-      }
+    const embedUrl = getYouTubeEmbedUrl(rawVideoUrl);
+    if (embedUrl && videoIframe && videoEmbedContainer) {
       videoIframe.src = embedUrl;
       videoEmbedContainer.style.display = "block";
       if (webInstrContainer) webInstrContainer.style.display = "none";

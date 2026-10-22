@@ -4276,8 +4276,8 @@ body.mobile-nav-locked {
   gap: 3px;
 }
 
-.detail-variants-group {
-  display: none;
+.detail-variants-group.d-none {
+  display: none !important;
 }
 
 .detail-video-card {
@@ -5044,6 +5044,7 @@ body.mobile-nav-locked {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -5304,7 +5305,6 @@ body.mobile-nav-locked {
     overflow-x: auto;
     flex-wrap: nowrap;
     padding-bottom: 0.35rem;
-    -webkit-overflow-scrolling: touch;
   }
   .home-product-tab {
     white-space: nowrap;
@@ -5539,5 +5539,72 @@ body.has-floating-cart .mobile-bottom-nav {
     font-size: 0.85rem;
   }
 }
+
+/* External helper classes for zero inline styles */
+.footer-helpline-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.catalog-cta-wrap {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.google-review-callout-box {
+  background: #eff6ff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 0.85rem;
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.google-review-callout-text {
+  font-size: 0.82rem;
+  color: #1e40af;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.btn-google-direct {
+  background: #1a73e8;
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.showroom-helpline-link {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.faq-section-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.footer-brand-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.footer-brand-name {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
 
 

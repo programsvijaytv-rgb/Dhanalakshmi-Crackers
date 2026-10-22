@@ -574,6 +574,76 @@ async function populateCategoryDropdown(selectedCategoryId = "") {
     }
     select.appendChild(opt);
   });
+
+  const newCatOpt = document.createElement("option");
+  newCatOpt.value = "__NEW_CATEGORY__";
+  newCatOpt.textContent = "➕ + Create New Category...";
+  newCatOpt.style.fontWeight = "bold";
+  newCatOpt.style.color = "#d97706";
+  select.appendChild(newCatOpt);
+}
+
+function handleCategorySelectChange(selectEl) {
+  if (selectEl && selectEl.value === "__NEW_CATEGORY__") {
+    selectEl.value = "";
+    promptAddNewCategory();
+    return;
+  }
+  updateLiveCardPreview();
+}
+
+async function promptAddNewCategory() {
+  const catName = prompt("Enter new Category Name (e.g. Multi Color Fancy Outfit, Giant Sparklers, etc.):");
+  if (!catName || !catName.trim()) return null;
+
+  const trimmed = catName.trim();
+  const slug = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `cat-${Date.now()}`;
+  const newCatId = (typeof crypto !== "undefined" && crypto.randomUUID) 
+    ? crypto.randomUUID() 
+    : ("c2000000-0000-0000-0000-" + Date.now().toString(16).padStart(12, "0"));
+
+  const newCat = {
+    id: newCatId,
+    name: trimmed,
+    slug: slug,
+    description: `${trimmed} fireworks collection`,
+    display_order: 99,
+    is_active: true
+  };
+
+  // 1. Save locally
+  const stored = typeof getStoredCategories === "function" ? getStoredCategories() : [];
+  const exists = stored.find(c => c.name.toLowerCase() === trimmed.toLowerCase());
+  if (exists) {
+    showToast(`Category "${exists.name}" already exists!`, "info");
+    await populateCategoryDropdown(exists.id);
+    return exists.id;
+  }
+
+  stored.push(newCat);
+  localStorage.setItem("dc_custom_categories", JSON.stringify(stored));
+
+  // 2. Online sync to Supabase if available
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
+  if (isSupabaseConfigured() && sb) {
+    try {
+      await sb.from("categories").upsert(newCat, { onConflict: "id" });
+      console.log("[Category Sync] Upserted new category to Supabase:", newCat);
+    } catch (e) {
+      console.warn("[Category Sync] Supabase category write note:", e);
+    }
+  }
+
+  // 3. Update dropdowns & filters
+  await populateCategoryDropdown(newCat.id);
+  await initAdminCategoryFilters();
+
+  if (typeof broadcastSync === "function") {
+    broadcastSync("categories_updated", { category: newCat });
+  }
+
+  showToast(`🎉 Category "${trimmed}" created and selected!`, "success");
+  return newCat.id;
 }
 
 /**
@@ -1097,23 +1167,42 @@ function openEditProductModal(productId) {
   document.getElementById("prodStock").value = product.stock_quantity;
   document.getElementById("prodUnit").value = product.unit || "Box";
   document.getElementById("prodImageUrl").value = product.image_url || "";
-  document.getElementById("prodDesc").value = product.description || "";
+  const cleanDesc = (product.description || "").replace(/<!--DC_META:[\s\S]*?-->/g, "").trim();
+  document.getElementById("prodDesc").value = cleanDesc;
 
   const videoEl = document.getElementById("prodVideoUrl");
-  if (videoEl) videoEl.value = product.video_url || "";
+  let videoVal = product.video_url || "";
+
+  // Check if variable product
+  let variants = product.variants;
+  if (typeof variants === "string") {
+    try { variants = JSON.parse(variants); } catch (_) {}
+  }
+  if (!Array.isArray(variants)) variants = [];
+  if (variants.length === 0 && product.description && product.description.includes("<!--DC_META:")) {
+    const m = product.description.match(/<!--DC_META:([\s\S]*?)-->/);
+    if (m && m[1]) {
+      try {
+        const meta = JSON.parse(m[1]);
+        if (Array.isArray(meta.variants) && meta.variants.length > 0) variants = meta.variants;
+        if (meta.video_url && !videoVal) videoVal = meta.video_url;
+      } catch (_) {}
+    }
+  }
+
+  if (videoEl) videoEl.value = videoVal;
 
   populateCategoryDropdown(product.category_id || product.category_name);
 
   const featEl = document.getElementById("prodFeatured");
   if (featEl) featEl.checked = Boolean(product.is_featured);
 
-  // Check if variable product
-  if (product.has_variants && Array.isArray(product.variants) && product.variants.length > 0) {
+  if (variants.length > 0 || product.has_variants) {
     toggleProductType("variable");
     const tbody = document.getElementById("variantTableBody");
     if (tbody) {
       tbody.innerHTML = "";
-      product.variants.forEach(v => addVariantRow(v));
+      variants.forEach(v => addVariantRow(v));
     }
   } else {
     toggleProductType("simple");
@@ -1558,16 +1647,26 @@ async function saveProductToSupabaseOnline(productData) {
   productData.stock_quantity = stock;
 
   let unit = (productData.unit || "Box").trim();
-  let desc = (productData.description || "").trim();
-  let image_url = (productData.image_url || "").trim() || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
-  let is_featured = Boolean(productData.is_featured);
-
-  // Validate category_id against UUID format
-  let category_id = productData.category_id;
+  let category_id = productData.category_id || null;
   if (category_id && !uuidRegex.test(category_id)) {
     category_id = null;
   }
 
+  let is_featured = Boolean(productData.is_featured);
+  let image_url = (productData.image_url || "").trim() || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
+
+  let cleanDesc = (productData.description || "").replace(/<!--DC_META:[\s\S]*?-->/g, "").trim();
+  const metaPayload = {
+    has_variants: Boolean(productData.has_variants),
+    variants: Array.isArray(productData.variants) ? productData.variants : [],
+    video_url: (productData.video_url || "").trim()
+  };
+  let descWithMeta = (metaPayload.has_variants || metaPayload.video_url)
+    ? `${cleanDesc}<!--DC_META:${JSON.stringify(metaPayload)}-->`
+    : cleanDesc;
+
+  // Live Supabase table columns:
+  // id, name, sku, category_id, description, price, original_price, stock_quantity, unit, image_url, is_featured, is_active, updated_at
   const dbPayload = {
     id,
     name: (productData.name || "").trim(),
@@ -1576,26 +1675,63 @@ async function saveProductToSupabaseOnline(productData) {
     original_price,
     stock_quantity: stock,
     unit,
-    category_id: category_id || null,
+    category_id: category_id,
     is_featured,
     image_url,
-    description: desc,
+    description: descWithMeta,
     is_active: productData.is_active !== false,
     updated_at: new Date().toISOString()
   };
 
+  async function ensureCategoryInSupabase(catId) {
+    if (!catId || !uuidRegex.test(catId)) return;
+    try {
+      const stored = typeof getStoredCategories === "function" ? getStoredCategories() : [];
+      const catObj = stored.find(c => String(c.id) === String(catId)) ||
+                     (typeof DEFAULT_CATEGORIES !== "undefined" && DEFAULT_CATEGORIES.find(c => String(c.id) === String(catId)));
+      if (catObj) {
+        const catSlug = catObj.slug || catObj.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || `cat-${Date.now()}`;
+        await sb.from("categories").upsert({
+          id: catId,
+          name: catObj.name,
+          slug: catSlug,
+          description: catObj.description || catObj.name,
+          display_order: catObj.display_order || 99,
+          is_active: true
+        }, { onConflict: "id" });
+      }
+    } catch (e) {
+      console.warn("[Cloud Save] Category auto-upsert note:", e);
+    }
+  }
+
   async function execUpsert(payload) {
     let res = await sb.from("products").upsert(payload, { onConflict: "id" }).select();
 
-    // 1. Foreign key constraint retry with null category
-    if (res.error && (res.error.message?.toLowerCase().includes("foreign key") || res.error.message?.toLowerCase().includes("category"))) {
-      console.warn("[Cloud Save] Retrying with category_id: null due to FK constraint:", res.error.message);
-      payload.category_id = null;
-      productData.category_id = null;
+    // 1. Column error fallback in case of schema cache mismatch
+    if (res.error && res.error.message && (res.error.message.includes("column") || res.error.message.includes("schema cache"))) {
+      console.warn("[Cloud Save] Schema cache/column note, retrying clean:", res.error.message);
+      delete payload.video_url;
+      delete payload.has_variants;
+      delete payload.variants;
       res = await sb.from("products").upsert(payload, { onConflict: "id" }).select();
     }
 
-    // 2. SKU constraint retry with auto-resolved unique SKU
+    // 2. Foreign key constraint retry: auto-create category in DB first
+    if (res.error && (res.error.message?.toLowerCase().includes("foreign key") || res.error.message?.toLowerCase().includes("category"))) {
+      if (payload.category_id) {
+        console.warn("[Cloud Save] Retrying after auto-upserting category to DB:", payload.category_id);
+        await ensureCategoryInSupabase(payload.category_id);
+        res = await sb.from("products").upsert(payload, { onConflict: "id" }).select();
+      }
+      if (res.error && (res.error.message?.toLowerCase().includes("foreign key") || res.error.message?.toLowerCase().includes("category"))) {
+        console.warn("[Cloud Save] Retrying with category_id: null as fallback due to FK constraint:", res.error.message);
+        payload.category_id = null;
+        res = await sb.from("products").upsert(payload, { onConflict: "id" }).select();
+      }
+    }
+
+    // 3. SKU constraint retry with auto-resolved unique SKU
     if (res.error && (res.error.message?.toLowerCase().includes("sku") || res.error.message?.toLowerCase().includes("duplicate key"))) {
       payload.sku = `${payload.sku.slice(0, 16)}-${Math.floor(Math.random() * 9000 + 1000)}`;
       productData.sku = payload.sku;
@@ -1607,7 +1743,29 @@ async function saveProductToSupabaseOnline(productData) {
       return { success: true, data: res.data[0] };
     }
 
-    // 3. Fallback to direct REST update or insert
+    // 4. Fallback to direct REST fetch
+    try {
+      const restBaseUrl = sb.supabaseUrl || (typeof SUPABASE_URL !== "undefined" ? SUPABASE_URL : "https://pbjcqamswwwoklcgdfjd.supabase.co");
+      const restKey = sb.supabaseKey || (typeof SUPABASE_ANON_KEY !== "undefined" ? SUPABASE_ANON_KEY : "sb_publishable_-nw-Lngui7gSYjJLsSaCAg_3OnHKd7H");
+      const directRes = await fetch(`${restBaseUrl}/rest/v1/products`, {
+        method: "POST",
+        headers: {
+          "apikey": restKey,
+          "Authorization": `Bearer ${restKey}`,
+          "Content-Type": "application/json",
+          "Prefer": "resolution=merge-duplicates,return=representation"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (directRes.ok) {
+        const body = await directRes.json();
+        return { success: true, data: Array.isArray(body) ? body[0] : body };
+      }
+    } catch (fetchErr) {
+      console.warn("[Cloud Save] Direct fetch fallback error:", fetchErr);
+    }
+
+    // 5. Fallback to direct REST update or insert
     const { data: existing } = await sb.from("products").select("id").eq("id", payload.id).maybeSingle();
     let restRes;
     if (existing) {
@@ -1616,46 +1774,9 @@ async function saveProductToSupabaseOnline(productData) {
       restRes = await sb.from("products").insert(payload).select();
     }
 
-    if (restRes.error && (restRes.error.message?.toLowerCase().includes("foreign key") || restRes.error.message?.toLowerCase().includes("category"))) {
-      payload.category_id = null;
-      productData.category_id = null;
-      restRes = existing 
-        ? await sb.from("products").update(payload).eq("id", payload.id).select()
-        : await sb.from("products").insert(payload).select();
-    }
-
-    if (restRes.error && (restRes.error.message?.toLowerCase().includes("sku") || restRes.error.message?.toLowerCase().includes("duplicate key"))) {
-      payload.sku = `${payload.sku.slice(0, 16)}-${Math.floor(Math.random() * 9000 + 1000)}`;
-      productData.sku = payload.sku;
-      restRes = existing 
-        ? await sb.from("products").update(payload).eq("id", payload.id).select()
-        : await sb.from("products").insert(payload).select();
-    }
-
     if (!restRes.error && restRes.data && restRes.data.length > 0) {
       return { success: true, data: restRes.data[0] };
     }
-
-    // 4. Fallback to RPC upsert_product_online
-    try {
-      const { data: rpcData, error: rpcErr } = await sb.rpc("upsert_product_online", {
-        p_id: payload.id,
-        p_name: payload.name,
-        p_sku: payload.sku,
-        p_price: payload.price,
-        p_original_price: payload.original_price,
-        p_stock_quantity: payload.stock_quantity,
-        p_unit: payload.unit,
-        p_image_url: payload.image_url,
-        p_description: payload.description,
-        p_category_id: payload.category_id,
-        p_is_featured: payload.is_featured,
-        p_is_active: payload.is_active
-      });
-      if (!rpcErr && rpcData) {
-        return { success: true, data: rpcData };
-      }
-    } catch (_) {}
 
     return { 
       success: false, 
@@ -1759,7 +1880,13 @@ async function syncPendingLocalProductsOnline(showFeedback = false) {
 
 async function saveProductForm(e, keepOpenAndAddAnother = false) {
   if (e && e.preventDefault) e.preventDefault();
-  let id = document.getElementById("prodId").value.trim();
+
+  const saveBtn = document.getElementById("wizardSaveCloseBtn");
+  const saveAnotherBtn = document.getElementById("wizardSaveAnotherBtn");
+  const origSaveText = saveBtn ? saveBtn.innerHTML : "💾 Save Firecracker";
+  const origAnotherText = saveAnotherBtn ? saveAnotherBtn.innerHTML : "➕ Save & Add Another";
+
+  let id = document.getElementById("prodId")?.value.trim() || "";
   const name = document.getElementById("prodName")?.value.trim() || "";
   const catSelect = document.getElementById("prodCategory");
   let category_id = catSelect ? catSelect.value : "";
@@ -1894,115 +2021,138 @@ async function saveProductForm(e, keepOpenAndAddAnother = false) {
     is_active: true
   };
 
-  // Perform DIRECT ONLINE SAVE to Supabase PostgreSQL
-  let onlineSaved = false;
-  let onlineError = null;
-
-  const onlineOutcome = await saveProductToSupabaseOnline(productData);
-  if (onlineOutcome.success) {
-    onlineSaved = true;
-    if (onlineOutcome.data?.id) {
-      id = onlineOutcome.data.id;
-      productData.id = onlineOutcome.data.id;
-    }
-    if (onlineOutcome.data?.sku) {
-      sku = onlineOutcome.data.sku;
-      productData.sku = onlineOutcome.data.sku;
-    }
-  } else {
-    onlineError = onlineOutcome.error;
-    console.warn("[Online Save] Supabase save note:", onlineError);
+  // Immediate visual feedback
+  if (saveBtn) {
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = "⏳ Saving...";
+  }
+  if (saveAnotherBtn) {
+    saveAnotherBtn.disabled = true;
   }
 
-  // Update local authoritative list
-  const idx = adminProductList.findIndex(p => String(p.id) === String(id) || (p.sku && p.sku === sku));
-  if (idx !== -1) {
-    adminProductList[idx] = { ...adminProductList[idx], ...productData };
-  } else {
-    adminProductList.unshift(productData);
-  }
+  try {
+    // Perform DIRECT ONLINE SAVE to Supabase PostgreSQL
+    let onlineSaved = false;
+    let onlineError = null;
 
-  // Remove from deleted list if previously marked
-  const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : JSON.parse(localStorage.getItem("dc_deleted_product_ids") || "[]");
-  const updatedDeletedIds = deletedIds.filter(did => String(did) !== String(id));
-  localStorage.setItem("dc_deleted_product_ids", JSON.stringify(updatedDeletedIds));
-
-  localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
-  localStorage.setItem("dc_products_updated_at", Date.now().toString());
-
-  // Broadcast real-time sync event to storefront website
-  if (typeof broadcastSync === "function") {
-    broadcastSync("products_updated", { id, action: "save", product: productData });
-  }
-
-  renderAdminProductsTable(adminProductList);
-
-  if (keepOpenAndAddAnother) {
-    wizardBatchAddedCount++;
-    const batchBadge = document.getElementById("batchSaveCounter");
-    if (batchBadge) {
-      batchBadge.style.display = "inline-flex";
-      batchBadge.textContent = `✓ ${wizardBatchAddedCount} added`;
-    }
-
-    // Preserve chosen category for superfast consecutive entry
-    const savedCat = catSelect ? catSelect.value : "";
-
-    // Reset form fields for the next firecracker
-    const form = document.getElementById("productForm");
-    if (form) form.reset();
-    document.getElementById("prodId").value = "";
-    document.getElementById("prodSku").value = "";
-    document.getElementById("prodPrice").value = "";
-    document.getElementById("prodOriginalPrice").value = "";
-    document.getElementById("prodStock").value = "100";
-    document.getElementById("prodUnit").value = "Box";
-    document.getElementById("prodImageUrl").value = "";
-    document.getElementById("prodVideoUrl").value = "";
-    document.getElementById("prodDesc").value = "";
-    if (savedCat && catSelect) catSelect.value = savedCat;
-
-    toggleProductType("simple");
-    const varTbody = document.getElementById("variantTableBody");
-    if (varTbody) varTbody.innerHTML = "";
-
-    const thumb = document.getElementById("imagePreviewThumb");
-    if (thumb) thumb.src = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
-
-    goToWizardStep(1);
-    const titleEl = document.getElementById("productModalTitle");
-    if (titleEl) titleEl.textContent = `Add Firecracker #${wizardBatchAddedCount + 1}`;
-
-    setTimeout(() => {
-      const nameInput = document.getElementById("prodName");
-      if (nameInput) nameInput.focus();
-    }, 150);
-
-    if (onlineSaved) {
-      showToast(`🎉 "${name}" saved ONLINE in Supabase cloud! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "success");
-    } else {
-      showToast(`💾 "${name}" saved locally! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "info");
-    }
-  } else {
-    closeProductModal();
-
-    if (onlineSaved) {
-      showToast(`🎉 Firecracker "${name}" saved ONLINE in Supabase cloud! Storefront is live.`, "success", 5000);
-      const badge = document.getElementById("cloudSyncStatusBadge");
-      if (badge) {
-        badge.className = "table-header-sub badge badge-success";
-        badge.textContent = "☁️ Online Cloud Sync: Active (Live DB)";
+    const onlineOutcome = await saveProductToSupabaseOnline(productData);
+    if (onlineOutcome.success) {
+      onlineSaved = true;
+      if (onlineOutcome.data?.id) {
+        id = onlineOutcome.data.id;
+        productData.id = onlineOutcome.data.id;
       }
-    } else if (onlineError) {
-      console.warn("Supabase online save note:", onlineError);
-      showToast(`💾 Firecracker "${name}" saved locally! (${onlineError})`, "info", 5000);
-      const badge = document.getElementById("cloudSyncStatusBadge");
-      if (badge) {
-        badge.className = "table-header-sub badge badge-warning";
-        badge.textContent = "☁️ Saved Locally (Cloud Check Note)";
+      if (onlineOutcome.data?.sku) {
+        sku = onlineOutcome.data.sku;
+        productData.sku = onlineOutcome.data.sku;
       }
     } else {
-      showToast(`🎉 Firecracker "${name}" saved successfully!`, "success");
+      onlineError = onlineOutcome.error;
+      console.warn("[Online Save] Supabase save note:", onlineError);
+    }
+
+    // Update local authoritative list
+    const idx = adminProductList.findIndex(p => String(p.id) === String(id) || (p.sku && p.sku === sku));
+    if (idx !== -1) {
+      adminProductList[idx] = { ...adminProductList[idx], ...productData };
+    } else {
+      adminProductList.unshift(productData);
+    }
+
+    // Remove from deleted list if previously marked
+    const deletedIds = typeof getDeletedProductIds === "function" ? getDeletedProductIds() : JSON.parse(localStorage.getItem("dc_deleted_product_ids") || "[]");
+    const updatedDeletedIds = deletedIds.filter(did => String(did) !== String(id));
+    localStorage.setItem("dc_deleted_product_ids", JSON.stringify(updatedDeletedIds));
+
+    localStorage.setItem("dc_custom_products", JSON.stringify(adminProductList));
+    localStorage.setItem("dc_products_updated_at", Date.now().toString());
+
+    // Broadcast real-time sync event to storefront website
+    if (typeof broadcastSync === "function") {
+      broadcastSync("products_updated", { id, action: "save", product: productData });
+    }
+
+    renderAdminProductsTable(adminProductList);
+
+    if (keepOpenAndAddAnother) {
+      wizardBatchAddedCount++;
+      const batchBadge = document.getElementById("batchSaveCounter");
+      if (batchBadge) {
+        batchBadge.style.display = "inline-flex";
+        batchBadge.textContent = `✓ ${wizardBatchAddedCount} added`;
+      }
+
+      // Preserve chosen category for superfast consecutive entry
+      const savedCat = catSelect ? catSelect.value : "";
+
+      // Reset form fields for the next firecracker
+      const form = document.getElementById("productForm");
+      if (form) form.reset();
+      document.getElementById("prodId").value = "";
+      document.getElementById("prodSku").value = "";
+      document.getElementById("prodPrice").value = "";
+      document.getElementById("prodOriginalPrice").value = "";
+      document.getElementById("prodStock").value = "100";
+      document.getElementById("prodUnit").value = "Box";
+      document.getElementById("prodImageUrl").value = "";
+      document.getElementById("prodVideoUrl").value = "";
+      document.getElementById("prodDesc").value = "";
+      if (savedCat && catSelect) catSelect.value = savedCat;
+
+      toggleProductType("simple");
+      const varTbody = document.getElementById("variantTableBody");
+      if (varTbody) varTbody.innerHTML = "";
+
+      const thumb = document.getElementById("imagePreviewThumb");
+      if (thumb) thumb.src = "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600";
+
+      goToWizardStep(1);
+      const titleEl = document.getElementById("productModalTitle");
+      if (titleEl) titleEl.textContent = `Add Firecracker #${wizardBatchAddedCount + 1}`;
+
+      setTimeout(() => {
+        const nameInput = document.getElementById("prodName");
+        if (nameInput) nameInput.focus();
+      }, 150);
+
+      if (onlineSaved) {
+        showToast(`🎉 "${name}" saved ONLINE in Supabase cloud! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "success", 4000);
+      } else {
+        showToast(`💾 "${name}" saved locally! Ready for firecracker #${wizardBatchAddedCount + 1}.`, "info", 4000);
+      }
+    } else {
+      closeProductModal();
+
+      if (onlineSaved) {
+        showToast(`🎉 Firecracker "${name}" saved ONLINE in Supabase cloud! Storefront is live.`, "success", 5000);
+        const badge = document.getElementById("cloudSyncStatusBadge");
+        if (badge) {
+          badge.className = "table-header-sub badge badge-success";
+          badge.textContent = "☁️ Online Cloud Sync: Active (Live DB)";
+        }
+      } else if (onlineError) {
+        console.warn("Supabase online save note:", onlineError);
+        showToast(`💾 Firecracker "${name}" saved locally! (${onlineError})`, "info", 5000);
+        const badge = document.getElementById("cloudSyncStatusBadge");
+        if (badge) {
+          badge.className = "table-header-sub badge badge-warning";
+          badge.textContent = "☁️ Saved Locally (Cloud Check Note)";
+        }
+      } else {
+        showToast(`🎉 Firecracker "${name}" saved successfully!`, "success");
+      }
+    }
+  } catch (err) {
+    console.error("[Save Firecracker Error]:", err);
+    showToast(`⚠️ Save Error: ${err.message || err}`, "danger", 6000);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = origSaveText;
+    }
+    if (saveAnotherBtn) {
+      saveAnotherBtn.disabled = false;
+      saveAnotherBtn.innerHTML = origAnotherText;
     }
   }
 }
@@ -2930,7 +3080,7 @@ Total: *${formatCurrency(order.total_amount)}*
 Payment Mode: *${order.payment_method}*
 
 Your festive fireworks order is being processed. Thank you for choosing us!
-📞 Helpline: ${settings.whatsapp_phone || settings.phone || '+91 98765 43210'}`;
+📞 Helpline: ${settings.whatsapp_phone || settings.phone || '+91 94431 88531'}`;
 
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, "_blank");
 }
@@ -3649,7 +3799,8 @@ async function saveAdminSettings(e) {
     const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
     if (isSupabaseConfigured() && sb) {
       try {
-        await sb.from("business_settings").upsert({ id: "a0000000-0000-0000-0000-000000000001", ...settings });
+        const { default_print_format, ...dbSettings } = settings;
+        await sb.from("business_settings").upsert({ id: "a0000000-0000-0000-0000-000000000001", ...dbSettings });
       } catch (err) {
         console.warn("Supabase settings update error", err);
       }

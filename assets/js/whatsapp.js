@@ -9,7 +9,9 @@
 function cleanPhoneNumber(phone) {
   if (!phone) return "";
   let cleaned = String(phone).replace(/[^0-9]/g, "");
-  // If Indian mobile number with 10 digits, prepend 91
+  if (cleaned.startsWith("0") && cleaned.length === 11) {
+    cleaned = cleaned.substring(1);
+  }
   if (cleaned.length === 10) {
     cleaned = "91" + cleaned;
   }
@@ -21,7 +23,7 @@ function cleanPhoneNumber(phone) {
  */
 function formatWhatsAppInvoiceMessage(invoice, businessSettings = null) {
   const shopName = businessSettings?.shop_name || "Dhanalakshmi Crackers";
-  const contactPhone = businessSettings?.whatsapp_phone || businessSettings?.phone || "+91 98765 43210";
+  const contactPhone = businessSettings?.whatsapp_phone || businessSettings?.phone || "+91 94431 88531";
   const dateStr = invoice.created_at ? new Date(invoice.created_at).toLocaleDateString("en-IN") : new Date().toLocaleDateString("en-IN");
   const isTaxApplicable = businessSettings?.tax_applicable !== false && Number(invoice.tax_amount || 0) > 0;
   const taxLine = isTaxApplicable ? `GST / Tax (${invoice.tax_rate || 18}%): + ₹${Number(invoice.tax_amount || 0).toFixed(2)}\n` : "";

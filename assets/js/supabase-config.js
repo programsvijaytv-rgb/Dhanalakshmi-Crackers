@@ -75,8 +75,8 @@ const DEFAULT_BUSINESS_SETTINGS = {
   business_category: "Fireworks Supplier / Store",
   tagline: "Thanjavur's Best Fireworks Destination - Direct Sivakasi Factory Rates",
   logo_url: "https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png",
-  phone: "+91 98765 43210",
-  whatsapp_phone: "+91 98765 43210",
+  phone: "+91 94431 88531",
+  whatsapp_phone: "+91 94431 88531",
   email: "sales@dhanalakshmicrackers.com",
   address: "Main Road, Thanjavur, Tamil Nadu - 613001",
   operating_hours: "Mon - Sun: 09:00 AM - 10:00 PM",
@@ -96,23 +96,21 @@ const DEFAULT_BUSINESS_SETTINGS = {
 };
 
 const DEFAULT_CATEGORIES = [
-  { id: "b1000000-0000-0000-0000-000000000001", name: "Sparklers & Flares", slug: "sparklers", display_order: 1 },
-  { id: "b1000000-0000-0000-0000-000000000002", name: "Ground Chakkars", slug: "ground-chakkars", display_order: 2 },
-  { id: "b1000000-0000-0000-0000-000000000003", name: "Flower Pots", slug: "flower-pots", display_order: 3 },
-  { id: "b1000000-0000-0000-0000-000000000004", name: "Rockets & Missiles", slug: "rockets", display_order: 4 },
-  { id: "b1000000-0000-0000-0000-000000000005", name: "Aerial Repeaters (Sky Shots)", slug: "sky-shots", display_order: 5 },
-  { id: "b1000000-0000-0000-0000-000000000006", name: "Sound Crackers & Garlands", slug: "sound-crackers", display_order: 6 },
-  { id: "b1000000-0000-0000-0000-000000000007", name: "Festival Gift Boxes", slug: "gift-boxes", display_order: 7 },
+  { id: "b1000000-0000-0000-0000-000000000001", name: "Gift Box", slug: "gift-box", display_order: 1 },
+  { id: "b1000000-0000-0000-0000-000000000002", name: "Sparklers - ஸ்பார்க்லர்", slug: "sparklers", display_order: 2 },
+  { id: "b1000000-0000-0000-0000-000000000003", name: "Chakkar - சக்கரம்", slug: "chakkar", display_order: 3 },
+  { id: "b1000000-0000-0000-0000-000000000004", name: "Flower Pots - பூச்சட்டி", slug: "flower-pots", display_order: 4 },
+  { id: "b1000000-0000-0000-0000-000000000005", name: "Pencil | Twinkling Star", slug: "pencil-twinkling-star", display_order: 5 },
+  { id: "b1000000-0000-0000-0000-000000000006", name: "Match Sticks - தீப்பெட்டி", slug: "match-sticks", display_order: 6 },
+  { id: "b1000000-0000-0000-0000-000000000007", name: "Bijili - பிஜிலி", slug: "bijili", display_order: 7 },
   { id: "b1000000-0000-0000-0000-000000000008", name: "Wala - வாலா", slug: "wala", display_order: 8 },
-  { id: "b1000000-0000-0000-0000-000000000009", name: "Rocket - ராக்கெட்", slug: "rocket-singles", display_order: 9 },
+  { id: "b1000000-0000-0000-0000-000000000009", name: "Rocket - ராக்கெட்", slug: "rocket", display_order: 9 },
   { id: "b1000000-0000-0000-0000-000000000010", name: "Fancy Crackers - பேன்சி கிராக்கர்", slug: "fancy-crackers", display_order: 10 },
   { id: "b1000000-0000-0000-0000-000000000011", name: "Night Out - நைட் அவுட்", slug: "night-out", display_order: 11 },
   { id: "b1000000-0000-0000-0000-000000000012", name: "Multi Colour Fancy out - மல்டி கலர் பேன்சி அவுட்", slug: "multi-colour-fancy-out", display_order: 12 },
   { id: "b1000000-0000-0000-0000-000000000013", name: "Bombs - பாம்", slug: "bombs", display_order: 13 },
-  { id: "b1000000-0000-0000-0000-000000000014", name: "Gun - கன், others", slug: "gun-others", display_order: 14 },
-  { id: "b1000000-0000-0000-0000-000000000015", name: "Pencil | Twinkling Star", slug: "pencil-twinkling-star", display_order: 15 },
-  { id: "b1000000-0000-0000-0000-000000000016", name: "Match Sticks - தீப்பெட்டி", slug: "match-sticks", display_order: 16 },
-  { id: "b1000000-0000-0000-0000-000000000017", name: "Bijili - பிஜிலி", slug: "bijili", display_order: 17 }
+  { id: "b1000000-0000-0000-0000-000000000014", name: "Gun - கன்", slug: "gun", display_order: 14 },
+  { id: "b1000000-0000-0000-0000-000000000015", name: "Others", slug: "others", display_order: 15 }
 ];
 
 const DEFAULT_PRODUCTS = [
@@ -641,12 +639,13 @@ async function fetchBusinessSettings() {
  * Attempts background sync of business settings to Supabase
  */
 async function syncSettingsToSupabaseBackground(settings) {
-  const sb = getSupabase();
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
   if (!isSupabaseConfigured() || !sb) return;
   try {
+    const { default_print_format, ...dbSettings } = settings;
     await sb.from("business_settings").upsert({
       id: "a0000000-0000-0000-0000-000000000001",
-      ...settings,
+      ...dbSettings,
       updated_at: new Date().toISOString()
     });
   } catch (err) {
@@ -664,12 +663,13 @@ async function saveBusinessSettings(settings) {
   localStorage.setItem("dc_settings_updated_at", Date.now().toString());
 
   // Attempt Supabase live cloud update
-  const sb = getSupabase();
+  const sb = (typeof getAdminSupabase === "function") ? getAdminSupabase() : getSupabase();
   if (isSupabaseConfigured() && sb) {
     try {
+      const { default_print_format, ...dbSettings } = settings;
       await sb.from("business_settings").upsert({
         id: "a0000000-0000-0000-0000-000000000001",
-        ...settings,
+        ...dbSettings,
         updated_at: new Date().toISOString()
       });
     } catch (err) {
@@ -682,6 +682,7 @@ async function saveBusinessSettings(settings) {
 
   // Broadcast to other open tabs/windows
   broadcastSync("settings_updated", settings);
+  return settings;
 }
 
 // ==============================================================================
@@ -750,78 +751,40 @@ function listenSync(callback) {
 // ==============================================================================
 
 /**
- * Normalizes any category string, product name, or SKU to one of the 14 official Diwali categories
+ * Resolves a category string or ID to a recognized category without overriding actual assigned categories
  */
 function normalizeCategory(rawNameOrSlug, productName = "", sku = "") {
-  const str = `${rawNameOrSlug || ""} ${productName || ""} ${sku || ""}`.toLowerCase();
+  const cats = typeof getStoredCategories === "function" ? getStoredCategories() : DEFAULT_CATEGORIES;
+  
+  if (rawNameOrSlug) {
+    const rawStr = String(rawNameOrSlug).trim().toLowerCase();
 
-  // 1. Gift Box
-  if (str.includes("gift") || str.includes("box-") || str.includes("hamper") || str.includes("dlt25") || str.includes("roy50")) {
-    return DEFAULT_CATEGORIES[0];
-  }
-  // 2. Sparklers
-  if (str.includes("sparkler") || str.includes("ஸ்பார்க்லர்") || str.includes("spk") || str.includes("flare")) {
-    return DEFAULT_CATEGORIES[1];
-  }
-  // 3. Chakkar
-  if (str.includes("chakkar") || str.includes("சக்கரம்") || str.includes("chk") || str.includes("wheel") || str.includes("ground")) {
-    return DEFAULT_CATEGORIES[2];
-  }
-  // 4. Flower Pots
-  if (str.includes("flower") || str.includes("pot") || str.includes("பூச்சட்டி") || str.includes("flp") || str.includes("koti")) {
-    return DEFAULT_CATEGORIES[3];
-  }
-  // 5. Pencil | Twinkling Star
-  if (str.includes("pencil") || str.includes("twinkling") || str.includes("star") || str.includes("pcl") || str.includes("torch")) {
-    return DEFAULT_CATEGORIES[4];
-  }
-  // 6. Match Sticks
-  if (str.includes("match") || str.includes("தீப்பெட்டி") || str.includes("mtc")) {
-    return DEFAULT_CATEGORIES[5];
-  }
-  // 7. Bijili
-  if (str.includes("bijili") || str.includes("பிஜிலி") || str.includes("bjl")) {
-    return DEFAULT_CATEGORIES[6];
-  }
-  // 8. Wala
-  if (str.includes("wala") || str.includes("வாலா") || str.includes("garland")) {
-    return DEFAULT_CATEGORIES[7];
-  }
-  // 9. Rocket
-  if (str.includes("rocket") || str.includes("ராக்கெட்") || str.includes("rck") || str.includes("missile") || str.includes("lunik")) {
-    return DEFAULT_CATEGORIES[8];
-  }
-  // 10. Fancy Crackers
-  if (str.includes("fancy cracker") || str.includes("பேன்சி கிராக்கர்") || str.includes("peacock") || str.includes("fnc")) {
-    return DEFAULT_CATEGORIES[9];
-  }
-  // 11. Night Out
-  if (str.includes("night") || str.includes("நைட்") || str.includes("nit") || str.includes("waterfall")) {
-    return DEFAULT_CATEGORIES[10];
-  }
-  // 12. Multi Colour Fancy out
-  if (str.includes("multi colour") || str.includes("multi color") || str.includes("மல்டி") || str.includes("sht") || str.includes("repeating cake") || str.includes("sky shot")) {
-    return DEFAULT_CATEGORIES[11];
-  }
-  // 13. Bombs
-  if (str.includes("bomb") || str.includes("பாம்") || str.includes("bmb") || str.includes("atom") || str.includes("sound") || str.includes("hydro") || str.includes("thunder")) {
-    return DEFAULT_CATEGORIES[12];
-  }
-  // 14. Gun & Others
-  if (str.includes("gun") || str.includes("கன்") || str.includes("cap") || str.includes("snake") || str.includes("novelty") || str.includes("other") || str.includes("oth")) {
-    return DEFAULT_CATEGORIES[13];
+    // 1. Exact ID match
+    const byId = cats.find(c => String(c.id).toLowerCase() === rawStr);
+    if (byId) return byId;
+
+    // 2. Exact slug match
+    const bySlug = cats.find(c => String(c.slug).toLowerCase() === rawStr);
+    if (bySlug) return bySlug;
+
+    // 3. Name match
+    const byName = cats.find(c => String(c.name).toLowerCase() === rawStr || c.name.toLowerCase().includes(rawStr));
+    if (byName) return byName;
   }
 
-  // Exact ID match check
-  const byId = DEFAULT_CATEGORIES.find(c => c.id === rawNameOrSlug);
-  if (byId) return byId;
+  // 4. Fallback search by query if no direct match found
+  const query = String(rawNameOrSlug || "").toLowerCase();
+  if (query) {
+    const found = cats.find(c => query.includes(c.name.toLowerCase()) || (c.slug && query.includes(c.slug)));
+    if (found) return found;
+  }
 
-  // Fallback to Gun - கன், others
-  return DEFAULT_CATEGORIES[13];
+  return cats[0] || DEFAULT_CATEGORIES[0];
 }
 
 /**
  * Retrieve custom categories list from localStorage, seeding from DEFAULT_CATEGORIES if empty or outdated
+ * Preserves custom categories created dynamically by admin
  */
 function getStoredCategories() {
   const raw = localStorage.getItem("dc_custom_categories");
@@ -829,11 +792,22 @@ function getStoredCategories() {
     try {
       let parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Upgrade any legacy names (like 'Sparklers & Flares', 'Ground Chakkars', 'Others')
-        const updated = DEFAULT_CATEGORIES.map(dc => {
-          const match = parsed.find(c => c.id === dc.id || c.slug === dc.slug || (c.name && c.name.toLowerCase().includes(dc.slug)));
-          return match ? { ...dc, ...match, name: dc.name, slug: dc.slug } : dc;
+        const mergedMap = new Map();
+        // Seed standard official categories first
+        DEFAULT_CATEGORIES.forEach(dc => mergedMap.set(dc.id, { ...dc }));
+        // Merge stored categories, preserving dynamic/custom categories
+        parsed.forEach(c => {
+          if (!c || !c.id) return;
+          const defaultCat = DEFAULT_CATEGORIES.find(dc => dc.id === c.id);
+          if (defaultCat) {
+            // Guarantee official name and slug for default categories
+            mergedMap.set(c.id, { ...defaultCat, ...c, name: defaultCat.name, slug: defaultCat.slug });
+          } else {
+            // Custom category created by admin
+            mergedMap.set(c.id, c);
+          }
         });
+        const updated = Array.from(mergedMap.values());
         localStorage.setItem("dc_custom_categories", JSON.stringify(updated));
         return updated;
       }
@@ -845,6 +819,7 @@ function getStoredCategories() {
 
 /**
  * Retrieve custom products list from localStorage, seeding from DEFAULT_PRODUCTS if empty
+ * Preserves exact assigned categories without keyword corruption
  */
 function getStoredCustomProducts() {
   const raw = localStorage.getItem("dc_custom_products");
@@ -852,20 +827,14 @@ function getStoredCustomProducts() {
     try {
       let parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        // Reconcile and normalize categories on all products
-        let hadChanges = false;
+        const cats = getStoredCategories();
         parsed = parsed.map(p => {
-          const norm = normalizeCategory(p.category_name, p.name, p.sku);
-          if (norm && (p.category_name !== norm.name || p.category_id !== norm.id)) {
-            hadChanges = true;
-            p.category_name = norm.name;
-            p.category_id = norm.id;
+          if (!p.category_name && p.category_id) {
+            const foundCat = cats.find(c => String(c.id) === String(p.category_id));
+            if (foundCat) p.category_name = foundCat.name;
           }
           return p;
         });
-        if (hadChanges) {
-          localStorage.setItem("dc_custom_products", JSON.stringify(parsed));
-        }
         return parsed;
       }
     } catch (e) {}
@@ -952,7 +921,12 @@ function formatCurrency(amount) {
 function cleanPhoneNumber(phone) {
   if (!phone) return "";
   let digits = String(phone).replace(/[^0-9]/g, "");
-  if (digits.length === 10) digits = "91" + digits;
+  if (digits.startsWith("0") && digits.length === 11) {
+    digits = digits.substring(1);
+  }
+  if (digits.length === 10) {
+    digits = "91" + digits;
+  }
   return digits;
 }
 
@@ -1002,7 +976,7 @@ async function applyBusinessBranding() {
 
   const shopName = settings.shop_name || "Dhanalakshmi Crackers";
   const categoryTag = settings.business_category || "Fireworks Supplier / Store";
-  const phone = settings.phone || "+91 98765 43210";
+  const phone = settings.phone || "+91 94431 88531";
   const whatsappPhone = settings.whatsapp_phone || phone;
   const rawPhone = cleanPhoneNumber(phone);
   const rawWhatsapp = cleanPhoneNumber(whatsappPhone);
@@ -1039,25 +1013,42 @@ async function applyBusinessBranding() {
     });
   }
 
-  // Update Phone Numbers
+  // Update Phone Numbers on explicit data-brand elements
   document.querySelectorAll("[data-brand='phone']").forEach(el => {
     el.textContent = phone;
     if (el.tagName === "A") el.href = `tel:+${rawPhone}`;
   });
 
-  // Update top announcement bar phone link if present
-  document.querySelectorAll(".top-announcement a[href^='tel:']").forEach(el => {
-    el.textContent = phone;
-    el.href = `tel:+${rawPhone}`;
+  // Update Call buttons in mobile navigation drawers and floating action cards
+  document.querySelectorAll(".drawer-btn-call, [data-brand='drawer-call']").forEach(el => {
+    el.textContent = `📞 Call ${phone}`;
+    if (el.tagName === "A") el.href = `tel:+${rawPhone}`;
   });
 
-  // Update WhatsApp links
-  document.querySelectorAll("a[href*='wa.me'], [data-brand='whatsapp']").forEach(el => {
+  // Update top announcement bar and any other tel: links across headers, footers, showroom sections
+  document.querySelectorAll("a[href^='tel:']").forEach(el => {
+    el.href = `tel:+${rawPhone}`;
+    if (el.classList.contains("drawer-btn-call") || el.getAttribute("data-brand") === "drawer-call") {
+      el.textContent = `📞 Call ${phone}`;
+    } else if (el.hasAttribute("data-brand") || el.textContent.includes("94431 88531") || el.textContent.includes("98765 43210") || el.closest(".footer-links") || el.closest(".showroom-detail-row") || el.closest(".top-announcement") || el.closest(".safety-tips-card")) {
+      el.textContent = phone;
+    }
+  });
+
+  // Update WhatsApp links and action buttons across entire site (drawers, product buttons, bottom nav)
+  document.querySelectorAll("a[href*='wa.me'], [data-brand='whatsapp'], .drawer-btn-wa, [data-brand='drawer-wa']").forEach(el => {
     if (el.tagName === "A" && rawWhatsapp) {
-      const currentHref = el.href;
+      const currentHref = el.getAttribute("href") || "";
       const textMatch = currentHref.match(/text=([^&]*)/);
       const textQuery = textMatch ? `?text=${textMatch[1]}` : "";
       el.href = `https://wa.me/${rawWhatsapp}${textQuery}`;
+    }
+  });
+
+  // Update helpline text across footers and summary strips
+  document.querySelectorAll("footer div, .footer-bottom div, .container > div, .checkout-footer div").forEach(el => {
+    if (el.children.length === 0 && el.textContent.includes("Helpline:") && (el.textContent.includes("94431 88531") || el.textContent.includes("98765 43210"))) {
+      el.textContent = `Helpline: ${phone} | ${settings.address || "Main Road, Thanjavur, Tamil Nadu - 613001"}`;
     }
   });
 
