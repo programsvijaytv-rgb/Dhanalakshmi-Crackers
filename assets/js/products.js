@@ -822,6 +822,8 @@ function renderHomeProducts(tab = "featured", limit = null) {
       (p.category_name && p.category_name.toLowerCase().includes("gift")) || 
       (p.name && p.name.toLowerCase().includes("box"))
     );
+    // Sort Festival Gift Boxes low to high price
+    prods.sort((a, b) => Number(a.price) - Number(b.price));
   } else if (homeActiveTab === "high-to-low") {
     prods.sort((a, b) => Number(b.price) - Number(a.price));
   } else {
@@ -895,7 +897,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (isHomePageFeatured) {
       renderHomeProducts("featured", 12);
+      initFestivalGiftBoxesSlider(prods);
     }
+  }
+
+  // Also check if gift box slider is on current page
+  if (document.getElementById("giftBoxViewport")) {
+    initFestivalGiftBoxesSlider();
   }
 
   // Initialize store guide videos under product areas
@@ -905,6 +913,87 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadProductDetails();
   }
 });
+
+/**
+ * Render and control Festival Gift Boxes sliding carousel under banner
+ */
+function initFestivalGiftBoxesSlider(products) {
+  const track = document.getElementById("giftBoxSliderTrack");
+  const viewport = document.getElementById("giftBoxViewport");
+  const prevBtn = document.getElementById("giftBoxPrevBtn");
+  const nextBtn = document.getElementById("giftBoxNextBtn");
+  if (!viewport) return;
+
+  const prodsList = (products && products.length > 0) ? products : (loadedProducts && loadedProducts.length > 0 ? loadedProducts : (typeof DEFAULT_PRODUCTS !== 'undefined' ? DEFAULT_PRODUCTS : []));
+  const giftProducts = prodsList.filter(p => {
+    const cat = (p.category_name || "").toLowerCase();
+    const name = (p.name || "").toLowerCase();
+    return cat.includes("gift") || name.includes("gift box") || name.includes("hamper");
+  });
+
+  // Sort Festival Gift Boxes Collections from low to high price
+  giftProducts.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+
+  if (giftProducts.length > 0 && track) {
+    track.innerHTML = "";
+    giftProducts.forEach(prod => {
+      const origPrice = Number(prod.original_price || prod.price * 2);
+      const currPrice = Number(prod.price);
+      const discount = origPrice > currPrice ? Math.round(((origPrice - currPrice) / origPrice) * 100) : 0;
+      const itemMatch = prod.name.match(/\((\d+)\s*Items?\)/i);
+      const itemsTag = itemMatch ? `🎁 ${itemMatch[1]} Items` : (prod.unit || "Gift Hamper");
+
+      const card = document.createElement("div");
+      card.className = "giftbox-slide-card";
+      card.innerHTML = `
+        <div class="giftbox-card-media" onclick="window.location.href='product-details.html?id=${prod.id}'" style="cursor:pointer;">
+          <img src="${prod.image_url || 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&auto=format&fit=crop&q=80'}" 
+               alt="${prod.name}" 
+               class="giftbox-card-img" 
+               loading="lazy">
+          <span class="giftbox-badge-festive">✨ Diwali Special</span>
+          <span class="giftbox-items-pill">${itemsTag}</span>
+        </div>
+        <div class="giftbox-card-body">
+          <h3 class="giftbox-card-title" title="${prod.name}">
+            <a href="product-details.html?id=${prod.id}" style="color:inherit; text-decoration:none;">${prod.name}</a>
+          </h3>
+          <p class="giftbox-card-desc">${prod.description || 'Festive assortment of Sivakasi green crackers.'}</p>
+          <div class="giftbox-pricing-box">
+            <div class="giftbox-price-row">
+              <span class="giftbox-price-current">${typeof formatCurrency === 'function' ? formatCurrency(currPrice) : '₹' + currPrice}</span>
+              ${origPrice > currPrice ? `<span class="giftbox-price-orig">₹${origPrice}</span>` : ''}
+              ${discount > 0 ? `<span class="giftbox-price-off">${discount}% OFF</span>` : ''}
+            </div>
+            <div class="giftbox-btn-group">
+              <button type="button" class="giftbox-btn-cart" onclick="quickAddProduct('${prod.id}', this)" aria-label="Add ${prod.name} to cart">
+                <span>🛒</span> Add to Cart
+              </button>
+              <a href="product-details.html?id=${prod.id}" class="giftbox-btn-view" title="View Box Details">
+                Details
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+      track.appendChild(card);
+    });
+  }
+
+  // Smooth slide navigation button handlers
+  if (prevBtn && !prevBtn._bound) {
+    prevBtn._bound = true;
+    prevBtn.addEventListener("click", () => {
+      viewport.scrollBy({ left: -310, behavior: "smooth" });
+    });
+  }
+  if (nextBtn && !nextBtn._bound) {
+    nextBtn._bound = true;
+    nextBtn.addEventListener("click", () => {
+      viewport.scrollBy({ left: 310, behavior: "smooth" });
+    });
+  }
+}
 
 /**
  * Initialize video guides placed under product areas across storefront

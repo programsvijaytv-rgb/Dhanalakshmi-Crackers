@@ -135,7 +135,7 @@ function renderFormattedInvoiceContent() {
   const inv = currentViewingInvoice;
   const settings = JSON.parse(localStorage.getItem("dc_business_settings") || "{}");
   const shopName = settings.shop_name || "Dhanalakshmi Crackers";
-  const shopAddress = settings.address || "142, By-pass Road, Sivakasi - 626123, Tamil Nadu";
+  const shopAddress = settings.address || "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001";
   const shopPhone = settings.phone || "+91 94431 88531";
   const gstNo = settings.gst_number || "33AAAAA0000A1Z5";
   const isInsideAdmin = typeof window !== "undefined" && window.location.pathname.includes("/admin");

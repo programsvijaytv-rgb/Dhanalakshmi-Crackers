@@ -54,6 +54,9 @@
         <button type="button" class="btn btn-secondary btn-sm" onclick="openDashboardManualModal()" title="Open User Manual">
           📖 Manual
         </button>
+        <button type="button" class="btn btn-reset-sales btn-sm" onclick="openResetSalesModal()" title="Reset Total Sales & Orders">
+          🔄 Reset Sales
+        </button>
         <a href="/admin/billing.html" class="btn btn-primary btn-sm" title="Launch POS Counter">
           ⚡ POS
         </a>
@@ -68,7 +71,10 @@
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-data">
-            <h3>Total Sales Volume</h3>
+            <div class="kpi-title-row">
+              <h3 class="kpi-title-heading">Total Sales Volume</h3>
+              <button type="button" class="kpi-reset-btn" onclick="openResetSalesModal()" title="Reset Total Sales Volume">🔄 Reset</button>
+            </div>
             <div class="kpi-val" id="kpiTotalSales">₹0.00</div>
           </div>
           <div class="kpi-icon sales">💰</div>
@@ -143,6 +149,90 @@
         </div>
       </div>
     </main>
+  </div>
+
+  <!-- Reset Sales Confirmation Modal -->
+  <div class="modal-overlay" id="resetSalesModal" role="dialog" aria-modal="true" aria-labelledby="resetSalesTitle">
+    <div class="modal-content reset-modal-content">
+      <div class="modal-header reset-modal-header">
+        <h3 id="resetSalesTitle" class="reset-modal-title">
+          <span>🔄</span> Reset Sales &amp; Orders Counter
+        </h3>
+        <button type="button" class="modal-close reset-modal-close" onclick="closeResetSalesModal()" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body reset-modal-body">
+        <div class="reset-modal-warning">
+          <div class="reset-modal-warning-title">
+            <span>⚠️</span> Warning: Irreversible Action
+          </div>
+          <div class="reset-modal-warning-text">
+            Resetting sales will clear transaction history, resetting <strong>Total Sales Volume</strong> to <strong>₹0.00</strong> and <strong>Completed Orders</strong> count to <strong>0</strong>.
+          </div>
+        </div>
+
+        <div class="reset-modal-snapshot">
+          <div class="reset-modal-snapshot-title">Current Sales Snapshot</div>
+          <div class="reset-modal-snapshot-row">
+            <span>Total Sales Volume:</span>
+            <strong id="modalCurrentSalesVal" class="reset-modal-sales-val">₹0.00</strong>
+          </div>
+          <div class="reset-modal-snapshot-row-last">
+            <span>Recorded Orders &amp; POS Bills:</span>
+            <strong id="modalCurrentOrdersCount" class="reset-modal-orders-count">0</strong>
+          </div>
+        </div>
+
+        <div class="reset-modal-scope-group">
+          <label class="reset-modal-scope-label">Select Reset Scope:</label>
+          <div class="reset-modal-scope-list">
+            <label class="reset-scope-option">
+              <input type="radio" name="resetSalesScope" value="all" checked>
+              <div>
+                <strong>Full Reset (Recommended)</strong>
+                <span>Reset Total Sales to ₹0.00, wipe all POS Bills &amp; Online Orders</span>
+              </div>
+            </label>
+            <label class="reset-scope-option">
+              <input type="radio" name="resetSalesScope" value="pos">
+              <div>
+                <strong>POS Bills Only</strong>
+                <span>Clear in-store counter bills only, keep website online orders</span>
+              </div>
+            </label>
+            <label class="reset-scope-option">
+              <input type="radio" name="resetSalesScope" value="orders">
+              <div>
+                <strong>Online Orders Only</strong>
+                <span>Clear website online orders only, keep counter POS bills</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="reset-modal-backup-card">
+          <div>
+            <div class="reset-modal-backup-title">Recommended Safe Step</div>
+            <div class="reset-modal-backup-sub">Download a backup before resetting.</div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm reset-modal-backup-btn" onclick="exportSalesBackupJSON()">
+            📥 Backup JSON
+          </button>
+        </div>
+
+        <div>
+          <label for="resetConfirmInput" class="reset-modal-confirm-label">
+            To confirm, type <span class="reset-modal-confirm-tag">RESET</span> below:
+          </label>
+          <input type="text" id="resetConfirmInput" class="form-control reset-modal-confirm-input" placeholder="Type RESET to confirm" oninput="handleResetConfirmInput(this.value)">
+        </div>
+      </div>
+      <div class="modal-footer reset-modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="closeResetSalesModal()">Cancel</button>
+        <button type="button" id="btnConfirmResetSales" class="btn btn-sm btn-confirm-reset" onclick="executeSalesReset()" disabled>
+          <span>🗑️</span> Confirm &amp; Reset Sales
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Scripts -->

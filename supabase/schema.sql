@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.business_settings (
     phone TEXT DEFAULT '+91 94431 88531',
     whatsapp_phone TEXT DEFAULT '+91 94431 88531',
     email TEXT DEFAULT 'sales@dhanalakshmicrackers.com',
-    address TEXT DEFAULT '142, By-pass Road, Sivakasi, Tamil Nadu - 626123',
+    address TEXT DEFAULT 'No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001',
     operating_hours TEXT DEFAULT 'Mon - Sun: 09:00 AM - 10:00 PM',
     business_description TEXT DEFAULT 'Wholesale and retail distributor of authentic Sivakasi fireworks and crackers.',
     gst_number TEXT DEFAULT '33AAAAA0000A1Z5',

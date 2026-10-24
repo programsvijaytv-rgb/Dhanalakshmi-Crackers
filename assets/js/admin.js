@@ -13,11 +13,13 @@ async function initAdminDashboard() {
 
   if (typeof listenSync === "function") {
     listenSync(async (event) => {
-      if (["order_created", "order_updated", "products_updated"].includes(event.type)) {
+      if (["order_created", "order_updated", "products_updated", "sales_reset"].includes(event.type)) {
         syncOrdersAndInvoices();
         await loadDashboardStats();
         if (event.type === "order_created" && event.payload) {
           showToast(`🔔 New Online Order Received: #${event.payload.order_number}`, "success");
+        } else if (event.type === "sales_reset") {
+          showToast(`🔄 Sales counter reset across store devices.`, "info");
         }
       }
     });
@@ -107,6 +109,181 @@ function renderRecentDashboardActivity(invoices, orders) {
     `;
     tbody.appendChild(tr);
   });
+}
+
+/**
+ * Open Reset Sales Modal with current snapshot values
+ */
+function openResetSalesModal() {
+  const modal = document.getElementById("resetSalesModal");
+  if (!modal) return;
+
+  const currentSales = document.getElementById("kpiTotalSales")?.textContent || "₹0.00";
+  const currentOrders = document.getElementById("kpiTotalOrders")?.textContent || "0";
+
+  const valEl = document.getElementById("modalCurrentSalesVal");
+  const countEl = document.getElementById("modalCurrentOrdersCount");
+  const inputEl = document.getElementById("resetConfirmInput");
+  const btn = document.getElementById("btnConfirmResetSales");
+
+  if (valEl) valEl.textContent = currentSales;
+  if (countEl) countEl.textContent = currentOrders;
+  if (inputEl) inputEl.value = "";
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+    btn.style.cursor = "not-allowed";
+  }
+
+  // Set default scope to 'all'
+  const defRadio = document.querySelector('input[name="resetSalesScope"][value="all"]');
+  if (defRadio) defRadio.checked = true;
+
+  modal.style.display = "flex";
+  setTimeout(() => {
+    if (inputEl) inputEl.focus();
+  }, 100);
+}
+
+/**
+ * Close Reset Sales Modal
+ */
+function closeResetSalesModal() {
+  const modal = document.getElementById("resetSalesModal");
+  if (modal) modal.style.display = "none";
+}
+
+/**
+ * Enable/disable confirm button based on typing 'RESET'
+ */
+function handleResetConfirmInput(val) {
+  const btn = document.getElementById("btnConfirmResetSales");
+  if (!btn) return;
+  const isMatch = (val || "").trim().toUpperCase() === "RESET";
+  btn.disabled = !isMatch;
+  btn.style.opacity = isMatch ? "1" : "0.5";
+  btn.style.cursor = isMatch ? "pointer" : "not-allowed";
+}
+
+/**
+ * Export backup of current sales data as JSON before wiping
+ */
+function exportSalesBackupJSON() {
+  try {
+    const invoices = JSON.parse(localStorage.getItem("dc_invoices_history") || "[]");
+    const orders = JSON.parse(localStorage.getItem("dc_orders_list") || "[]");
+    const salesTotal = document.getElementById("kpiTotalSales")?.textContent || "₹0.00";
+    const ordersCount = document.getElementById("kpiTotalOrders")?.textContent || "0";
+
+    const payload = {
+      exportTimestamp: new Date().toISOString(),
+      store: "Dhanalakshmi Crackers",
+      address: "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001",
+      phone: "+91 94431 88531",
+      stats: {
+        totalSalesVolume: salesTotal,
+        totalOrdersAndBillsCount: ordersCount
+      },
+      posInvoicesCount: invoices.length,
+      onlineOrdersCount: orders.length,
+      posInvoices: invoices,
+      onlineOrders: orders
+    };
+
+    const dataBlob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const downloadUrl = URL.createObjectURL(dataBlob);
+    const link = document.createElement("a");
+    const today = new Date().toISOString().slice(0, 10);
+    link.href = downloadUrl;
+    link.download = `Dhanalakshmi_Sales_Backup_${today}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+
+    if (typeof showToast === "function") {
+      showToast("📥 Sales backup downloaded successfully!", "success");
+    }
+  } catch (err) {
+    console.error("Backup export failed:", err);
+    if (typeof showToast === "function") {
+      showToast("⚠️ Could not generate backup file.", "error");
+    }
+  }
+}
+
+/**
+ * Execute Sales Reset based on chosen scope
+ */
+async function executeSalesReset() {
+  const confirmInput = document.getElementById("resetConfirmInput");
+  if (confirmInput && confirmInput.value.trim().toUpperCase() !== "RESET") {
+    if (typeof showToast === "function") {
+      showToast("⚠️ Please type RESET to confirm sales wipe.", "error");
+    }
+    return;
+  }
+
+  const scope = (document.querySelector('input[name="resetSalesScope"]:checked') || {}).value || "all";
+  const btn = document.getElementById("btnConfirmResetSales");
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span>⏳</span> Resetting...`;
+  }
+
+  try {
+    const sb = typeof getSupabase === "function" ? getSupabase() : null;
+    const isOnline = typeof isSupabaseConfigured === "function" && isSupabaseConfigured() && sb;
+
+    if (scope === "all" || scope === "pos") {
+      localStorage.setItem("dc_invoices_history", "[]");
+      if (typeof adminInvoicesList !== "undefined") adminInvoicesList = [];
+      if (isOnline) {
+        try {
+          await sb.from("invoices").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        } catch (e) {
+          console.warn("Supabase invoices wipe note:", e);
+        }
+      }
+    }
+
+    if (scope === "all" || scope === "orders") {
+      localStorage.setItem("dc_orders_list", "[]");
+      if (typeof adminOrdersList !== "undefined") adminOrdersList = [];
+      if (isOnline) {
+        try {
+          await sb.from("order_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+          await sb.from("orders").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        } catch (e) {
+          console.warn("Supabase orders wipe note:", e);
+        }
+      }
+    }
+
+    // Refresh dashboard stats and table immediately
+    await loadDashboardStats();
+
+    // Broadcast across open browser tabs & POS counters
+    if (typeof emitSync === "function") {
+      emitSync("sales_reset", { scope, timestamp: new Date().toISOString() });
+    }
+
+    closeResetSalesModal();
+    if (typeof showToast === "function") {
+      const scopeLabel = scope === "all" ? "All sales and orders" : (scope === "pos" ? "POS Bills" : "Online Orders");
+      showToast(`✅ ${scopeLabel} successfully reset to ₹0.00!`, "success");
+    }
+  } catch (err) {
+    console.error("Error executing sales reset:", err);
+    if (typeof showToast === "function") {
+      showToast("❌ An error occurred while resetting sales data.", "error");
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<span>🗑️</span> Confirm & Reset Sales`;
+    }
+  }
 }
 
 // ==============================================================================
@@ -3667,7 +3844,9 @@ async function initAdminSettings() {
   document.getElementById("setWhatsappPhone").value = settings.whatsapp_phone || settings.phone || "";
   document.getElementById("setEmail").value = settings.email || "";
   document.getElementById("setOperatingHours").value = settings.operating_hours || "";
-  document.getElementById("setAddress").value = settings.address || "";
+  const officialAddr = "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001";
+  const currentAddr = (settings.address || "").trim();
+  document.getElementById("setAddress").value = (!currentAddr || currentAddr.includes("142, By-pass") || currentAddr.includes("626123") || currentAddr.includes("Kamaraj Statue") || !currentAddr.includes("Thanjavur")) ? officialAddr : currentAddr;
   document.getElementById("setBusinessDesc").value = settings.business_description || "";
   document.getElementById("setGst").value = settings.gst_number || "";
   document.getElementById("setTaxRate").value = settings.default_tax_rate || 18;

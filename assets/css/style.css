@@ -5606,5 +5606,309 @@ body.has-floating-cart .mobile-bottom-nav {
   font-size: 1.25rem;
 }
 
+/* ==============================================================================
+   Festival Gift Boxes Sliding Section (Under Banner)
+   ============================================================================== */
+.giftbox-slider-section {
+  padding: 2.5rem 0 2.2rem;
+  background: linear-gradient(180deg, #fffbf2 0%, #ffffff 100%);
+  border-bottom: 1.5px solid #fde68a;
+  position: relative;
+  overflow: hidden;
+}
+
+.giftbox-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.section-tag-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  border: 1px solid #fde68a;
+  margin-bottom: 0.5rem;
+}
+
+.giftbox-slider-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin: 0.25rem 0;
+  letter-spacing: -0.02em;
+}
+
+.giftbox-slider-subtitle {
+  color: #4b5563;
+  font-size: 0.95rem;
+  margin: 0;
+  max-width: 620px;
+}
+
+.giftbox-slider-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.giftbox-nav-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  transition: all 0.2s ease;
+}
+
+.giftbox-nav-btn:hover {
+  background: var(--primary, #c21d1d);
+  color: #ffffff;
+  border-color: var(--primary, #c21d1d);
+  transform: scale(1.06);
+}
+
+.giftbox-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.giftbox-slider-viewport {
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  padding: 0.5rem 0 1.25rem;
+}
+
+.giftbox-slider-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.giftbox-slider-track {
+  display: flex;
+  gap: 1.5rem;
+  width: max-content;
+}
+
+.giftbox-slide-card {
+  width: 295px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  background: #ffffff;
+  border: 1.5px solid #fcd34d;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.giftbox-slide-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 25px rgba(245, 158, 11, 0.22);
+  border-color: #f59e0b;
+}
+
+.giftbox-card-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #fef3c7;
+  cursor: pointer;
+}
+
+.giftbox-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.giftbox-slide-card:hover .giftbox-card-img {
+  transform: scale(1.08);
+}
+
+.giftbox-badge-festive {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(135deg, #c21d1d, #e11d48);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  box-shadow: 0 2px 6px rgba(194, 29, 29, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.giftbox-items-pill {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(15, 23, 42, 0.85);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  color: #fef08a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(254, 240, 138, 0.3);
+}
+
+.giftbox-card-body {
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.giftbox-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 0.4rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.giftbox-card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.giftbox-card-desc {
+  font-size: 0.82rem;
+  color: #6b7280;
+  line-height: 1.4;
+  margin: 0 0 0.85rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 2.8em;
+}
+
+.giftbox-pricing-box {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #f3f4f6;
+}
+
+.giftbox-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.giftbox-price-current {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #c21d1d;
+}
+
+.giftbox-price-orig {
+  font-size: 0.88rem;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.giftbox-price-off {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.giftbox-btn-group {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.giftbox-btn-cart {
+  background: linear-gradient(135deg, #c21d1d, #b91c1c);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.giftbox-btn-cart:hover {
+  background: #991b1b;
+  transform: translateY(-1px);
+}
+
+.giftbox-btn-view {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.giftbox-btn-view:hover {
+  background: #fde68a;
+  color: #78350f;
+}
+
+@media (max-width: 768px) {
+  .giftbox-slide-card {
+    width: 255px;
+  }
+  .giftbox-slider-title {
+    font-size: 1.45rem;
+  }
+}
+
+
 
 

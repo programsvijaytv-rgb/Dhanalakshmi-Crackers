@@ -78,7 +78,7 @@ const DEFAULT_BUSINESS_SETTINGS = {
   phone: "+91 94431 88531",
   whatsapp_phone: "+91 94431 88531",
   email: "sales@dhanalakshmicrackers.com",
-  address: "Main Road, Thanjavur, Tamil Nadu - 613001",
+  address: "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001",
   operating_hours: "Mon - Sun: 09:00 AM - 10:00 PM",
   business_description: "Premier crackers showroom in Thanjavur supplying 100% certified Sivakasi fireworks at direct factory wholesale rates. Retail & bulk festive orders.",
   gst_number: "33AAAAA0000A1Z5",
@@ -92,6 +92,7 @@ const DEFAULT_BUSINESS_SETTINGS = {
   invoice_prefix: "DC-",
   invoice_footer: "Thank you for celebrating with Dhanalakshmi Crackers! Have a sparkling and safe Diwali.",
   google_review_url: "https://share.google/RqWbas77JcB57AOT2",
+  google_maps_url: "https://www.google.com/maps/place/Dhanalakshmi+Crackers/@10.7778648,79.1463781,343m/data=!3m1!1e3!4m14!1m7!3m6!1s0x3baab9a7e7b24989:0x7e4ac427c5999a5!2sDhanalakshmi+Crackers!8m2!3d10.7777247!4d79.1464141!16s%2Fg%2F11gwjbk2lm!3m5!1s0x3baab9a7e7b24989:0x7e4ac427c5999a5!8m2!3d10.7777247!4d79.1464141!16s%2Fg%2F11gwjbk2lm?entry=ttu&g_ep=EgoyMDI2MTAxOS4wIKXMDSoASAFQAw%3D%3D",
   guide_video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78"
 };
 
@@ -103,18 +104,33 @@ const DEFAULT_CATEGORIES = [
   { id: "b1000000-0000-0000-0000-000000000005", name: "Pencil | Twinkling Star", slug: "pencil-twinkling-star", display_order: 5 },
   { id: "b1000000-0000-0000-0000-000000000006", name: "Match Sticks - தீப்பெட்டி", slug: "match-sticks", display_order: 6 },
   { id: "b1000000-0000-0000-0000-000000000007", name: "Bijili - பிஜிலி", slug: "bijili", display_order: 7 },
-  { id: "b1000000-0000-0000-0000-000000000008", name: "Wala - வாலா", slug: "wala", display_order: 8 },
-  { id: "b1000000-0000-0000-0000-000000000009", name: "Rocket - ராக்கெட்", slug: "rocket", display_order: 9 },
-  { id: "b1000000-0000-0000-0000-000000000010", name: "Fancy Crackers - பேன்சி கிராக்கர்", slug: "fancy-crackers", display_order: 10 },
-  { id: "b1000000-0000-0000-0000-000000000011", name: "Night Out - நைட் அவுட்", slug: "night-out", display_order: 11 },
-  { id: "b1000000-0000-0000-0000-000000000012", name: "Multi Colour Fancy out - மல்டி கலர் பேன்சி அவுட்", slug: "multi-colour-fancy-out", display_order: 12 },
-  { id: "b1000000-0000-0000-0000-000000000013", name: "Bombs - பாம்", slug: "bombs", display_order: 13 },
-  { id: "b1000000-0000-0000-0000-000000000014", name: "Gun - கன்", slug: "gun", display_order: 14 },
-  { id: "b1000000-0000-0000-0000-000000000015", name: "Others", slug: "others", display_order: 15 }
+  { id: "b1000000-0000-0000-0000-000000000010", name: "Fancy Crackers - பேன்சி கிராக்கர்", slug: "fancy-crackers", display_order: 8 },
+  { id: "b1000000-0000-0000-0000-000000000011", name: "Night Out - நைட் அவுட்", slug: "night-out", display_order: 9 },
+  { id: "b1000000-0000-0000-0000-000000000014", name: "Gun - கன்", slug: "gun", display_order: 10 },
+  { id: "b1000000-0000-0000-0000-000000000015", name: "Others", slug: "others", display_order: 11 }
 ];
 
 const DEFAULT_PRODUCTS = [
-  // 1. Gift Box
+  // 1. Gift Box Collections (Low to High Price)
+  {
+    id: "c1000000-0000-0000-0000-000000000021",
+    name: "Kids Joy & Family Sparkling Gift Box (18 Items)",
+    sku: "BOX-KID18",
+    category_id: "b1000000-0000-0000-0000-000000000001",
+    category_name: "Gift Box",
+    price: 499,
+    original_price: 999,
+    stock_quantity: 90,
+    min_stock_alert: 10,
+    unit: "Gift Box",
+    description: "Child-friendly festive assortment with 10cm electric sparklers, butterfly spinners, safe magic pencils, and whistle novelties.",
+    image_url: "https://images.unsplash.com/photo-1513297887119-d46091b24bfa?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: true,
+    is_active: true
+  },
   {
     id: "c1000000-0000-0000-0000-000000000001",
     name: "Dhanalakshmi Family Delight Gift Box (25 Items)",
@@ -145,8 +161,27 @@ const DEFAULT_PRODUCTS = [
     stock_quantity: 45,
     min_stock_alert: 5,
     unit: "Gift Box",
-    description: "Grand deluxe festival assortment with multi-shot aerial cakes, whistling rockets, giant flower pots, and sound crackers.",
+    description: "Grand deluxe festival assortment with multi-color flower pots, deluxe chakkars, electric sparklers, and magical novelties.",
     image_url: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=600&auto=format&fit=crop&q=80",
+    video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
+    has_variants: false,
+    variants: [],
+    is_featured: true,
+    is_active: true
+  },
+  {
+    id: "c1000000-0000-0000-0000-000000000020",
+    name: "Maha VIP Deepavali Grand Gift Box (75 Items)",
+    sku: "BOX-VIP75",
+    category_id: "b1000000-0000-0000-0000-000000000001",
+    category_name: "Gift Box",
+    price: 2999,
+    original_price: 5999,
+    stock_quantity: 30,
+    min_stock_alert: 5,
+    unit: "Gift Box",
+    description: "The ultimate festive mega hamper containing 75 premium Sivakasi items including jumbo sparklers, giant flower pots, fancy spinners, and torches.",
+    image_url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80",
     video_url: "https://www.youtube.com/watch?v=kY7XlB8mS78",
     has_variants: false,
     variants: [],
@@ -597,6 +632,18 @@ const DEFAULT_PRODUCTS = [
 
 /**
  * Returns Business Settings from localStorage or Supabase
+const OFFICIAL_SHOWROOM_ADDRESS = "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001";
+
+function sanitizeBusinessSettings(settings) {
+  if (!settings) return settings;
+  if (!settings.address || settings.address.includes("142, By-pass") || settings.address.includes("626123") || settings.address.includes("Kamaraj Statue") || !settings.address.includes("Thanjavur")) {
+    settings.address = OFFICIAL_SHOWROOM_ADDRESS;
+  }
+  return settings;
+}
+
+/**
+ * Fetch business settings
  * Prioritizes local customizations made via Admin Panel so they are never erased by stale remote defaults
  */
 async function fetchBusinessSettings() {
@@ -606,7 +653,9 @@ async function fetchBusinessSettings() {
   // If already customized locally via Admin panel, respect local version as authoritative
   if (isCustomized && stored) {
     try {
-      const parsed = JSON.parse(stored);
+      let parsed = JSON.parse(stored);
+      parsed = sanitizeBusinessSettings(parsed);
+      localStorage.setItem("dc_business_settings", JSON.stringify(parsed));
       // Background sync to Supabase if configured
       syncSettingsToSupabaseBackground(parsed);
       return parsed;
@@ -621,8 +670,12 @@ async function fetchBusinessSettings() {
     try {
       const { data, error } = await sb.from("business_settings").select("*").limit(1).single();
       if (!error && data) {
-        localStorage.setItem("dc_business_settings", JSON.stringify(data));
-        return data;
+        let cleaned = sanitizeBusinessSettings(data);
+        localStorage.setItem("dc_business_settings", JSON.stringify(cleaned));
+        if (data.address !== cleaned.address) {
+          syncSettingsToSupabaseBackground(cleaned);
+        }
+        return cleaned;
       }
     } catch (e) {
       console.warn("Failed to fetch settings from Supabase, using local fallback", e);
@@ -630,9 +683,14 @@ async function fetchBusinessSettings() {
   }
 
   if (stored) {
-    try { return JSON.parse(stored); } catch (e) {}
+    try {
+      let parsed = JSON.parse(stored);
+      parsed = sanitizeBusinessSettings(parsed);
+      localStorage.setItem("dc_business_settings", JSON.stringify(parsed));
+      return parsed;
+    } catch (e) {}
   }
-  return DEFAULT_BUSINESS_SETTINGS;
+  return sanitizeBusinessSettings(DEFAULT_BUSINESS_SETTINGS);
 }
 
 /**
@@ -786,6 +844,8 @@ function normalizeCategory(rawNameOrSlug, productName = "", sku = "") {
  * Retrieve custom categories list from localStorage, seeding from DEFAULT_CATEGORIES if empty or outdated
  * Preserves custom categories created dynamically by admin
  */
+const EXCLUDED_CATEGORY_SLUGS = ["rocket", "multi-colour-fancy-out", "wala", "bombs"];
+
 function getStoredCategories() {
   const raw = localStorage.getItem("dc_custom_categories");
   if (raw) {
@@ -798,6 +858,12 @@ function getStoredCategories() {
         // Merge stored categories, preserving dynamic/custom categories
         parsed.forEach(c => {
           if (!c || !c.id) return;
+          // Filter out explicitly removed categories (Rockets, Aerial Repeaters, Sound Crackers & Garlands)
+          if (c.slug && EXCLUDED_CATEGORY_SLUGS.includes(c.slug.toLowerCase())) return;
+          if (c.name && (c.name.includes("Rocket") || c.name.includes("ராக்கெட்") || 
+                         c.name.includes("Multi Colour Fancy") || c.name.includes("வாலா") || 
+                         c.name.includes("Wala") || c.name.includes("Bombs") || c.name.includes("பாம்"))) return;
+
           const defaultCat = DEFAULT_CATEGORIES.find(dc => dc.id === c.id);
           if (defaultCat) {
             // Guarantee official name and slug for default categories
@@ -828,6 +894,12 @@ function getStoredCustomProducts() {
       let parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
         const cats = getStoredCategories();
+        // Make sure newly introduced default gift boxes are present
+        DEFAULT_PRODUCTS.forEach(dp => {
+          if (!parsed.some(p => p.id === dp.id || p.sku === dp.sku)) {
+            parsed.unshift({ ...dp });
+          }
+        });
         parsed = parsed.map(p => {
           if (!p.category_name && p.category_id) {
             const foundCat = cats.find(c => String(c.id) === String(p.category_id));
@@ -835,6 +907,7 @@ function getStoredCustomProducts() {
           }
           return p;
         });
+        localStorage.setItem("dc_custom_products", JSON.stringify(parsed));
         return parsed;
       }
     } catch (e) {}
@@ -1048,13 +1121,17 @@ async function applyBusinessBranding() {
   // Update helpline text across footers and summary strips
   document.querySelectorAll("footer div, .footer-bottom div, .container > div, .checkout-footer div").forEach(el => {
     if (el.children.length === 0 && el.textContent.includes("Helpline:") && (el.textContent.includes("94431 88531") || el.textContent.includes("98765 43210"))) {
-      el.textContent = `Helpline: ${phone} | ${settings.address || "Main Road, Thanjavur, Tamil Nadu - 613001"}`;
+      el.textContent = `Helpline: ${phone} | ${settings.address || "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001"}`;
     }
   });
 
   // Update Address
   document.querySelectorAll("[data-brand='address']").forEach(el => {
-    if (settings.address) el.textContent = settings.address;
+    let addr = settings.address;
+    if (!addr || addr.includes("142, By-pass") || addr.includes("626123") || addr.includes("Kamaraj Statue") || !addr.includes("Thanjavur")) {
+      addr = OFFICIAL_SHOWROOM_ADDRESS;
+    }
+    el.textContent = addr;
   });
 
   // Update Operating Hours
