@@ -635,11 +635,20 @@ const DEFAULT_PRODUCTS = [
 const OFFICIAL_SHOWROOM_ADDRESS = "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001";
 
 function sanitizeBusinessSettings(settings) {
-  if (!settings) return settings;
-  if (!settings.address || settings.address.includes("142, By-pass") || settings.address.includes("626123") || settings.address.includes("Kamaraj Statue") || !settings.address.includes("Thanjavur")) {
-    settings.address = OFFICIAL_SHOWROOM_ADDRESS;
+  if (!settings || typeof settings !== "object") return { ...DEFAULT_BUSINESS_SETTINGS };
+  const merged = { ...DEFAULT_BUSINESS_SETTINGS, ...settings };
+  if (!merged.shop_name || !merged.shop_name.trim()) merged.shop_name = DEFAULT_BUSINESS_SETTINGS.shop_name;
+  if (!merged.phone || !merged.phone.trim()) merged.phone = DEFAULT_BUSINESS_SETTINGS.phone;
+  if (!merged.whatsapp_phone || !merged.whatsapp_phone.trim()) merged.whatsapp_phone = merged.phone || DEFAULT_BUSINESS_SETTINGS.whatsapp_phone;
+  if (!merged.upi_id || !merged.upi_id.trim()) merged.upi_id = DEFAULT_BUSINESS_SETTINGS.upi_id;
+  if (!merged.upi_name || !merged.upi_name.trim()) merged.upi_name = DEFAULT_BUSINESS_SETTINGS.upi_name;
+  if (!merged.business_category || !merged.business_category.trim()) merged.business_category = DEFAULT_BUSINESS_SETTINGS.business_category;
+  if (!merged.tagline || !merged.tagline.trim()) merged.tagline = DEFAULT_BUSINESS_SETTINGS.tagline;
+  if (!merged.operating_hours || !merged.operating_hours.trim()) merged.operating_hours = DEFAULT_BUSINESS_SETTINGS.operating_hours;
+  if (!merged.address || merged.address.includes("142, By-pass") || merged.address.includes("626123") || merged.address.includes("Kamaraj Statue") || !merged.address.includes("Thanjavur")) {
+    merged.address = OFFICIAL_SHOWROOM_ADDRESS;
   }
-  return settings;
+  return merged;
 }
 
 /**
@@ -664,11 +673,13 @@ async function fetchBusinessSettings() {
     }
   }
 
-  // Otherwise, fetch from Supabase if connected
-  const sb = getSupabase();
-  if (isSupabaseConfigured() && sb) {
+  // Otherwise, fetch from Supabase if connected (with 2.5s network timeout protection)
+  const sb = (typeof getSupabase === "function") ? getSupabase() : null;
+  if (typeof isSupabaseConfigured === "function" && isSupabaseConfigured() && sb) {
     try {
-      const { data, error } = await sb.from("business_settings").select("*").limit(1).single();
+      const fetchPromise = sb.from("business_settings").select("*").limit(1).single();
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Supabase settings fetch timeout")), 2500));
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
       if (!error && data) {
         let cleaned = sanitizeBusinessSettings(data);
         localStorage.setItem("dc_business_settings", JSON.stringify(cleaned));
@@ -678,7 +689,7 @@ async function fetchBusinessSettings() {
         return cleaned;
       }
     } catch (e) {
-      console.warn("Failed to fetch settings from Supabase, using local fallback", e);
+      console.warn("Failed to fetch settings from Supabase, using local fallback:", e.message || e);
     }
   }
 

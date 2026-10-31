@@ -69,13 +69,24 @@ async function handleAdminLogin(email, password) {
  */
 async function protectAdminRoute() {
   const sessionUser = sessionStorage.getItem("dc_auth_user");
-  const sb = getSupabase();
+  const sb = (typeof getSupabase === "function") ? getSupabase() : null;
 
-  if (isSupabaseConfigured() && sb) {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session && !sessionUser) {
-      window.location.href = "/login.html";
-      return false;
+  if (typeof isSupabaseConfigured === "function" && isSupabaseConfigured() && sb) {
+    try {
+      const sessionPromise = sb.auth.getSession();
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Auth timeout")), 2500));
+      const res = await Promise.race([sessionPromise, timeoutPromise]);
+      const session = res?.data?.session;
+      if (!session && !sessionUser) {
+        window.location.href = "/login.html";
+        return false;
+      }
+    } catch (err) {
+      console.warn("Auth session check notice (continuing with local session):", err.message);
+      if (!sessionUser) {
+        window.location.href = "/login.html";
+        return false;
+      }
     }
   } else {
     if (!sessionUser) {
@@ -84,12 +95,20 @@ async function protectAdminRoute() {
     }
   }
 
-  // Update current user display in admin header
-  const user = sessionUser ? JSON.parse(sessionUser) : { full_name: "Admin", role: "admin" };
+  // Update current user display in admin header safely
+  let user = { full_name: "Admin Staff", role: "admin" };
+  try {
+    if (sessionUser) {
+      user = JSON.parse(sessionUser);
+    }
+  } catch (e) {
+    console.warn("Error parsing sessionUser:", e);
+  }
+
   const nameEl = document.getElementById("adminUserName");
   const roleEl = document.getElementById("adminUserRole");
-  if (nameEl) nameEl.textContent = user.full_name;
-  if (roleEl) roleEl.textContent = user.role.toUpperCase();
+  if (nameEl) nameEl.textContent = user.full_name || "Admin Staff";
+  if (roleEl) roleEl.textContent = (user.role || "ADMIN").toUpperCase();
 
   return true;
 }

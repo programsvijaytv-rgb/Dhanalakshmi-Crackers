@@ -3832,53 +3832,100 @@ function initAdminCustomers() {
 // ==============================================================================
 // SETTINGS (admin/settings.html)
 // ==============================================================================
-async function initAdminSettings() {
-  await protectAdminRoute();
-  const settings = await fetchBusinessSettings();
+function populateSettingsForm(settings) {
+  if (!settings) return;
 
-  document.getElementById("setShopName").value = settings.shop_name || "";
-  document.getElementById("setBusinessCategory").value = settings.business_category || "";
-  document.getElementById("setTagline").value = settings.tagline || "";
-  document.getElementById("setLogoUrl").value = settings.logo_url || "";
-  document.getElementById("setPhone").value = settings.phone || "";
-  document.getElementById("setWhatsappPhone").value = settings.whatsapp_phone || settings.phone || "";
-  document.getElementById("setEmail").value = settings.email || "";
-  document.getElementById("setOperatingHours").value = settings.operating_hours || "";
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = (val !== undefined && val !== null) ? val : "";
+  };
+
+  setVal("setShopName", settings.shop_name || "Dhanalakshmi Crackers");
+  setVal("setBusinessCategory", settings.business_category || "Fireworks Supplier / Store");
+  setVal("setTagline", settings.tagline || "Thanjavur's Best Fireworks Destination - Direct Sivakasi Factory Rates");
+  setVal("setLogoUrl", settings.logo_url || "https://res.cloudinary.com/dtbm1sjoo/image/upload/v1792332614/Ornate_Standard_Fireworks_Badge_1_hv1w6n.png");
+  setVal("setPhone", settings.phone || "+91 94431 88531");
+  setVal("setWhatsappPhone", settings.whatsapp_phone || settings.phone || "+91 94431 88531");
+  setVal("setEmail", settings.email || "sales@dhanalakshmicrackers.com");
+  setVal("setOperatingHours", settings.operating_hours || "Mon - Sun: 09:00 AM - 10:00 PM");
+
   const officialAddr = "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001";
   const currentAddr = (settings.address || "").trim();
-  document.getElementById("setAddress").value = (!currentAddr || currentAddr.includes("142, By-pass") || currentAddr.includes("626123") || currentAddr.includes("Kamaraj Statue") || !currentAddr.includes("Thanjavur")) ? officialAddr : currentAddr;
-  document.getElementById("setBusinessDesc").value = settings.business_description || "";
-  document.getElementById("setGst").value = settings.gst_number || "";
-  document.getElementById("setTaxRate").value = settings.default_tax_rate || 18;
-  document.getElementById("setTaxApplicable").checked = settings.tax_applicable !== false;
-  document.getElementById("setInvoiceFooter").value = settings.invoice_footer || "";
-  if (document.getElementById("setGoogleReviewUrl")) {
-    document.getElementById("setGoogleReviewUrl").value = (settings.google_review_url && !settings.google_review_url.includes("AwTsdLuk9OtRHQhbR")) 
-      ? settings.google_review_url 
-      : "https://share.google/RqWbas77JcB57AOT2";
+  setVal("setAddress", (!currentAddr || currentAddr.includes("142, By-pass") || currentAddr.includes("626123") || currentAddr.includes("Kamaraj Statue") || !currentAddr.includes("Thanjavur")) ? officialAddr : currentAddr);
+
+  setVal("setBusinessDesc", settings.business_description || "Premier crackers showroom in Thanjavur supplying 100% certified Sivakasi fireworks at direct factory wholesale rates. Retail & bulk festive orders.");
+  setVal("setGst", settings.gst_number || "33AAAAA0000A1Z5");
+  setVal("setTaxRate", settings.default_tax_rate || 18);
+
+  const taxAppEl = document.getElementById("setTaxApplicable");
+  if (taxAppEl) {
+    taxAppEl.checked = settings.tax_applicable !== false;
   }
-  if (document.getElementById("setGuideVideoUrl")) {
-    document.getElementById("setGuideVideoUrl").value = settings.guide_video_url || "https://www.youtube.com/watch?v=kY7XlB8mS78";
-  }
-  document.getElementById("setUpiId").value = settings.upi_id || "";
-  document.getElementById("setUpiName").value = settings.upi_name || "";
-  if (document.getElementById("setDefaultPrintFormat")) {
-    document.getElementById("setDefaultPrintFormat").value = settings.default_print_format || localStorage.getItem("dc_default_print_format") || "80mm";
+
+  setVal("setInvoiceFooter", settings.invoice_footer || "Thank you for celebrating with Dhanalakshmi Crackers! Have a sparkling and safe Diwali.");
+
+  const reviewUrl = (settings.google_review_url && !settings.google_review_url.includes("AwTsdLuk9OtRHQhbR")) 
+    ? settings.google_review_url 
+    : "https://share.google/RqWbas77JcB57AOT2";
+  setVal("setGoogleReviewUrl", reviewUrl);
+
+  setVal("setGuideVideoUrl", settings.guide_video_url || "https://www.youtube.com/watch?v=kY7XlB8mS78");
+  setVal("setUpiId", settings.upi_id || "dhanalakshmicrackers@tmb");
+  setVal("setUpiName", settings.upi_name || "Dhanalakshmi Crackers Sivakasi");
+
+  const formatEl = document.getElementById("setDefaultPrintFormat");
+  if (formatEl) {
+    formatEl.value = settings.default_print_format || localStorage.getItem("dc_default_print_format") || "80mm";
   }
 
   // Supabase Credentials Config
   const currentSbUrl = localStorage.getItem("dc_supabase_url");
   const currentSbKey = localStorage.getItem("dc_supabase_anon_key");
   const currentServiceKey = localStorage.getItem("dc_supabase_service_key");
-  document.getElementById("setSupabaseUrl").value = (currentSbUrl && !currentSbUrl.includes("your-project")) ? currentSbUrl : DEFAULT_SUPABASE_URL;
-  document.getElementById("setSupabaseAnonKey").value = (currentSbKey && !currentSbKey.includes("your-public-anon-key")) ? currentSbKey : DEFAULT_SUPABASE_ANON_KEY;
-  if (document.getElementById("setSupabaseServiceKey")) {
-    document.getElementById("setSupabaseServiceKey").value = currentServiceKey || "";
+  const defaultUrl = (typeof DEFAULT_SUPABASE_URL !== "undefined") ? DEFAULT_SUPABASE_URL : "https://pbjcqamswwwoklcgdfjd.supabase.co";
+  const defaultAnon = (typeof DEFAULT_SUPABASE_ANON_KEY !== "undefined") ? DEFAULT_SUPABASE_ANON_KEY : "sb_publishable_-nw-Lngui7gSYjJLsSaCAg_3OnHKd7H";
+
+  setVal("setSupabaseUrl", (currentSbUrl && !currentSbUrl.includes("your-project")) ? currentSbUrl : defaultUrl);
+  setVal("setSupabaseAnonKey", (currentSbKey && !currentSbKey.includes("your-public-anon-key")) ? currentSbKey : defaultAnon);
+  setVal("setSupabaseServiceKey", currentServiceKey || "");
+}
+
+async function initAdminSettings() {
+  try {
+    await protectAdminRoute();
+  } catch (err) {
+    console.warn("protectAdminRoute notice:", err);
   }
 
+  // 1. Instant local render: populate form immediately from localStorage or defaults (0ms synchronous)
+  let initialSettings = null;
+  const stored = localStorage.getItem("dc_business_settings");
+  if (stored) {
+    try {
+      initialSettings = JSON.parse(stored);
+    } catch (_) {}
+  }
+  if (!initialSettings && typeof DEFAULT_BUSINESS_SETTINGS !== "undefined") {
+    initialSettings = DEFAULT_BUSINESS_SETTINGS;
+  }
+  if (initialSettings) {
+    populateSettingsForm(initialSettings);
+  }
+
+  // 2. Fetch authoritative business settings (from local customized version or cloud)
+  try {
+    const freshSettings = await fetchBusinessSettings();
+    if (freshSettings) {
+      populateSettingsForm(freshSettings);
+    }
+  } catch (e) {
+    console.warn("fetchBusinessSettings fallback notice:", e);
+  }
+
+  // 3. Attach submit listener
   const form = document.getElementById("settingsForm");
   if (form) {
-    form.addEventListener("submit", saveAdminSettings);
+    form.onsubmit = saveAdminSettings;
   }
 }
 
