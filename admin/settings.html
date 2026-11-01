@@ -57,7 +57,7 @@
         </div>
       </div>
       <div class="topbar-actions">
-        <button type="button" class="btn btn-primary btn-sm topbar-save-btn" onclick="document.getElementById('settingsForm').requestSubmit()">
+        <button type="button" class="btn btn-primary btn-sm topbar-save-btn" onclick="triggerSettingsSave()">
           💾 Save Now
         </button>
       </div>
@@ -112,7 +112,7 @@
 
       <!-- Settings Form Container -->
       <div class="settings-container">
-        <form id="settingsForm">
+        <form id="settingsForm" novalidate>
           
           <!-- SECTION 1: Store & Contact Profile -->
           <section id="section-profile" class="settings-card-section">
@@ -251,7 +251,7 @@
               </div>
               <div class="upi-preview-body">
                 <div class="upi-qr-wrapper">
-                  <img id="liveUpiQrImg" src="" alt="Live Merchant UPI QR Preview" class="upi-qr-image">
+                  <img id="liveUpiQrImg" src="" alt="Live Merchant UPI QR Preview" class="upi-qr-image" onerror="this.style.opacity='0.4'">
                   <span class="upi-qr-scan-hint">Scan with any UPI App</span>
                 </div>
                 <div class="upi-preview-details">
@@ -494,7 +494,7 @@
         <span class="mobile-save-dot">●</span>
         <span class="mobile-save-text">Store Settings</span>
       </div>
-      <button type="button" class="btn btn-primary btn-sm mobile-save-btn" onclick="document.getElementById('settingsForm').requestSubmit()">
+      <button type="button" class="btn btn-primary btn-sm mobile-save-btn" onclick="triggerSettingsSave()">
         💾 Save Settings
       </button>
     </div>
@@ -510,6 +510,23 @@
     let liveSaveDebounceTimer = null;
     let qrDebounceTimer = null;
     let isSettingsFormInitialized = false;
+
+    // Trigger settings save safely with fallback
+    function triggerSettingsSave() {
+      const form = document.getElementById("settingsForm");
+      if (!form) return;
+      try {
+        if (typeof form.requestSubmit === "function") {
+          form.requestSubmit();
+          return;
+        }
+      } catch (err) {
+        console.warn("requestSubmit failed, falling back to direct save:", err);
+      }
+      if (typeof saveAdminSettings === "function") {
+        saveAdminSettings(new Event("submit"));
+      }
+    }
 
     // Initialize Admin Settings & Dynamic Preview Enhancements
     document.addEventListener("DOMContentLoaded", async function() {
@@ -753,6 +770,16 @@
 
       const chosenFormat = document.getElementById("setDefaultPrintFormat")?.value || "80mm";
       localStorage.setItem("dc_default_print_format", chosenFormat);
+
+      // Persist Supabase cloud credentials safely if modified
+      const sbUrl = (document.getElementById("setSupabaseUrl")?.value || "").trim();
+      const sbKey = (document.getElementById("setSupabaseAnonKey")?.value || "").trim();
+      const sbServiceKey = (document.getElementById("setSupabaseServiceKey")?.value || "").trim();
+      if (sbUrl) localStorage.setItem("dc_supabase_url", sbUrl);
+      if (sbKey) localStorage.setItem("dc_supabase_anon_key", sbKey);
+      if (sbServiceKey) {
+        localStorage.setItem("dc_supabase_service_key", sbServiceKey);
+      }
 
       // Save to localStorage immediately
       localStorage.setItem("dc_business_settings", JSON.stringify(settings));

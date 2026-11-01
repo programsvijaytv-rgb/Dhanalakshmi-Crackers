@@ -632,6 +632,7 @@ const DEFAULT_PRODUCTS = [
 
 /**
  * Returns Business Settings from localStorage or Supabase
+ */
 const OFFICIAL_SHOWROOM_ADDRESS = "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001";
 
 function sanitizeBusinessSettings(settings) {
@@ -858,7 +859,15 @@ function normalizeCategory(rawNameOrSlug, productName = "", sku = "") {
  * Retrieve custom categories list from localStorage, seeding from DEFAULT_CATEGORIES if empty or outdated
  * Preserves custom categories created dynamically by admin
  */
-const EXCLUDED_CATEGORY_SLUGS = ["rocket", "multi-colour-fancy-out", "wala", "bombs"];
+const EXCLUDED_CATEGORY_SLUGS = [
+  "rockets",
+  "sky-shots",
+  "sound-crackers",
+  "rocket",
+  "multi-colour-fancy-out",
+  "wala",
+  "bombs"
+];
 
 function getStoredCategories() {
   const raw = localStorage.getItem("dc_custom_categories");
@@ -872,9 +881,14 @@ function getStoredCategories() {
         // Merge stored categories, preserving dynamic/custom categories
         parsed.forEach(c => {
           if (!c || !c.id) return;
-          // Filter out explicitly removed categories (Rockets, Aerial Repeaters, Sound Crackers & Garlands)
+          if (c.is_active === false) return;
+          // Filter out explicitly removed categories (Rockets & Missiles, Aerial Repeaters, Sound Crackers & Garlands)
+          if (c.id === "b1000000-0000-0000-0000-000000000004" || 
+              c.id === "b1000000-0000-0000-0000-000000000005" || 
+              c.id === "b1000000-0000-0000-0000-000000000006") return;
           if (c.slug && EXCLUDED_CATEGORY_SLUGS.includes(c.slug.toLowerCase())) return;
-          if (c.name && (c.name.includes("Rocket") || c.name.includes("ராக்கெட்") || 
+          if (c.name && (c.name.includes("Rockets & Missiles") || c.name.includes("Aerial Repeaters") || 
+                         c.name.includes("Sound Crackers") || c.name.includes("ராக்கெட்") || 
                          c.name.includes("Multi Colour Fancy") || c.name.includes("வாலா") || 
                          c.name.includes("Wala") || c.name.includes("Bombs") || c.name.includes("பாம்"))) return;
 

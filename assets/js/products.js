@@ -41,6 +41,25 @@ async function fetchCategories() {
     });
   }
 
+  // Filter out removed categories (Rockets & Missiles, Aerial Repeaters, Sound Crackers & Garlands)
+  const excludedCategoryIds = [
+    "b1000000-0000-0000-0000-000000000004",
+    "b1000000-0000-0000-0000-000000000005",
+    "b1000000-0000-0000-0000-000000000006"
+  ];
+  const excludedCategorySlugs = ["rockets", "sky-shots", "sound-crackers"];
+  mergedCats = mergedCats.filter(c => {
+    if (!c) return false;
+    if (c.is_active === false) return false;
+    if (c.id && excludedCategoryIds.includes(String(c.id).toLowerCase())) return false;
+    if (c.slug && excludedCategorySlugs.includes(String(c.slug).toLowerCase())) return false;
+    const name = String(c.name || "").toLowerCase();
+    if (name.includes("rockets & missiles") || name.includes("aerial repeaters") || name.includes("sound crackers & garlands")) {
+      return false;
+    }
+    return true;
+  });
+
   loadedCategories = mergedCats;
   return loadedCategories;
 }
