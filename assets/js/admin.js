@@ -3859,7 +3859,10 @@ function populateSettingsForm(settings) {
 
   const taxAppEl = document.getElementById("setTaxApplicable");
   if (taxAppEl) {
-    taxAppEl.checked = settings.tax_applicable !== false;
+    taxAppEl.checked = settings.tax_applicable === true;
+    if (typeof toggleTaxRateInput === "function") {
+      toggleTaxRateInput(taxAppEl.checked);
+    }
   }
 
   setVal("setInvoiceFooter", settings.invoice_footer || "Thank you for celebrating with Dhanalakshmi Crackers! Have a sparkling and safe Diwali.");

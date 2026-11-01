@@ -87,7 +87,7 @@ const DEFAULT_BUSINESS_SETTINGS = {
   currency_symbol: "₹",
   currency_code: "INR",
   time_zone: "Asia/Kolkata",
-  tax_applicable: true,
+  tax_applicable: false,
   default_tax_rate: 18,
   invoice_prefix: "DC-",
   invoice_footer: "Thank you for celebrating with Dhanalakshmi Crackers! Have a sparkling and safe Diwali.",
@@ -647,6 +647,9 @@ function sanitizeBusinessSettings(settings) {
   if (!merged.operating_hours || !merged.operating_hours.trim()) merged.operating_hours = DEFAULT_BUSINESS_SETTINGS.operating_hours;
   if (!merged.address || merged.address.includes("142, By-pass") || merged.address.includes("626123") || merged.address.includes("Kamaraj Statue") || !merged.address.includes("Thanjavur")) {
     merged.address = OFFICIAL_SHOWROOM_ADDRESS;
+  }
+  if (merged.tax_applicable === undefined || merged.tax_applicable === null) {
+    merged.tax_applicable = false;
   }
   return merged;
 }

@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS public.business_settings (
     currency_symbol TEXT DEFAULT '₹',
     currency_code TEXT DEFAULT 'INR',
     time_zone TEXT DEFAULT 'Asia/Kolkata',
-    tax_applicable BOOLEAN DEFAULT TRUE,
+    tax_applicable BOOLEAN DEFAULT FALSE,
     default_tax_rate NUMERIC(5, 2) DEFAULT 18.00, -- GST rate (18% for fireworks)
     invoice_prefix TEXT DEFAULT 'DC-',
     invoice_footer TEXT DEFAULT 'Thank you for celebrating with Dhanalakshmi Crackers! Have a safe and joyous Diwali.',

@@ -25,7 +25,7 @@ function formatWhatsAppInvoiceMessage(invoice, businessSettings = null) {
   const shopName = businessSettings?.shop_name || "Dhanalakshmi Crackers";
   const contactPhone = businessSettings?.whatsapp_phone || businessSettings?.phone || "+91 94431 88531";
   const dateStr = invoice.created_at ? new Date(invoice.created_at).toLocaleDateString("en-IN") : new Date().toLocaleDateString("en-IN");
-  const isTaxApplicable = businessSettings?.tax_applicable !== false && Number(invoice.tax_amount || 0) > 0;
+  const isTaxApplicable = Boolean(businessSettings?.tax_applicable) && Number(invoice.tax_amount || 0) > 0;
   const taxLine = isTaxApplicable ? `GST / Tax (${invoice.tax_rate || 18}%): + ₹${Number(invoice.tax_amount || 0).toFixed(2)}\n` : "";
 
   let paymentLinkLine = "";

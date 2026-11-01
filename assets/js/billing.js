@@ -7,7 +7,7 @@ let posCatalog = [];
 let posCategories = [];
 let posCart = [];
 let posActiveCategory = "all";
-let posTaxRate = 18.0; // Standard GST for fireworks
+let posTaxRate = 0; // Default off (exempt/zero-rated) unless enabled in settings
 let posDiscountPercent = 0;
 let posSelectedPaymentMethod = "CASH";
 
@@ -19,6 +19,15 @@ async function initPOS() {
   const [categories, products] = await Promise.all([fetchCategories(), fetchProducts()]);
   posCategories = categories;
   posCatalog = products;
+
+  // Sync tax configuration from business settings
+  try {
+    const settings = (typeof fetchBusinessSettings === "function") ? await fetchBusinessSettings() : null;
+    const isTaxApplicable = settings ? Boolean(settings.tax_applicable) : false;
+    posTaxRate = isTaxApplicable ? (Number(settings.default_tax_rate) || 18.0) : 0;
+  } catch (_) {
+    posTaxRate = 0;
+  }
 
   renderPOSCategoryPills();
   renderPOSProductGrid();
@@ -343,7 +352,7 @@ function updatePOSTotals() {
   const subtotal = posCart.reduce((sum, item) => sum + item.subtotal, 0);
   const discountAmount = (subtotal * posDiscountPercent) / 100;
   const taxable = subtotal - discountAmount;
-  const taxAmount = (taxable * posTaxRate) / 100;
+  const taxAmount = posTaxRate > 0 ? (taxable * posTaxRate) / 100 : 0;
   const grandTotal = taxable + taxAmount;
 
   const subtotalEl = document.getElementById("posSubtotalDisplay");
@@ -353,7 +362,13 @@ function updatePOSTotals() {
 
   if (subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
   if (discountEl) discountEl.textContent = `- ${formatCurrency(discountAmount)}`;
-  if (taxEl) taxEl.textContent = formatCurrency(taxAmount);
+  if (taxEl) {
+    taxEl.textContent = posTaxRate > 0 ? formatCurrency(taxAmount) : "₹0.00 (Exempt)";
+    const taxLabel = taxEl.previousElementSibling;
+    if (taxLabel && taxLabel.tagName === "SPAN") {
+      taxLabel.textContent = posTaxRate > 0 ? `GST (${posTaxRate}%):` : `GST:`;
+    }
+  }
   if (grandTotalEl) grandTotalEl.textContent = formatCurrency(grandTotal);
 
   // Update mobile summary badge and floating bottom bar

@@ -141,7 +141,7 @@ function renderFormattedInvoiceContent() {
   const isInsideAdmin = typeof window !== "undefined" && window.location.pathname.includes("/admin");
   const defaultLocalLogo = isInsideAdmin ? "../assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png" : "assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png";
   const logoUrl = settings.logo_url || defaultLocalLogo;
-  const isTaxApplicable = settings.tax_applicable !== false;
+  const isTaxApplicable = Boolean(settings.tax_applicable);
   const footerNote = settings.invoice_footer || "Thank you for shopping with Dhanalakshmi Crackers! Have a safe and sparkling Diwali celebration. 🪔";
   const dateStr = inv.created_at ? new Date(inv.created_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString("en-IN");
   const timeStr = inv.created_at ? new Date(inv.created_at).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit' }) : "";

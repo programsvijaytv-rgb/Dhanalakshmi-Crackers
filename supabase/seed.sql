@@ -41,7 +41,7 @@ INSERT INTO public.business_settings (
     '₹',
     'INR',
     'Asia/Kolkata',
-    true,
+    false,
     18.00,
     'DC-',
     'Thank you for shopping with Dhanalakshmi Crackers! We wish you a sparkling, safe and joyful festival!'

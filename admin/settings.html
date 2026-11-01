@@ -308,7 +308,7 @@
             <div class="tax-toggle-card">
               <div class="tax-toggle-left">
                 <label class="admin-switch">
-                  <input type="checkbox" id="setTaxApplicable" checked onchange="toggleTaxRateInput(this.checked)" aria-label="Calculate & Print GST on Invoices" title="Calculate & Print GST on Invoices">
+                  <input type="checkbox" id="setTaxApplicable" onchange="toggleTaxRateInput(this.checked)" aria-label="Calculate & Print GST on Invoices" title="Calculate & Print GST on Invoices">
                   <span class="admin-slider"></span>
                 </label>
                 <div>
@@ -319,13 +319,13 @@
               <div class="tax-toggle-right" id="taxRateContainer">
                 <div class="form-group form-group-zero-margin">
                   <label class="form-label" for="setTaxRate">GST Rate (%)</label>
-                  <input type="number" id="setTaxRate" step="0.5" class="form-input tax-rate-input" value="18">
+                  <input type="number" id="setTaxRate" step="0.5" class="form-input tax-rate-input" value="18" disabled>
                 </div>
                 <div class="tax-presets">
-                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(5)">5%</button>
-                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(12)">12%</button>
-                  <button type="button" class="tax-preset-chip active" onclick="setTaxPreset(18)">18%</button>
-                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(28)">28%</button>
+                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(5)" disabled>5%</button>
+                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(12)" disabled>12%</button>
+                  <button type="button" class="tax-preset-chip active" onclick="setTaxPreset(18)" disabled>18%</button>
+                  <button type="button" class="tax-preset-chip" onclick="setTaxPreset(28)" disabled>28%</button>
                 </div>
               </div>
             </div>
@@ -402,19 +402,15 @@
                 </div>
 
                 <div id="liveReceiptTaxRows">
-                  <div class="receipt-tax-row">
-                    <span>CGST (9.0%):</span>
-                    <span>₹90.00</span>
-                  </div>
-                  <div class="receipt-tax-row">
-                    <span>SGST (9.0%):</span>
-                    <span>₹90.00</span>
+                  <div class="receipt-tax-row" style="color: #64748b; font-style: italic;">
+                    <span>GST Tax:</span>
+                    <span>Exempt / Zero-Rated</span>
                   </div>
                 </div>
 
                 <div class="receipt-total-row">
                   <span>ESTIMATED TOTAL:</span>
-                  <span id="liveReceiptTotal">₹1,180.00</span>
+                  <span id="liveReceiptTotal">₹1,000.00</span>
                 </div>
 
                 <div class="receipt-footer-text" id="liveReceiptFooter">
@@ -618,7 +614,7 @@
       const gst = (document.getElementById("setGst")?.value || "").trim();
       const upiId = (document.getElementById("setUpiId")?.value || "").trim();
       const upiName = (document.getElementById("setUpiName")?.value || "").trim();
-      const taxApplicable = document.getElementById("setTaxApplicable") ? document.getElementById("setTaxApplicable").checked : true;
+      const taxApplicable = document.getElementById("setTaxApplicable") ? document.getElementById("setTaxApplicable").checked : false;
       const taxRate = parseFloat(document.getElementById("setTaxRate")?.value) || 0;
       const invoiceFooter = (document.getElementById("setInvoiceFooter")?.value || "").trim();
 
@@ -744,7 +740,7 @@
         currency_symbol: "₹",
         currency_code: "INR",
         time_zone: "Asia/Kolkata",
-        tax_applicable: document.getElementById("setTaxApplicable") ? document.getElementById("setTaxApplicable").checked : true,
+        tax_applicable: document.getElementById("setTaxApplicable") ? document.getElementById("setTaxApplicable").checked : false,
         gst_number: (document.getElementById("setGst")?.value || "").trim(),
         upi_id: (document.getElementById("setUpiId")?.value || "").trim(),
         upi_name: (document.getElementById("setUpiName")?.value || "").trim(),
