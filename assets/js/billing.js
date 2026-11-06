@@ -362,8 +362,12 @@ function updatePOSTotals() {
 
   if (subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
   if (discountEl) discountEl.textContent = `- ${formatCurrency(discountAmount)}`;
+  const taxRowEl = document.getElementById("posTaxRow");
+  if (taxRowEl) {
+    taxRowEl.style.display = posTaxRate > 0 ? "flex" : "none";
+  }
   if (taxEl) {
-    taxEl.textContent = posTaxRate > 0 ? formatCurrency(taxAmount) : "₹0.00 (Exempt)";
+    taxEl.textContent = posTaxRate > 0 ? formatCurrency(taxAmount) : "₹0.00";
     const taxLabel = taxEl.previousElementSibling;
     if (taxLabel && taxLabel.tagName === "SPAN") {
       taxLabel.textContent = posTaxRate > 0 ? `GST (${posTaxRate}%):` : `GST:`;

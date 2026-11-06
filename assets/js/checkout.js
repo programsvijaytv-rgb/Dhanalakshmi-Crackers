@@ -343,7 +343,7 @@ function showOrderConfirmationModal(order) {
     iconBg = '#dcfce7';
     iconColor = '#16a34a';
     headingText = 'Payment Confirmed & Order Placed! 🎉';
-    subText = `Your payment has been received! Official GST Invoice <strong>#${order.order_number}</strong> is generated below.`;
+    subText = `Your payment has been received! Official Order Invoice <strong>#${order.order_number}</strong> is generated below.`;
     badgeClass = 'badge-success';
     badgeText = 'PAID (VERIFIED)';
   } else if (isPendingVerification) {
@@ -525,7 +525,7 @@ Invoice / Order Number: #${order.order_number}
 Total Amount: ${formatCurrency(order.total_amount)}
 Payment Method: ${order.payment_method} (${(order.payment_status || 'PAID').toUpperCase()})
 
-You can download your official GST Tax Invoice PDF anytime using the link below:
+You can download your official Order Invoice PDF anytime using the link below:
 ${downloadUrl}
 
 Wishing you and your family a safe, sparkling Diwali!

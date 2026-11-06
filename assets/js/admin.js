@@ -3854,7 +3854,7 @@ function populateSettingsForm(settings) {
   setVal("setAddress", (!currentAddr || currentAddr.includes("142, By-pass") || currentAddr.includes("626123") || currentAddr.includes("Kamaraj Statue") || !currentAddr.includes("Thanjavur")) ? officialAddr : currentAddr);
 
   setVal("setBusinessDesc", settings.business_description || "Premier crackers showroom in Thanjavur supplying 100% certified Sivakasi fireworks at direct factory wholesale rates. Retail & bulk festive orders.");
-  setVal("setGst", settings.gst_number || "33AAAAA0000A1Z5");
+  setVal("setGst", (settings.gst_number && settings.gst_number !== "33AAAAA0000A1Z5") ? settings.gst_number : "");
   setVal("setTaxRate", settings.default_tax_rate || 18);
 
   const taxAppEl = document.getElementById("setTaxApplicable");
@@ -3894,12 +3894,6 @@ function populateSettingsForm(settings) {
 }
 
 async function initAdminSettings() {
-  try {
-    await protectAdminRoute();
-  } catch (err) {
-    console.warn("protectAdminRoute notice:", err);
-  }
-
   // 1. Instant local render: populate form immediately from localStorage or defaults (0ms synchronous)
   let initialSettings = null;
   const stored = localStorage.getItem("dc_business_settings");
@@ -3913,6 +3907,13 @@ async function initAdminSettings() {
   }
   if (initialSettings) {
     populateSettingsForm(initialSettings);
+  }
+
+  // 2. Auth verification check
+  try {
+    await protectAdminRoute();
+  } catch (err) {
+    console.warn("protectAdminRoute notice:", err);
   }
 
   // 2. Fetch authoritative business settings (from local customized version or cloud)
@@ -3978,28 +3979,65 @@ async function testSupabaseOnlineSync() {
 }
 
 async function saveAdminSettings(e) {
-  e.preventDefault();
+  if (e && typeof e.preventDefault === "function") {
+    e.preventDefault();
+  }
+
+  const shopNameInput = document.getElementById("setShopName");
+  const phoneInput = document.getElementById("setPhone");
+  const addrInput = document.getElementById("setAddress");
+  const upiInput = document.getElementById("setUpiId");
+
+  const shopNameVal = shopNameInput ? shopNameInput.value.trim() : "";
+  const phoneVal = phoneInput ? phoneInput.value.trim() : "";
+  const addrVal = addrInput ? addrInput.value.trim() : "";
+  const upiVal = upiInput ? upiInput.value.trim() : "";
+
+  if (!shopNameVal) {
+    if (typeof switchSettingsTab === "function") switchSettingsTab("profile");
+    if (shopNameInput) shopNameInput.focus();
+    showToast("Please enter your Business / Shop Name", "error");
+    return;
+  }
+  if (!phoneVal) {
+    if (typeof switchSettingsTab === "function") switchSettingsTab("profile");
+    if (phoneInput) phoneInput.focus();
+    showToast("Please enter a Contact Phone Number", "error");
+    return;
+  }
+  if (!addrVal) {
+    if (typeof switchSettingsTab === "function") switchSettingsTab("profile");
+    if (addrInput) addrInput.focus();
+    showToast("Please enter your Verified Business Address", "error");
+    return;
+  }
+  if (!upiVal) {
+    if (typeof switchSettingsTab === "function") switchSettingsTab("payments");
+    if (upiInput) upiInput.focus();
+    showToast("Please enter a Merchant UPI ID", "error");
+    return;
+  }
 
   const settings = {
-    shop_name: document.getElementById("setShopName").value.trim(),
-    business_category: document.getElementById("setBusinessCategory").value.trim(),
-    tagline: document.getElementById("setTagline").value.trim(),
-    logo_url: document.getElementById("setLogoUrl").value.trim(),
-    phone: document.getElementById("setPhone").value.trim(),
-    whatsapp_phone: document.getElementById("setWhatsappPhone").value.trim(),
-    email: document.getElementById("setEmail").value.trim(),
-    operating_hours: document.getElementById("setOperatingHours").value.trim(),
-    address: document.getElementById("setAddress").value.trim(),
-    business_description: document.getElementById("setBusinessDesc").value.trim(),
+    shop_name: shopNameVal,
+    business_category: document.getElementById("setBusinessCategory") ? document.getElementById("setBusinessCategory").value.trim() : "",
+    tagline: document.getElementById("setTagline") ? document.getElementById("setTagline").value.trim() : "",
+    logo_url: document.getElementById("setLogoUrl") ? document.getElementById("setLogoUrl").value.trim() : "",
+    phone: phoneVal,
+    whatsapp_phone: document.getElementById("setWhatsappPhone") ? document.getElementById("setWhatsappPhone").value.trim() : phoneVal,
+    email: document.getElementById("setEmail") ? document.getElementById("setEmail").value.trim() : "",
+    operating_hours: document.getElementById("setOperatingHours") ? document.getElementById("setOperatingHours").value.trim() : "",
+    address: addrVal,
+    business_description: document.getElementById("setBusinessDesc") ? document.getElementById("setBusinessDesc").value.trim() : "",
     currency_symbol: "₹",
     currency_code: "INR",
     time_zone: "Asia/Kolkata",
-    tax_applicable: document.getElementById("setTaxApplicable").checked,
-    gst_number: document.getElementById("setGst").value.trim(),
-    upi_id: document.getElementById("setUpiId").value.trim(),
-    upi_name: document.getElementById("setUpiName").value.trim(),
-    default_tax_rate: Number(document.getElementById("setTaxRate").value) || 18,
-    invoice_footer: document.getElementById("setInvoiceFooter").value.trim(),
+    tax_applicable: document.getElementById("setTaxApplicable") ? document.getElementById("setTaxApplicable").checked : false,
+    gst_number: document.getElementById("setGst") ? document.getElementById("setGst").value.trim() : "",
+    upi_id: upiVal,
+    upi_name: document.getElementById("setUpiName") ? document.getElementById("setUpiName").value.trim() : "",
+    default_tax_rate: Number(document.getElementById("setTaxRate") ? document.getElementById("setTaxRate").value : 18) || 18,
+    invoice_footer: document.getElementById("setInvoiceFooter") ? document.getElementById("setInvoiceFooter").value.trim() : "",
     default_print_format: document.getElementById("setDefaultPrintFormat") ? document.getElementById("setDefaultPrintFormat").value : "80mm",
     google_review_url: (document.getElementById("setGoogleReviewUrl") ? document.getElementById("setGoogleReviewUrl").value.trim() : "") || "https://share.google/RqWbas77JcB57AOT2",
     guide_video_url: (document.getElementById("setGuideVideoUrl") ? document.getElementById("setGuideVideoUrl").value.trim() : "") || "https://www.youtube.com/watch?v=kY7XlB8mS78"

@@ -35,7 +35,7 @@ INSERT INTO public.business_settings (
     'No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001',
     'Mon - Sun: 09:00 AM - 10:00 PM',
     'Wholesale and retail distributor of authentic Sivakasi fireworks, certified safety standards, factory direct pricing.',
-    '33AAAAA0000A1Z5',
+    '',
     'dhanalakshmi@upi',
     'Dhanalakshmi Crackers Thanjavur',
     '₹',

@@ -81,7 +81,7 @@ const DEFAULT_BUSINESS_SETTINGS = {
   address: "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001",
   operating_hours: "Mon - Sun: 09:00 AM - 10:00 PM",
   business_description: "Premier crackers showroom in Thanjavur supplying 100% certified Sivakasi fireworks at direct factory wholesale rates. Retail & bulk festive orders.",
-  gst_number: "33AAAAA0000A1Z5",
+  gst_number: "",
   upi_id: "dhanalakshmi@upi",
   upi_name: "Dhanalakshmi Crackers Thanjavur",
   currency_symbol: "₹",
@@ -651,6 +651,9 @@ function sanitizeBusinessSettings(settings) {
   }
   if (merged.tax_applicable === undefined || merged.tax_applicable === null) {
     merged.tax_applicable = false;
+  }
+  if (merged.gst_number === "33AAAAA0000A1Z5") {
+    merged.gst_number = "";
   }
   return merged;
 }

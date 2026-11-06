@@ -137,7 +137,7 @@ function renderFormattedInvoiceContent() {
   const shopName = settings.shop_name || "Dhanalakshmi Crackers";
   const shopAddress = settings.address || "No.33 Vengatesh Perumal Kovil Street, Maharnonbu Chavadi, Thanjavur, Tamil Nadu 613001";
   const shopPhone = settings.phone || "+91 94431 88531";
-  const gstNo = settings.gst_number || "33AAAAA0000A1Z5";
+  const gstNo = (settings.gst_number && settings.gst_number !== "33AAAAA0000A1Z5") ? settings.gst_number : "";
   const isInsideAdmin = typeof window !== "undefined" && window.location.pathname.includes("/admin");
   const defaultLocalLogo = isInsideAdmin ? "../assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png" : "assets/img/Dhanalakshmi%20Crackers_%2040%20Years%20of%20Celebration.png";
   const logoUrl = settings.logo_url || defaultLocalLogo;
@@ -170,8 +170,8 @@ function renderFormattedInvoiceContent() {
           </div>
           <div class="a4-brand-meta">
             📍 ${shopAddress}<br>
-            📞 Helpline: ${shopPhone} | ✉️ contact@dhanalakshmicrackers.com<br>
-            <strong>GSTIN:</strong> ${gstNo} | <strong>State:</strong> Tamil Nadu (Code: 33) | <strong>HSN:</strong> 3604
+            📞 Helpline: ${shopPhone} | ✉️ contact@dhanalakshmicrackers.com
+            ${(isTaxApplicable && gstNo) ? `<br><strong>GSTIN:</strong> ${gstNo} | <strong>State:</strong> Tamil Nadu (Code: 33) | <strong>HSN:</strong> 3604` : ''}
           </div>
         </div>
 
@@ -198,8 +198,10 @@ function renderFormattedInvoiceContent() {
           <div class="a4-card-heading">INVOICE & PAYMENT SUMMARY</div>
           <div class="a4-cust-line">💳 <strong>Payment Method:</strong> ${inv.payment_method || 'UPI / Cash'}</div>
           <div class="a4-cust-line">🏷️ <strong>Supply Type:</strong> Sivakasi Direct Factory Supply</div>
-          <div class="a4-cust-line">🌐 <strong>Place of Supply:</strong> Tamil Nadu (State Code: 33)</div>
-          <div class="a4-cust-line">⚖️ <strong>Reverse Charge:</strong> No</div>
+          ${isTaxApplicable ? `
+            <div class="a4-cust-line">🌐 <strong>Place of Supply:</strong> Tamil Nadu (State Code: 33)</div>
+            <div class="a4-cust-line">⚖️ <strong>Reverse Charge:</strong> No</div>
+          ` : ''}
         </div>
       </div>
 
@@ -208,14 +210,16 @@ function renderFormattedInvoiceContent() {
         <table class="a4-table">
           <thead>
             <tr>
-              <th style="width: 40px; text-align: center;">#</th>
+              <th style="width: 45px; text-align: center;">#</th>
               <th>Description of Goods (Fireworks)</th>
-              <th style="width: 65px; text-align: center;">HSN</th>
-              <th style="width: 55px; text-align: center;">Qty</th>
-              <th style="width: 85px; text-align: right;">Rate (₹)</th>
-              <th style="width: 95px; text-align: right;">Taxable (₹)</th>
-              <th style="width: 80px; text-align: right;">GST (18%)</th>
-              <th style="width: 100px; text-align: right;">Amount (₹)</th>
+              ${isTaxApplicable ? `<th style="width: 65px; text-align: center;">HSN</th>` : ''}
+              <th style="width: 60px; text-align: center;">Qty</th>
+              <th style="width: 100px; text-align: right;">Rate (₹)</th>
+              ${isTaxApplicable ? `
+                <th style="width: 95px; text-align: right;">Taxable (₹)</th>
+                <th style="width: 80px; text-align: right;">GST (18%)</th>
+              ` : ''}
+              <th style="width: 110px; text-align: right;">Amount (₹)</th>
             </tr>
           </thead>
           <tbody>
@@ -230,11 +234,13 @@ function renderFormattedInvoiceContent() {
                     <div class="a4-item-name">${item.product_name}</div>
                     <div class="a4-item-sku">SKU: ${item.sku || 'SIV-' + (idx + 101)}</div>
                   </td>
-                  <td style="text-align: center; color: #475569;">3604</td>
+                  ${isTaxApplicable ? `<td style="text-align: center; color: #475569;">3604</td>` : ''}
                   <td style="text-align: center; font-weight: 700;">${item.quantity}</td>
                   <td style="text-align: right;">${Number(item.unit_price).toFixed(2)}</td>
-                  <td style="text-align: right;">${itemTaxable.toFixed(2)}</td>
-                  <td style="text-align: right; color: #475569;">${itemGst.toFixed(2)}</td>
+                  ${isTaxApplicable ? `
+                    <td style="text-align: right;">${itemTaxable.toFixed(2)}</td>
+                    <td style="text-align: right; color: #475569;">${itemGst.toFixed(2)}</td>
+                  ` : ''}
                   <td style="text-align: right; font-weight: 700;">${itemTotal.toFixed(2)}</td>
                 </tr>
               `;
@@ -290,7 +296,7 @@ function renderFormattedInvoiceContent() {
           <strong>Terms & Safety Information:</strong><br>
           1. 100% PESO Certified fireworks manufactured strictly under Indian safety regulations.<br>
           2. Store in a cool, dry place. Light outdoors only under adult supervision.<br>
-          3. This is a computer-generated tax invoice and requires no physical signature.<br>
+          3. This is a computer-generated invoice and requires no physical signature.<br>
           <em>${footerNote}</em>
         </div>
         <div class="a4-sign-col">
@@ -318,7 +324,7 @@ function renderFormattedInvoiceContent() {
         <div class="thermal-shop-name">${shopName}</div>
         <div class="thermal-meta">${shopAddress}</div>
         <div class="thermal-meta">Helpline: ${shopPhone}</div>
-        ${gstNo ? `<div class="thermal-meta">GSTIN: ${gstNo} | State: 33</div>` : ''}
+        ${(isTaxApplicable && gstNo) ? `<div class="thermal-meta">GSTIN: ${gstNo} | State: 33</div>` : ''}
       </div>
 
       <div class="thermal-divider"></div>
